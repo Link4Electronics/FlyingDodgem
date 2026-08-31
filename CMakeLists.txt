@@ -46,9 +46,12 @@ if(MSVC_50_FOR_RECCMP)
 
     set(CMAKE_MSVC_RUNTIME_LIBRARY "")
 
-    set(CMAKE_C_FLAGS_DEBUG "/Od /Oi /Zi /MLd")
+    # HOVER.EXE was shipped with MSVC 5.0 at /O2 optimization. We compile the
+    # matching (reccmp) build with the same optimization but retain /Zi debug
+    # info so reccmp can resolve function symbols from the PDB.
+    set(CMAKE_C_FLAGS_DEBUG "/O2 /Oi /G5 /Zi /ML")
     set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /G5 /DNDEBUG /ML")
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO "/O2 /Ob2 /G5 /DNDEBUG /ML")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "/O2 /Ob2 /G5 /DNDEBUG /Zi /ML")
     set(CMAKE_C_FLAGS_MINSIZEREL "/Os /DNDEBUG /ML")
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS}")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
