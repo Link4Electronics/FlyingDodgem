@@ -1,0 +1,8 @@
+targets:
+  HOVER:
+    filename: HOVER.EXE
+    source_root: src
+    hash:
+      sha256: e49b284bed8773bc2a14f4977d1be4ce5eedd1df79896e7b556e7eb538e2f09a
+    report:
+      icon: reccmp/icons/hover.png
