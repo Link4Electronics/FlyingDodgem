@@ -5,4 +5,4 @@ targets:
     hash:
       sha256: e49b284bed8773bc2a14f4977d1be4ce5eedd1df79896e7b556e7eb538e2f09a
     report:
-      icon: reccmp/icons/hover.png
+      icon: reccmp/hover.png

@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - "main"
-    # The report files are committed back to this repo by this workflow; ignore
-    # those commits so they do not retrigger a new run.
     paths-ignore:
       - "reccmp-report/**"
   workflow_dispatch:
@@ -14,37 +12,93 @@ permissions:
   actions: read
   contents: write
 
+env:
+  RECCMP_TARGET: HOVER
+
 jobs:
   report:
     name: Generate and publish reccmp report
-    runs-on: ubuntu-latest
+    runs-on: windows-2025-vs2026
     steps:
-      - uses: actions/checkout@v4
-        name: Checkout
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Fetch MSVC 5.0 (Visual C++ 97 SP3)
+        uses: actions/checkout@v6
         with:
-          submodules: recursive
-      - name: Fetch latest report
+          repository: archaic-msvc/msvc500sp3
+          path: msvc500
+
+      - name: Setup MSVC 5.0
+        shell: cmd
         run: |
-          curl -fsSL -o reccmp-report-report.json https://raw.githubusercontent.com/Link4Electronics/FlyingDodgem/refs/heads/main/reccmp-report/report.json \
-            || echo "No previous report found"
-      - uses: dethrace-labs/reccmp-action@main
-        name: Build
+          echo INCLUDE=${{ github.workspace }}\msvc500\include;${{ github.workspace }}\msvc500\atl\include;${{ github.workspace }}\msvc500\mfc\include>>%GITHUB_ENV%
+          echo LIB=${{ github.workspace }}\msvc500\lib;${{ github.workspace }}\msvc500\mfc\lib>>%GITHUB_ENV%
+          echo ${{ github.workspace }}\msvc500\bin>>%GITHUB_PATH%
+          echo ${{ github.workspace }}\msvc500\redist>>%GITHUB_PATH%
+
+      - name: Setup Ninja
+        shell: sh
+        run: |
+          curl -fsSL https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja.exe -o ${{ github.workspace }}/ninja.exe
+          echo "${{ github.workspace }}" >> $GITHUB_PATH
+
+      - name: Setup Python
+        uses: actions/setup-python@main
         with:
-          cmake_flags: -G Ninja -DCMAKE_BUILD_TYPE=Debug -DMSVC_42_FOR_RECCMP=on
-          build_only: true
-      - uses: dethrace-labs/reccmp-action@main
-        name: Run reccmp
-        with:
-          cmake_flags: -G Ninja -DCMAKE_BUILD_TYPE=Debug -DMSVC_42_FOR_RECCMP=on
-          target: HOVER
-          diff_report_filename: ${{ github.workspace }}/reccmp-report-report.json
-          report_filename: ${{ github.workspace }}/new-reccmp-report.json
-          original_binary_url: https://archive.org/download/flyingdodgem/HOVER.EXE
-          original_binary_filename: HOVER.EXE
-          reccmp_output_filename: ${{ github.workspace }}/reccmp-output.txt
-          status_png_icon_filename: ${{ github.workspace }}/reccmp/icons/hover.png
-          status_svg_filename: ${{ github.workspace }}/new-reccmp-progress.svg
+          python-version: 3.x
+
+      - name: Install reccmp
+        shell: sh
+        run: |
+          python -m pip -q install reccmp
+
+      - name: Download original binary
+        shell: sh
+        run: |
+          mkdir -p originals
+          curl -fLSs -o originals/HOVER.EXE \
+            "https://archive.org/download/hoverwindows95/hover.zip/HOVER%21%2FHOVER.EXE"
+          echo "e49b284bed8773bc2a14f4977d1be4ce5eedd1df79896e7b556e7eb538e2f09a  originals/HOVER.EXE" | sha256sum -c -
+
+      - name: Fetch latest report
+        shell: sh
+        run: |
+          curl -fsSL -o prev-report.json https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/reccmp-report/report.json || echo "No previous report found"
+
+      - name: Detect originals
+        shell: sh
+        run: |
+          reccmp-project detect --what original --search-path originals
+
+      - name: CMake (configure)
+        shell: sh
+        run: |
+          cmake -S . -B build -GNinja -DMSVC_50_FOR_RECCMP=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
+
+      - name: CMake (build)
+        shell: sh
+        run: |
+          cmake --build build
+
+      - name: Run reccmp
+        working-directory: build
+        shell: bash
+        run: |
+          diff_args=()
+          if [ -s ../prev-report.json ]; then
+            diff_args+=(--diff ../prev-report.json)
+          fi
+          reccmp-reccmp --no-color --target "$RECCMP_TARGET" \
+            "${diff_args[@]}" \
+            --json new-reccmp-report.json \
+            --json-diet \
+            -S new-reccmp-progress.svg \
+            >reccmp-output.txt
+          cat reccmp-output.txt
+
       - name: Publish reccmp report
+        shell: bash
         run: |
           mkdir -p reccmp-report
           cp new-reccmp-progress.svg reccmp-report/progress.svg
