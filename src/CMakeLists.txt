@@ -2,6 +2,8 @@ set(FLYINGDODGEM_SOURCES
     flyingdodgem.c
     fixed96.c
     resources.c
+    globals.c
+    stubs.c
 )
 
 add_executable(FlyingDodgem ${FLYINGDODGEM_SOURCES})
