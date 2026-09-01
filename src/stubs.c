@@ -178,6 +178,16 @@ void __fastcall SetTable401000(void* self)
     *(uint32_t*)self = (uint32_t)(uintptr_t)&g_data_bb670;
 }
 
+// FUNCTION: HOVER 0x0040bc70
+void* __fastcall ClearSub40bc70(void* self)
+{
+    uint32_t* s = *(uint32_t**)((uint8_t*)self + 0x88);
+    s[0x81] = 0;
+    s[0x86] = 0;
+    s[0x85] = 0;
+    return s;
+}
+
 extern uint32_t g_data_4ca8;
 
 // FUNCTION: HOVER 0x00429340
@@ -185,3 +195,134 @@ void __cdecl Toggle429340(void)
 {
     g_data_4ca8 = (uint32_t)(g_data_4ca8 < 1u);
 }
+
+#if !defined(FLYINGDODGEM_GDI_COMPAT)
+/* WinHelpA / joy.cpl thunks from the retail binary. The 0xc variants forward
+ * the dereferenced member at arg2+0x0c as the window handle and return the
+ * WinHelpA result; the 0xa variants pass arg1 as the handle and return 1. */
+#if defined(_MSC_VER)
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "kernel32.lib")
+#endif
+
+typedef void* HWND;
+typedef int32_t BOOL;
+typedef uint32_t DWORD;
+typedef uint32_t UINT;
+typedef void* HMODULE;
+typedef void* FARPROC;
+
+#if defined(_MSC_VER)
+__declspec(dllimport)
+#endif
+BOOL __stdcall WinHelpA(HWND hWndMain, const char* lpszHelp, UINT uCommand, DWORD dwData);
+
+#if defined(_MSC_VER)
+__declspec(dllimport)
+#endif
+HMODULE __stdcall LoadLibraryA(const char* lpFileName);
+
+#if defined(_MSC_VER)
+__declspec(dllimport)
+#endif
+FARPROC __stdcall GetProcAddress(HMODULE hModule, const char* lpProcName);
+
+extern uint8_t g_data_4880[1];
+extern uint8_t g_data_d5e8[1];
+extern uint8_t g_data_dbb8[1];
+extern uint8_t g_data_dfe0[1];
+extern uint8_t g_data_ecd0[1];
+extern uint8_t g_data_f1e0[1];
+extern uint8_t g_data_f8b8[1];
+extern uint8_t g_data_5764[1];
+extern uint8_t g_data_5758[1];
+
+// FUNCTION: HOVER 0x0042d140
+int32_t __stdcall WinHelp42d140(uint32_t arg1, uint32_t arg2)
+{
+    return WinHelpA((HWND)*(uint32_t*)((uint8_t*)arg2 + 0xc), (const char*)&g_data_4880, 0xc, (DWORD)(uintptr_t)&g_data_d5e8);
+}
+
+// FUNCTION: HOVER 0x0042d160
+int32_t __stdcall WinHelp42d160(uint32_t arg1, uint32_t arg2)
+{
+    WinHelpA((HWND)(uintptr_t)arg1, (const char*)&g_data_4880, 0xa, (DWORD)(uintptr_t)&g_data_d5e8);
+    return 1;
+}
+
+// FUNCTION: HOVER 0x0042e4f0
+int32_t __stdcall WinHelp42e4f0(uint32_t arg1, uint32_t arg2)
+{
+    return WinHelpA((HWND)*(uint32_t*)((uint8_t*)arg2 + 0xc), (const char*)&g_data_4880, 0xc, (DWORD)(uintptr_t)&g_data_dbb8);
+}
+
+// FUNCTION: HOVER 0x0042e510
+int32_t __stdcall WinHelp42e510(uint32_t arg1, uint32_t arg2)
+{
+    WinHelpA((HWND)(uintptr_t)arg1, (const char*)&g_data_4880, 0xa, (DWORD)(uintptr_t)&g_data_dbb8);
+    return 1;
+}
+
+// FUNCTION: HOVER 0x0042eaa0
+int32_t __stdcall WinHelp42eaa0(uint32_t arg1, uint32_t arg2)
+{
+    return WinHelpA((HWND)*(uint32_t*)((uint8_t*)arg2 + 0xc), (const char*)&g_data_4880, 0xc, (DWORD)(uintptr_t)&g_data_dfe0);
+}
+
+// FUNCTION: HOVER 0x0042eac0
+int32_t __stdcall WinHelp42eac0(uint32_t arg1, uint32_t arg2)
+{
+    WinHelpA((HWND)(uintptr_t)arg1, (const char*)&g_data_4880, 0xa, (DWORD)(uintptr_t)&g_data_dfe0);
+    return 1;
+}
+
+// FUNCTION: HOVER 0x0042f850
+int32_t __stdcall WinHelp42f850(uint32_t arg1, uint32_t arg2)
+{
+    return WinHelpA((HWND)*(uint32_t*)((uint8_t*)arg2 + 0xc), (const char*)&g_data_4880, 0xc, (DWORD)(uintptr_t)&g_data_ecd0);
+}
+
+// FUNCTION: HOVER 0x0042f870
+int32_t __stdcall WinHelp42f870(uint32_t arg1, uint32_t arg2)
+{
+    WinHelpA((HWND)(uintptr_t)arg1, (const char*)&g_data_4880, 0xa, (DWORD)(uintptr_t)&g_data_ecd0);
+    return 1;
+}
+
+// FUNCTION: HOVER 0x00430610
+int32_t __stdcall WinHelp430610(uint32_t arg1, uint32_t arg2)
+{
+    return WinHelpA((HWND)*(uint32_t*)((uint8_t*)arg2 + 0xc), (const char*)&g_data_4880, 0xc, (DWORD)(uintptr_t)&g_data_f1e0);
+}
+
+// FUNCTION: HOVER 0x00430630
+int32_t __stdcall WinHelp430630(uint32_t arg1, uint32_t arg2)
+{
+    WinHelpA((HWND)(uintptr_t)arg1, (const char*)&g_data_4880, 0xa, (DWORD)(uintptr_t)&g_data_f1e0);
+    return 1;
+}
+
+// FUNCTION: HOVER 0x00434010
+int32_t __stdcall WinHelp434010(uint32_t arg1, uint32_t arg2)
+{
+    return WinHelpA((HWND)*(uint32_t*)((uint8_t*)arg2 + 0xc), (const char*)&g_data_4880, 0xc, (DWORD)(uintptr_t)&g_data_f8b8);
+}
+
+// FUNCTION: HOVER 0x00434030
+int32_t __stdcall WinHelp434030(uint32_t arg1, uint32_t arg2)
+{
+    WinHelpA((HWND)(uintptr_t)arg1, (const char*)&g_data_4880, 0xa, (DWORD)(uintptr_t)&g_data_f8b8);
+    return 1;
+}
+
+// FUNCTION: HOVER 0x0042e3f0
+void __cdecl ShowJoyCpl42e3f0(void)
+{
+    HMODULE module = LoadLibraryA((const char*)&g_data_5764);
+    if (module) {
+        FARPROC proc = GetProcAddress(module, (const char*)&g_data_5758);
+        if (proc)
+            ((void(__stdcall*)(uint32_t))proc)(0);
+    }
+}
+#endif

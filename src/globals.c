@@ -424,3 +424,30 @@ uint32_t g_data_bb670;
 
 // GLOBAL: HOVER 0x004c4ca8
 uint32_t g_data_4ca8;
+
+// GLOBAL: HOVER 0x004c4880
+uint8_t g_data_4880[1];
+
+// GLOBAL: HOVER 0x004bd5e8
+uint8_t g_data_d5e8[1];
+
+// GLOBAL: HOVER 0x004bdbb8
+uint8_t g_data_dbb8[1];
+
+// GLOBAL: HOVER 0x004bdfe0
+uint8_t g_data_dfe0[1];
+
+// GLOBAL: HOVER 0x004becd0
+uint8_t g_data_ecd0[1];
+
+// GLOBAL: HOVER 0x004bf1e0
+uint8_t g_data_f1e0[1];
+
+// GLOBAL: HOVER 0x004bf8b8
+uint8_t g_data_f8b8[1];
+
+// GLOBAL: HOVER 0x004c5764
+uint8_t g_data_5764[1];
+
+// GLOBAL: HOVER 0x004c5758
+uint8_t g_data_5758[1];
