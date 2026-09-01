@@ -1225,13 +1225,13 @@ s32 __fastcall Imm14A62(void* self, void* unused, s32 a)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x004177C3
-void* __stdcall Imm177C3(void* self)
+void* __fastcall Imm177C3(void* self)
 {
     extern uint8_t g_data_77c9[1];
     return g_data_77c9;
 }
 // FUNCTION: HOVER 0x004179F1
-void* __stdcall Imm179F1(void* self)
+void* __fastcall Imm179F1(void* self)
 {
     extern uint8_t g_data_79f7[1];
     return g_data_79f7;
@@ -1242,19 +1242,19 @@ s32 __fastcall Imm1B860(void* self)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x0041D3D1
-void* __stdcall Imm1D3D1(void* self)
+void* __fastcall Imm1D3D1(void* self)
 {
     extern uint8_t g_data_d3d7[1];
     return g_data_d3d7;
 }
 // FUNCTION: HOVER 0x0041F0AA
-void* __stdcall Imm1F0AA(void* self)
+void* __fastcall Imm1F0AA(void* self)
 {
     extern uint8_t g_data_f0b0[1];
     return g_data_f0b0;
 }
 // FUNCTION: HOVER 0x0041F315
-void* __stdcall Imm1F315(void* self)
+void* __fastcall Imm1F315(void* self)
 {
     extern uint8_t g_data_f31b[1];
     return g_data_f31b;
@@ -1270,7 +1270,7 @@ s32 __fastcall Imm2AD28(void* self, void* unused, s32 a, s32 b)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x0042CB60
-void* __stdcall Imm2CB60(void* self)
+void* __fastcall Imm2CB60(void* self)
 {
     extern uint8_t g_data_5608[1];
     return g_data_5608;
@@ -1286,7 +1286,7 @@ s32 __fastcall Imm2E527(void* self, void* unused, s32 a, s32 b)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x0042E9F0
-void* __stdcall Imm2E9F0(void* self)
+void* __fastcall Imm2E9F0(void* self)
 {
     extern uint8_t g_data_df78[1];
     return g_data_df78;
@@ -1337,25 +1337,25 @@ s32 __fastcall Imm3E2C9(void* self)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x0043E601
-void* __stdcall Imm3E601(void* self)
+void* __fastcall Imm3E601(void* self)
 {
     extern uint8_t g_data_e607[1];
     return g_data_e607;
 }
 // FUNCTION: HOVER 0x0043E61C
-void* __stdcall Imm3E61C(void* self)
+void* __fastcall Imm3E61C(void* self)
 {
     extern uint8_t g_data_e622[1];
     return g_data_e622;
 }
 // FUNCTION: HOVER 0x0043FB2C
-void* __stdcall Imm3FB2C(void* self)
+void* __fastcall Imm3FB2C(void* self)
 {
     extern uint8_t g_data_fb32[1];
     return g_data_fb32;
 }
 // FUNCTION: HOVER 0x0043FB47
-void* __stdcall Imm3FB47(void* self)
+void* __fastcall Imm3FB47(void* self)
 {
     extern uint8_t g_data_fb4d[1];
     return g_data_fb4d;
@@ -1395,13 +1395,8 @@ s32 __fastcall Imm45A5A(void* self)
 {
     return (s32)0x1;
 }
-// FUNCTION: HOVER 0x004475EA
-s32 __fastcall Imm475EA(void* self)
-{
-    return (s32)0xffffffff;
-}
 // FUNCTION: HOVER 0x0044A60E
-void* __stdcall Imm4A60E(void* self)
+void* __fastcall Imm4A60E(void* self)
 {
     extern uint8_t g_data_a614[1];
     return g_data_a614;
@@ -1412,13 +1407,13 @@ s32 __fastcall Imm4B721(void* self)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x0044C333
-void* __stdcall Imm4C333(void* self)
+void* __fastcall Imm4C333(void* self)
 {
     extern uint8_t g_data_c339[1];
     return g_data_c339;
 }
 // FUNCTION: HOVER 0x0044C708
-void* __stdcall Imm4C708(void* self)
+void* __fastcall Imm4C708(void* self)
 {
     extern uint8_t g_data_c70e[1];
     return g_data_c70e;
@@ -1429,13 +1424,13 @@ s32 __fastcall Imm4CA8C(void* self, void* unused, s32 a)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x0044E150
-void* __stdcall Imm4E150(void* self)
+void* __fastcall Imm4E150(void* self)
 {
     extern uint8_t g_data_e172[1];
     return g_data_e172;
 }
 // FUNCTION: HOVER 0x0044E16C
-void* __stdcall Imm4E16C(void* self)
+void* __fastcall Imm4E16C(void* self)
 {
     extern uint8_t g_data_e172[1];
     return g_data_e172;
@@ -1446,7 +1441,7 @@ s32 __fastcall Imm4E597(void* self)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x0044E7AC
-void* __stdcall Imm4E7AC(void* self)
+void* __fastcall Imm4E7AC(void* self)
 {
     extern uint8_t g_data_e7b2[1];
     return g_data_e7b2;
@@ -1457,43 +1452,43 @@ s32 __fastcall Imm4EC87(void* self, void* unused, s32 a)
     return (s32)0x5;
 }
 // FUNCTION: HOVER 0x00451B78
-void* __stdcall Imm51B78(void* self)
+void* __fastcall Imm51B78(void* self)
 {
     extern uint8_t g_data_1b7e[1];
     return g_data_1b7e;
 }
 // FUNCTION: HOVER 0x00452166
-void* __stdcall Imm52166(void* self)
+void* __fastcall Imm52166(void* self)
 {
     extern uint8_t g_data_216c[1];
     return g_data_216c;
 }
 // FUNCTION: HOVER 0x00452182
-void* __stdcall Imm52182(void* self)
+void* __fastcall Imm52182(void* self)
 {
     extern uint8_t g_data_2188[1];
     return g_data_2188;
 }
 // FUNCTION: HOVER 0x004521A5
-void* __stdcall Imm521A5(void* self)
+void* __fastcall Imm521A5(void* self)
 {
     extern uint8_t g_data_21ab[1];
     return g_data_21ab;
 }
 // FUNCTION: HOVER 0x004523F5
-void* __stdcall Imm523F5(void* self)
+void* __fastcall Imm523F5(void* self)
 {
     extern uint8_t g_data_23fb[1];
     return g_data_23fb;
 }
 // FUNCTION: HOVER 0x00452411
-void* __stdcall Imm52411(void* self)
+void* __fastcall Imm52411(void* self)
 {
     extern uint8_t g_data_2417[1];
     return g_data_2417;
 }
 // FUNCTION: HOVER 0x00452434
-void* __stdcall Imm52434(void* self)
+void* __fastcall Imm52434(void* self)
 {
     extern uint8_t g_data_243a[1];
     return g_data_243a;
@@ -1524,7 +1519,7 @@ s32 __fastcall Imm55DCB(void* self, void* unused, s32 a, s32 b)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x00457B04
-void* __stdcall Imm57B04(void* self)
+void* __fastcall Imm57B04(void* self)
 {
     extern uint8_t g_data_3118[1];
     return g_data_3118;
@@ -1540,13 +1535,13 @@ s32 __fastcall Imm59323(void* self, void* unused, s32 a)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x0045C7AF
-void* __stdcall Imm5C7AF(void* self)
+void* __fastcall Imm5C7AF(void* self)
 {
     extern uint8_t g_data_c7b5[1];
     return g_data_c7b5;
 }
 // FUNCTION: HOVER 0x0045C7BD
-void* __stdcall Imm5C7BD(void* self)
+void* __fastcall Imm5C7BD(void* self)
 {
     extern uint8_t g_data_c7c3[1];
     return g_data_c7c3;
@@ -1562,13 +1557,13 @@ s32 __fastcall Imm5CA4A(void* self)
     return (s32)0x1;
 }
 // FUNCTION: HOVER 0x0045D4E2
-void* __stdcall Imm5D4E2(void* self)
+void* __fastcall Imm5D4E2(void* self)
 {
     extern uint8_t g_data_6a58[1];
     return g_data_6a58;
 }
 // FUNCTION: HOVER 0x0045DA37
-void* __stdcall Imm5DA37(void* self)
+void* __fastcall Imm5DA37(void* self)
 {
     extern uint8_t g_data_6e10[1];
     return g_data_6e10;
