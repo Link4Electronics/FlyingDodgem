@@ -1,14 +1,10 @@
 #include "flyingdodgem_types.h"
+#include "resources.h"
 
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-#include "gdi32_compat.h"
-#else
-/* Reccmp matching build. Keep the resource-API types and the KERNEL32 import
- * declaration local so the wrapper below resolves to __imp__FindResourceA@12
- * (HOVER.EXE IAT slot 0x4ca854) exactly like the retail binary. */
-typedef void *HINSTANCE;
-typedef void *HRSRC;
-
+#if !defined(FLYINGDODGEM_GDI_COMPAT)
+/* Reccmp matching build. Declare the KERNEL32 import locally so the wrapper
+ * below resolves to __imp__FindResourceA@12 (HOVER.EXE IAT slot 0x4ca854)
+ * exactly like the retail binary. */
 #if defined(_MSC_VER)
 #pragma comment(lib, "kernel32.lib")
 #endif

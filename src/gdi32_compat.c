@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 /* ---------------------------------------------------------------------------
  * GDI32 -> SDL3 translation layer.
@@ -627,16 +628,19 @@ HBRUSH __cdecl CreateSolidBrush(u32 color)
  * (resources 0x81..0x86) that HOVER.EXE loads at runtime with
  * LoadLibraryA/LoadResource/LockResource, then copies into a DIB section and
  * renders through GDI. This layer provides the same resource API surface, so
- * the reconstructed dashboard can load the same DIB files and drive the same
- * CreateDIBSection/BitBlt pipeline.
- *
- * The original resource blobs are laid out on disk next to the binary as
- * raw .dib files (BITMAPINFOHEADER + palette + row-major pixels).
+ * the reconstructed dashboard loads the *real* DASHRES.DLL, parses its PE
+ * resource directory, and drives the same FindResourceA/CreateDIBSection/
+ * BitBlt pipeline. As a fallback it can also serve a directory of the same
+ * bitmaps split into dash_XX.dib files (BITMAPINFOHEADER + palette + pixels).
  * ------------------------------------------------------------------------- */
 
 /* Number of DIB resources in the DASHRES set (ids 0x81..0x86). */
 #define DASHRES_FIRST_ID 0x81
 #define DASHRES_COUNT 6
+
+#define PE_MAX_SECTIONS 16
+#define PE_MAX_RESOURCES 4096
+#define IMAGE_DIRECTORY_ENTRY_RESOURCE 2
 
 static void resource_free(GdiResource *r)
 {
@@ -659,31 +663,325 @@ static void module_free(GdiModule *m)
     SDL_free(m);
 }
 
-HINSTANCE __cdecl LoadLibraryA(const char *path)
+typedef struct PeSection
 {
-    if (path == NULL)
-        return NULL;
+    u32 va;
+    u32 vsz;
+    u32 raw_off;
+    u32 raw_sz;
+} PeSection;
 
-    /* Read the whole module file as one buffer, then carve resources from it.
-     * A DASHRES-style asset is a byte stream of concatenated .dib blobs; we
-     * can't rely on a container format (the retail DLL uses the PE resource
-     * directory), so here each .dib is its own file named dash_XX.dib. */
-    char dir[520];
-    char fname[520];
+typedef struct PeMap
+{
+    const u8 *base;
+    u32 size;
+    u32 nsect;
+    u32 first_va; /* VA of the first (lowest) section: anything below is
+                     mapped at file offset == RVA (DOS/PE headers) */
+    PeSection sect[PE_MAX_SECTIONS];
+} PeMap;
+
+static u16 pe_rd_u16(const u8 *p)
+{
+    u16 v;
+    SDL_memcpy(&v, p, 2);
+    return v;
+}
+
+static u32 pe_rd_u32(const u8 *p)
+{
+    u32 v;
+    SDL_memcpy(&v, p, 4);
+    return v;
+}
+
+/* Map a PE relative virtual address to a validated pointer into the flat
+ * on-disk image (sections are mapped by their raw data). */
+static const u8 *pe_ptr(const PeMap *pm, u32 rva, u32 len)
+{
+    u32 i;
+
+    /* DOS/PE headers are mapped at file offset == RVA (below the first
+     * section). Everything else must be translated through the raw data of
+     * the section that contains the RVA; the resource directory lives in
+     * .rsrc whose file offset differs from its virtual address. */
+    if (rva < pm->first_va && (u64)rva + len <= (u64)pm->size)
+        return pm->base + (u64)rva;
+    for (i = 0; i < pm->nsect; i++)
+    {
+        const PeSection *s = &pm->sect[i];
+        if ((u64)rva >= s->va && (u64)rva + len <= (u64)s->va + s->vsz)
+        {
+            u64 off = (u64)s->raw_off + ((u64)rva - s->va);
+            if (off + len <= pm->size)
+                return pm->base + off;
+            return NULL;
+        }
+    }
+    return NULL;
+}
+
+/* Copy a UTF-16 resource-name string into an ASCII buffer (resources here are
+ * plain ANSI ids; named entries are best-effort ported to bytes). */
+static void pe_name_string(const PeMap *pm, u32 base_rva, u32 off, char *out,
+                           u32 outsz)
+{
+    const u8 *p = pe_ptr(pm, base_rva + (off & 0x7fffffffu), 2);
+    u16 len;
+    u32 i;
+
+    if (p == NULL)
+    {
+        out[0] = '\0';
+        return;
+    }
+    len = pe_rd_u16(p);
+    for (i = 0; i < outsz - 1 && i < len; i++)
+    {
+        const u8 *c = pe_ptr(pm, base_rva + (off & 0x7fffffffu) + 2 + i * 2, 2);
+        if (c == NULL)
+            break;
+        out[i] = (char)(pe_rd_u16(c) & 0x7f);
+    }
+    out[i] = '\0';
+}
+
+static void pe_add_resource(GdiModule *m, u32 id, const char *name,
+                            const char *type, const u8 *data, u32 size)
+{
+    GdiResource *r;
+    GdiResource *nr;
+
+    nr = (GdiResource *)SDL_realloc(m->resources,
+                                    (m->resource_count + 1) *
+                                        sizeof(GdiResource));
+    if (nr == NULL)
+        return;
+    m->resources = nr;
+    r = &m->resources[m->resource_count];
+    SDL_memset(r, 0, sizeof(*r));
+    r->magic = RESOURCE_MAGIC;
+    r->id = id;
+    if (name != NULL)
+        r->name = SDL_strdup(name);
+    if (type != NULL)
+        r->type = SDL_strdup(type);
+    r->size = size;
+    r->data = (u8 *)SDL_malloc(size == 0 ? 1 : size);
+    if (r->data == NULL)
+    {
+        resource_free(r);
+        return;
+    }
+    SDL_memcpy(r->data, data, size);
+    m->resource_count++;
+}
+
+/* Walk the PE resource directory (type/name/language/data) and collect every
+ * embedded resource blob into the module. Offsets below the root are relative
+ * to base_rva (the resource directory's RVA); data-entry RVAs are absolute. */
+static void pe_walk(const PeMap *pm, GdiModule *m, u32 base_rva, u32 dir_rva,
+                    u32 depth, u32 type_id, char *type_label, u32 name_id,
+                    char *name_label)
+{
+    const u8 *dir;
+    u16 named;
+    u16 idc;
+    u16 n;
+    u16 k;
+
+    if (depth >= 3)
+    {
+        /* Leaf: dir_rva is the address of a data entry (rva/size/codepage). */
+        const u8 *de = pe_ptr(pm, dir_rva, 16);
+        u32 rva;
+        u32 sz;
+        const u8 *data;
+        if (de == NULL)
+            return;
+        rva = pe_rd_u32(de);
+        sz = pe_rd_u32(de + 4);
+        if (sz == 0)
+            return;
+        data = pe_ptr(pm, rva, sz);
+        if (data == NULL)
+            return;
+        pe_add_resource(m, name_id, name_label, type_label, data, sz);
+        return;
+    }
+
+    dir = pe_ptr(pm, dir_rva, 16);
+    if (dir == NULL)
+        return;
+    if (m->resource_count >= PE_MAX_RESOURCES)
+        return;
+    named = pe_rd_u16(dir + 12);
+    idc = pe_rd_u16(dir + 14);
+    n = (u16)(named + idc);
+    if (n > 1024)
+        return;
+    for (k = 0; k < n; k++)
+    {
+        const u8 *e = pe_ptr(pm, dir_rva + 16 + (u32)k * 8, 8);
+        u32 nm;
+        u32 o;
+        u32 sub;
+        bool is_dir;
+
+        if (e == NULL)
+            continue;
+        nm = pe_rd_u32(e);
+        o = pe_rd_u32(e + 4);
+        is_dir = (o & 0x80000000u) != 0;
+        sub = o & 0x7fffffffu;
+
+        if (depth == 0)
+        {
+            char tlabel[64];
+            if (nm & 0x80000000u)
+            {
+                pe_name_string(pm, base_rva, nm, tlabel, sizeof(tlabel));
+                pe_walk(pm, m, base_rva, base_rva + sub, 1, 0, tlabel, 0,
+                        NULL);
+            }
+            else
+            {
+                if (nm == 2)
+                    SDL_strlcpy(tlabel, "BITMAP", sizeof(tlabel));
+                else
+                    (void)SDL_snprintf(tlabel, sizeof(tlabel), "RT_%u", nm);
+                pe_walk(pm, m, base_rva, base_rva + sub, 1, nm, tlabel, 0,
+                        NULL);
+            }
+        }
+        else if (depth == 1)
+        {
+            if (nm & 0x80000000u)
+            {
+                char nlabel[64];
+                pe_name_string(pm, base_rva, nm, nlabel, sizeof(nlabel));
+                pe_walk(pm, m, base_rva, base_rva + sub, 2, type_id,
+                        type_label, 0, nlabel);
+            }
+            else
+            {
+                pe_walk(pm, m, base_rva, base_rva + sub, 2, type_id,
+                        type_label, nm, NULL);
+            }
+        }
+        else if (depth == 2)
+        {
+            /* Language level: the entry points at either a nested directory
+             * (another resource level) or, as in DASHRES, directly at a data
+             * entry (16-byte rva/size record). */
+            pe_walk(pm, m, base_rva, base_rva + sub, 3, type_id, type_label,
+                    name_id, name_label);
+        }
+    }
+}
+
+/* Parse a loaded PE image's resource directory into a new GdiModule. Resource
+ * payloads are copied out, so the caller may free the image buffer. */
+static bool pe_build_module(const u8 *base, u32 size, GdiModule **out)
+{
     GdiModule *m = NULL;
+    PeMap pm;
+    u32 e_lfanew;
+    u32 nsect;
+    u32 opt_off;
+    u16 optmagic;
+    u32 dd_off;
+    u32 rsrc_rva;
+    u16 ndd;
+    u32 i;
+
+    *out = NULL;
+    SDL_memset(&pm, 0, sizeof(pm));
+    pm.base = base;
+    pm.size = size;
+
+    if (size < 0x40 || pe_rd_u16(base + 0) != 0x5a4du) /* "MZ" */
+        return false;
+    e_lfanew = pe_rd_u32(base + 0x3c);
+    if (e_lfanew == 0 || (u64)e_lfanew + 24 > size)
+        return false;
+    if (pe_rd_u32(base + e_lfanew) != 0x00004550u) /* "PE\0\0" */
+        return false;
+
+    nsect = pe_rd_u16(base + e_lfanew + 6);
+    if (nsect == 0 || nsect > PE_MAX_SECTIONS)
+        return false;
+    opt_off = e_lfanew + 24;
+    if ((u64)opt_off + 110 > size)
+        return false;
+    optmagic = pe_rd_u16(base + opt_off);
+    if (optmagic != 0x10bu && optmagic != 0x20bu)
+        return false;
+
+    ndd = pe_rd_u16(base + opt_off + (optmagic == 0x10b ? 92 : 108));
+    if (ndd <= IMAGE_DIRECTORY_ENTRY_RESOURCE)
+        return false;
+
+    dd_off = opt_off + (optmagic == 0x10b ? 96 : 112) +
+             IMAGE_DIRECTORY_ENTRY_RESOURCE * 8;
+    rsrc_rva = pe_rd_u32(base + dd_off);
+
+    {
+        u32 sect_off = opt_off + (optmagic == 0x10b ? 224 : 240);
+        for (i = 0; i < nsect; i++)
+        {
+            const u8 *sh = base + sect_off + i * 40;
+            PeSection *s;
+            if ((u64)sect_off + (u64)i * 40 + 40 > size)
+                return false;
+            s = &pm.sect[pm.nsect];
+            s->va = pe_rd_u32(sh + 12);
+            s->vsz = pe_rd_u32(sh + 8);
+            s->raw_off = pe_rd_u32(sh + 20);
+            s->raw_sz = pe_rd_u32(sh + 16);
+            if (pm.nsect == 0)
+                pm.first_va = s->va;
+            pm.nsect++;
+        }
+    }
+
+    m = (GdiModule *)SDL_calloc(1, sizeof(GdiModule));
+    if (m == NULL)
+        return false;
+
+    pe_walk(&pm, m, rsrc_rva, rsrc_rva, 0, 0, NULL, 0, NULL);
+
+    if (m->resource_count == 0)
+    {
+        module_free(m);
+        return false;
+    }
+    m->magic = MODULE_MAGIC;
+    *out = m;
+    return true;
+}
+
+static bool path_is_regular(const char *path)
+{
+    struct stat st;
+    return stat(path, &st) == 0 && S_ISREG(st.st_mode);
+}
+
+/* Load a set of raw dash_XX.dib files from a directory. */
+static HINSTANCE load_dib_directory(const char *path)
+{
+    GdiModule *m = NULL;
+    char fname[520];
     u32 n = 0;
     u32 id;
 
-    (void)SDL_strlcpy(dir, path, sizeof(dir));
-
-    /* Open <path>/dash_81.dib .. <path>/dash_86.dib. */
     for (id = DASHRES_FIRST_ID; id < DASHRES_FIRST_ID + DASHRES_COUNT; id++)
     {
         FILE *f;
         long sz;
         u8 *buf;
 
-        (void)SDL_snprintf(fname, sizeof(fname), "%s/dash_%02x.dib", dir, id);
+        (void)SDL_snprintf(fname, sizeof(fname), "%s/dash_%02x.dib", path, id);
         f = fopen(fname, "rb");
         if (f == NULL)
             continue;
@@ -742,6 +1040,65 @@ HINSTANCE __cdecl LoadLibraryA(const char *path)
     m->magic = MODULE_MAGIC;
     m->resource_count = n;
     return m;
+}
+
+/* Load a Win32 module by path, like the retail HOVER.EXE's LoadLibraryA. The
+ * compat loader accepts:
+ *   - a real PE DLL (DASHRES.DLL) whose resource directory is parsed in place,
+ *   - a directory containing DASHRES.DLL,
+ *   - a directory of raw dash_XX.dib files (legacy layout). */
+HINSTANCE __cdecl LoadLibraryA(const char *path)
+{
+    GdiModule *m = NULL;
+    FILE *f = NULL;
+    long size = 0;
+    u8 *buf = NULL;
+
+    if (path == NULL)
+        return NULL;
+
+    if (path_is_regular(path))
+    {
+        f = fopen(path, "rb");
+        if (f == NULL)
+            return NULL;
+        if (fseek(f, 0, SEEK_END) != 0 || (size = ftell(f)) < 0 ||
+            fseek(f, 0, SEEK_SET) != 0 || size < 0x40)
+        {
+            fclose(f);
+            return NULL;
+        }
+        buf = (u8 *)SDL_malloc((size_t)size);
+        if (buf == NULL)
+        {
+            fclose(f);
+            return NULL;
+        }
+        if (fread(buf, 1, (size_t)size, f) != (size_t)size)
+        {
+            SDL_free(buf);
+            fclose(f);
+            return NULL;
+        }
+        fclose(f);
+
+        if (!pe_build_module(buf, (u32)size, &m))
+        {
+            SDL_free(buf);
+            return NULL;
+        }
+        SDL_free(buf);
+        return m;
+    }
+
+    /* Directory: a real DASHRES.DLL wins over the legacy split .dib set. */
+    {
+        char dllpath[520];
+        (void)SDL_snprintf(dllpath, sizeof(dllpath), "%s/DASHRES.DLL", path);
+        if (path_is_regular(dllpath))
+            return LoadLibraryA(dllpath);
+        return load_dib_directory(path);
+    }
 }
 
 void __cdecl FreeLibrary(HINSTANCE hmodule)
@@ -814,6 +1171,38 @@ const void * __cdecl LockResource(HGLOBAL hres)
     return r->data;
 }
 
+u32 __cdecl GdiCompat_SetDibPalette(const void *dib)
+{
+    const u8 *src = (const u8 *)dib;
+    BITMAPINFOHEADER hdr;
+    SDL_Palette *pal;
+    SDL_Color colors[256];
+    u32 i;
+
+    if (src == NULL)
+        return 0;
+    SDL_memcpy(&hdr, src, sizeof(BITMAPINFOHEADER));
+    if (hdr.biSize < sizeof(BITMAPINFOHEADER) || hdr.biBitCount != 8 ||
+        hdr.biPlanes != 1)
+        return 0;
+
+    pal = shared_palette();
+    if (pal == NULL)
+        return 0;
+
+    /* Copy the DIB's own colour table into the shared palette store. */
+    memcpy(g_paletteStore, src + hdr.biSize, 256 * sizeof(RGBQUAD));
+    for (i = 0; i < 256; i++)
+    {
+        colors[i].r = g_paletteStore[i].red;
+        colors[i].g = g_paletteStore[i].green;
+        colors[i].b = g_paletteStore[i].blue;
+        colors[i].a = 255;
+    }
+    SDL_SetPaletteColors(pal, colors, 0, 256);
+    return 1;
+}
+
 HDC __cdecl GdiCompat_CreateDibSurface(const void *dib)
 {
     const u8 *src = (const u8 *)dib;
@@ -823,8 +1212,6 @@ HDC __cdecl GdiCompat_CreateDibSurface(const void *dib)
     SDL_Surface *sdl;
     GdiSurface *s;
     SDL_Palette *pal;
-    SDL_Color colors[256];
-    u32 i;
 
     if (src == NULL)
         return NULL;
@@ -845,6 +1232,9 @@ HDC __cdecl GdiCompat_CreateDibSurface(const void *dib)
     pix_off = pal_off + 256 * 4;
     row_stride = (u32)(((w * 8 + 31) / 32) * 4);   /* DWORD-align rows (8bpp) */
 
+    if (GdiCompat_SetDibPalette(src) == 0)
+        return NULL;
+
     pal = shared_palette();
     if (pal == NULL)
         return NULL;
@@ -854,17 +1244,6 @@ HDC __cdecl GdiCompat_CreateDibSurface(const void *dib)
         return NULL;
     SDL_SetSurfacePalette(sdl, pal);
     SDL_SetSurfaceColorspace(sdl, SDL_COLORSPACE_SRGB);
-
-    /* Copy the DIB's own colour table into the shared palette store. */
-    memcpy(g_paletteStore, src + pal_off, 256 * sizeof(RGBQUAD));
-    for (i = 0; i < 256; i++)
-    {
-        colors[i].r = g_paletteStore[i].red;
-        colors[i].g = g_paletteStore[i].green;
-        colors[i].b = g_paletteStore[i].blue;
-        colors[i].a = 255;
-    }
-    SDL_SetPaletteColors(pal, colors, 0, 256);
 
     {
         const u8 *pixels = src + pix_off;

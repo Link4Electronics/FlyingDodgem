@@ -128,6 +128,13 @@ const void * __cdecl LockResource(HGLOBAL hres);
  * selecting its colour table. Returns the new HDC (caller owns it). */
 HDC __cdecl GdiCompat_CreateDibSurface(const void *dib);
 
+/* Apply a raw DIB's 256-entry colour table to the shared palette store (the
+ * analogue of selecting the resource's palette into the screen DC, as the
+ * original does before drawing a loaded dashboard surface). The DASH mip
+ * variants carry different, quantized palettes, so the displayed surface's own
+ * palette must be applied before presenting it. */
+u32 __cdecl GdiCompat_SetDibPalette(const void *dib);
+
 /* DIB creation flag. */
 #define DIB_RGB_COLORS 0
 
