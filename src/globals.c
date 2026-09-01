@@ -14,6 +14,36 @@ uint32_t __cdecl GetTable_1010(void)
     return (uint32_t)(uintptr_t)g_data_b0c0;
 }
 
+// GLOBAL: HOVER 0x0046058c
+void* g_46058c;
+
+// GLOBAL: HOVER 0x004c52d8
+uint32_t g_4c52d8;
+
+// GLOBAL: HOVER 0x004c79b0
+void* g_4c79b0;
+
+// GLOBAL: HOVER 0x004b6ff0
+void* g_4b6ff0;
+
+// GLOBAL: HOVER 0x004c5330
+void* g_4c5330;
+
+// GLOBAL: HOVER 0x004c53e0
+void* g_4c53e0;
+
+// GLOBAL: HOVER 0x004c54d0
+void* g_4c54d0;
+
+// GLOBAL: HOVER 0x004a48c8
+void* g_4a48c8;
+
+// GLOBAL: HOVER 0x004c844c
+uint32_t g_4c844c;
+
+// GLOBAL: HOVER 0x004c8450
+uint32_t g_4c8450;
+
 // GLOBAL: HOVER 0x004ba8d0
 uint8_t g_data_a8d0[1];
 
@@ -451,3 +481,205 @@ uint8_t g_data_5764[1];
 
 // GLOBAL: HOVER 0x004c5758
 uint8_t g_data_5758[1];
+// GLOBAL: HOVER 0x004C5790
+uint8_t g_data_5790[1];
+
+// GLOBAL: HOVER 0x004C51E0
+uint8_t g_data_51e0[1];
+
+// GLOBAL: HOVER 0x004C52C0
+uint8_t g_data_52c0[1];
+
+// GLOBAL: HOVER 0x004C5318
+uint8_t g_data_5318[1];
+
+// GLOBAL: HOVER 0x004BFEE0
+uint8_t g_data_fee0[1];
+
+// GLOBAL: HOVER 0x004C0320
+uint8_t g_data_0320[1];
+
+// GLOBAL: HOVER 0x004C05E0
+uint8_t g_data_05e0[1];
+
+// GLOBAL: HOVER 0x004C0600
+uint8_t g_data_0600[1];
+
+// GLOBAL: HOVER 0x004C0630
+uint8_t g_data_0630[1];
+
+// GLOBAL: HOVER 0x004C08B8
+uint8_t g_data_08b8[1];
+
+// GLOBAL: HOVER 0x004C6A20
+uint8_t g_data_6a20[1];
+
+// GLOBAL: HOVER 0x004C1D60
+uint8_t g_data_1d60[1];
+
+// GLOBAL: HOVER 0x004C2380
+uint8_t g_data_2380[1];
+
+// GLOBAL: HOVER 0x004C00C0
+uint8_t g_data_00c0[1];
+
+// GLOBAL: HOVER 0x004C1B00
+uint8_t g_data_1b00[1];
+
+// GLOBAL: HOVER 0x004C2C48
+uint8_t g_data_2c48[1];
+
+// GLOBAL: HOVER 0x004C2CB0
+uint8_t g_data_2cb0[1];
+
+// GLOBAL: HOVER 0x004C31B0
+uint8_t g_data_31b0[1];
+
+// GLOBAL: HOVER 0x004C15A8
+uint8_t g_data_15a8[1];
+
+// GLOBAL: HOVER 0x004C34D0
+uint8_t g_data_34d0[1];
+
+// GLOBAL: HOVER 0x004C68B8
+uint8_t g_data_68b8[1];
+
+// GLOBAL: HOVER 0x004179d8
+uint8_t g_data_79d8[1];
+// GLOBAL: HOVER 0x004C68E0
+uint8_t g_data_68e0[1];
+
+// GLOBAL: HOVER 0x004C6908
+uint8_t g_data_6908[1];
+
+// GLOBAL: HOVER 0x004C6938
+uint8_t g_data_6938[1];
+
+// GLOBAL: HOVER 0x004C6960
+uint8_t g_data_6960[1];
+
+// GLOBAL: HOVER 0x004C6998
+uint8_t g_data_6998[1];
+
+// GLOBAL: HOVER 0x004C6A00
+uint8_t g_data_6a00[1];
+
+// GLOBAL: HOVER 0x004C6A40
+uint8_t g_data_6a40[1];
+
+// GLOBAL: HOVER 0x004C6A70
+uint8_t g_data_6a70[1];
+
+// GLOBAL: HOVER 0x004C6A88
+uint8_t g_data_6a88[1];
+
+// GLOBAL: HOVER 0x004C6AA0
+uint8_t g_data_6aa0[1];
+
+// GLOBAL: HOVER 0x004C6AB8
+uint8_t g_data_6ab8[1];
+
+// GLOBAL: HOVER 0x004C6AD0
+uint8_t g_data_6ad0[1];
+
+// GLOBAL: HOVER 0x004C6AE8
+uint8_t g_data_6ae8[1];
+
+// GLOBAL: HOVER 0x004C6B00
+uint8_t g_data_6b00[1];
+
+// GLOBAL: HOVER 0x004C6B18
+uint8_t g_data_6b18[1];
+
+// GLOBAL: HOVER 0x004C6B30
+uint8_t g_data_6b30[1];
+
+// GLOBAL: HOVER 0x004C6B48
+uint8_t g_data_6b48[1];
+
+// GLOBAL: HOVER 0x004C6B60
+uint8_t g_data_6b60[1];
+
+// GLOBAL: HOVER 0x004C6D48
+uint8_t g_data_6d48[1];
+
+// GLOBAL: HOVER 0x004C6DE0
+uint8_t g_data_6de0[1];
+
+// GLOBAL: HOVER 0x004C6DF8
+uint8_t g_data_6df8[1];
+
+// GLOBAL: HOVER 0x004C6F38
+uint8_t g_data_6f38[1];
+
+// GLOBAL: HOVER 0x004C6FC8
+uint8_t g_data_6fc8[1];
+
+// GLOBAL: HOVER 0x004C6FE0
+uint8_t g_data_6fe0[1];
+
+// GLOBAL: HOVER 0x004C7010
+uint8_t g_data_7010[1];
+
+// GLOBAL: HOVER 0x004C7028
+uint8_t g_data_7028[1];
+
+// GLOBAL: HOVER 0x004C7098
+uint8_t g_data_7098[1];
+
+// GLOBAL: HOVER 0x004C70B0
+uint8_t g_data_70b0[1];
+
+// GLOBAL: HOVER 0x004C70C8
+uint8_t g_data_70c8[1];
+
+// GLOBAL: HOVER 0x004C7118
+uint8_t g_data_7118[1];
+
+// GLOBAL: HOVER 0x004C7150
+uint8_t g_data_7150[1];
+
+// GLOBAL: HOVER 0x004C7180
+uint8_t g_data_7180[1];
+
+// GLOBAL: HOVER 0x004C71A0
+uint8_t g_data_71a0[1];
+
+// GLOBAL: HOVER 0x004C71C8
+uint8_t g_data_71c8[1];
+
+// GLOBAL: HOVER 0x004C71E8
+uint8_t g_data_71e8[1];
+
+// GLOBAL: HOVER 0x004C7238
+uint8_t g_data_7238[1];
+
+// GLOBAL: HOVER 0x004C7268
+uint8_t g_data_7268[1];
+
+// GLOBAL: HOVER 0x004C7298
+uint8_t g_data_7298[1];
+
+// GLOBAL: HOVER 0x004C72F0
+uint8_t g_data_72f0[1];
+
+// GLOBAL: HOVER 0x004C7330
+uint8_t g_data_7330[1];
+
+// GLOBAL: HOVER 0x004C73F8
+uint8_t g_data_73f8[1];
+
+// GLOBAL: HOVER 0x004C7410
+uint8_t g_data_7410[1];
+
+// GLOBAL: HOVER 0x004C7448
+uint8_t g_data_7448[1];
+
+// GLOBAL: HOVER 0x004C97D8
+uint8_t g_data_97d8[1];
+
+// GLOBAL: HOVER 0x004C97F0
+uint8_t g_data_97f0[1];
+
+// GLOBAL: HOVER 0x004C98F8
+uint8_t g_data_98f8[1];

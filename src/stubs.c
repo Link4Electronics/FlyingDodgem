@@ -188,6 +188,112 @@ void* __fastcall ClearSub40bc70(void* self)
     return s;
 }
 
+/* __thiscall leaf methods whose only stack argument follows the implicit
+ * "this" (ECX). The extra void* second fastcall argument occupies EDX and goes
+ * unused, so the real stack argument lands at [esp+4] exactly like retail. */
+
+typedef struct { uint32_t x, y; } PtPair;
+
+typedef struct { uint8_t pad[0x44]; PtPair p; } Self38a0;
+
+// FUNCTION: HOVER 0x00459d94
+void* __fastcall GetField459d94(void* self)
+{
+    return *(void**)((uint8_t*)self + 0x94);
+}
+
+// FUNCTION: HOVER 0x00401140
+extern void* g_46058c;
+void* __cdecl GetSub401140(void)
+{
+    void* obj;
+    if (g_46058c == NULL)
+        return NULL;
+    obj = g_46058c;
+    return GetField459d94(obj);
+}
+
+// FUNCTION: HOVER 0x004038a0
+void __fastcall GetPair38a0(Self38a0* self, void* unused, PtPair* out)
+{
+    *out = self->p;
+}
+
+// FUNCTION: HOVER 0x00408530
+extern uint32_t g_4c52d8;
+void __fastcall Register8530(void* self)
+{
+    if (*(uint32_t*)((uint8_t*)self + 0x68) == 0)
+    {
+        *(uint32_t*)((uint8_t*)self + 0x68) = 1;
+        *(uint32_t*)((uint8_t*)self + 0x70) = g_4c52d8;
+        g_4c52d8 = (uint32_t)(uintptr_t)self;
+    }
+}
+
+// FUNCTION: HOVER 0x00413ed0
+void __fastcall Set13ed0(void* self, void* unused, void* arg)
+{
+    uint8_t* s;
+    uint32_t tail;
+    if (arg != NULL)
+        *(void**)((uint8_t*)self + 0x84) = arg;
+    s = *(uint8_t**)((uint8_t*)self + 0x84);
+    tail = *(uint32_t*)(s + 8);
+    *(uint32_t*)((uint8_t*)self + 0x1d0) = *(uint32_t*)(s + 0);
+    *(uint32_t*)((uint8_t*)self + 0x1d4) = tail;
+    *(uint32_t*)((uint8_t*)self + 0x1d8) = tail;
+}
+
+// FUNCTION: HOVER 0x0040bc50
+void __fastcall Touch40bc50(void* self)
+{
+    uint32_t* a = *(uint32_t**)((uint8_t*)self + 0x88);
+    *(uint32_t*)((uint8_t*)self + 0x8c) = 0xc8;
+    *(uint32_t*)((uint8_t*)a + 0x204) = 1;
+}
+
+// FUNCTION: HOVER 0x00411d60
+void __fastcall SetFour11d60(void* self, void* unused, s32 a, s32 b, s32 c, s32 d)
+{
+    *(s32*)((uint8_t*)self + 0x10) = b;
+    *(s32*)((uint8_t*)self + 0x18) = c;
+    *(s32*)((uint8_t*)self + 0x14) = d;
+    *(s32*)((uint8_t*)self + 0x1c) = a;
+}
+
+// FUNCTION: HOVER 0x00414a50
+s32 __fastcall SetThree14a50(void* self, void* unused, s32 v)
+{
+    *(s32*)((uint8_t*)self + 0x78) = v;
+    *(s32*)((uint8_t*)self + 0x80) = 0;
+    *(s32*)((uint8_t*)self + 0x7c) = 0;
+    return 1;
+}
+
+// FUNCTION: HOVER 0x00419940
+void __fastcall SetTwo19940(void* self, void* unused, u32 a, u32 b)
+{
+    *(u32*)((uint8_t*)self + 0x74) = a;
+    *(u32*)((uint8_t*)self + 0x70) = b;
+}
+
+// FUNCTION: HOVER 0x00422c80
+void* __fastcall Init22c80(void* self)
+{
+    *(uint32_t*)((uint8_t*)self + 0x00) = 0;
+    *(uint32_t*)((uint8_t*)self + 0x04) = 0;
+    *(uint32_t*)((uint8_t*)self + 0x08) = 10;
+    *(uint32_t*)((uint8_t*)self + 0x0c) = 10;
+    *(uint32_t*)((uint8_t*)self + 0x10) = 0;
+    *(uint32_t*)((uint8_t*)self + 0x18) = 0;
+    *(uint32_t*)((uint8_t*)self + 0x14) = 0;
+    *(uint32_t*)((uint8_t*)self + 0x2c) = 0;
+    *(uint32_t*)((uint8_t*)self + 0x1c) = 1;
+    *(uint32_t*)((uint8_t*)self + 0x24) = 0;
+    return self;
+}
+
 extern uint32_t g_data_4ca8;
 
 // FUNCTION: HOVER 0x00429340
@@ -326,3 +432,758 @@ void __cdecl ShowJoyCpl42e3f0(void)
     }
 }
 #endif
+// FUNCTION: HOVER 0x0044afe6
+uint32_t __fastcall Get44afe6(void* self)
+{
+    return *(uint32_t*)((uint8_t*)self + 0x38);
+}
+
+// FUNCTION: HOVER 0x0044b3b8
+uint32_t __fastcall Get44b3b8(void* self)
+{
+    return *(uint32_t*)((uint8_t*)self + 0x1c);
+}
+
+// FUNCTION: HOVER 0x00452554
+uint32_t __fastcall Get452554(void* self)
+{
+    return *(uint32_t*)((uint8_t*)self + 0x3c);
+}
+
+// FUNCTION: HOVER 0x004508f7
+void __fastcall Set4508f7(void* self, void* unused, uint32_t v)
+{
+    *(uint32_t*)((uint8_t*)self + 0x8) = v;
+}
+
+// FUNCTION: HOVER 0x00450901
+void __fastcall Set450901(void* self, void* unused, uint32_t v)
+{
+    *(uint32_t*)((uint8_t*)self + 0x4) = v;
+}
+
+// FUNCTION: HOVER 0x0045090b
+void __fastcall Clear45090b(void* self)
+{
+    *(uint32_t*)((uint8_t*)self + 0x8) = 0;
+}
+
+// FUNCTION: HOVER 0x00450913
+void __fastcall Clear450913(void* self)
+{
+    *(uint32_t*)((uint8_t*)self + 0x4) = 0;
+}
+
+// FUNCTION: HOVER 0x00453abd
+void __fastcall Write453abd(void* self, void* unused, void* out)
+{
+    *(void**)((uint8_t*)out + 0x34) = self;
+}
+
+// FUNCTION: HOVER 0x00453ac7
+void __fastcall Zap453ac7(void* self, void* unused, void* out)
+{
+    *(void**)((uint8_t*)out + 0x34) = NULL;
+}
+
+// FUNCTION: HOVER 0x004551ad
+int32_t __fastcall Set4551ad(void* self, void* unused, uint32_t v, void* unused2)
+{
+    *(uint32_t*)((uint8_t*)self + 0x68) = v;
+    return 0;
+}
+
+// FUNCTION: HOVER 0x004551b9
+uint32_t __fastcall Get4551b9(void* self, void* unused, void* a, void* b)
+{
+    return *(uint32_t*)((uint8_t*)self + 0x68);
+}
+
+// FUNCTION: HOVER 0x0045a9c7
+void* __fastcall Id45a9c7(void* self)
+{
+    return self;
+}
+
+// FUNCTION: HOVER 0x0044d6be
+void __fastcall Set44d6be(void* self, void* unused, uint32_t v)
+{
+    *(uint32_t*)((uint8_t*)self + 0x18) = 1;
+    *(uint32_t*)((uint8_t*)self + 0x28) = v;
+}
+
+// FUNCTION: HOVER 0x004438bc
+PtPair __fastcall GetPair4438bc(void* self)
+{
+    return *(PtPair*)((uint8_t*)self + 0);
+}
+
+// FUNCTION: HOVER 0x0042af89
+extern void* g_4c5330;
+void __fastcall Set42af89(void* v)
+{
+    g_4c5330 = v;
+}
+
+// FUNCTION: HOVER 0x0042b7d6
+extern void* g_4c53e0;
+void __fastcall Set42b7d6(void* v)
+{
+    g_4c53e0 = v;
+}
+
+// FUNCTION: HOVER 0x0042c3a2
+extern void* g_4c54d0;
+void __fastcall Set42c3a2(void* v)
+{
+    g_4c54d0 = v;
+}
+
+// FUNCTION: HOVER 0x00432f26
+extern void* g_4a48c8;
+void __fastcall Set432f26(void* v)
+{
+    g_4a48c8 = v;
+}
+
+// FUNCTION: HOVER 0x0045b1fa
+extern void* g_4b6ff0;
+void __stdcall Set45b1fa(void* v)
+{
+    g_4b6ff0 = v;
+}
+
+// FUNCTION: HOVER 0x0045b206
+extern void* g_4b6ff0;
+void* __cdecl Get45b206(void)
+{
+    return g_4b6ff0;
+}
+
+// FUNCTION: HOVER 0x00440221
+extern void* g_4c79b0;
+void* __cdecl Xchg440221(void* v)
+{
+    void* old;
+    old = g_4c79b0;
+    g_4c79b0 = v;
+    return old;
+}
+
+// FUNCTION: HOVER 0x00442ada
+extern uint32_t g_4c844c;
+extern uint32_t g_4c8450;
+void __cdecl Init442ada(void)
+{
+    g_4c844c = 0x4000;
+    g_4c8450 = 0x1000000;
+}
+
+// FUNCTION: HOVER 0x00456e9a
+int32_t __cdecl One456e9a(void)
+{
+    return 1;
+}
+
+// FUNCTION: HOVER 0x00457c9d
+int32_t __cdecl One457c9d(void)
+{
+    return 1;
+}
+
+// FUNCTION: HOVER 0x0043b836
+uint32_t __cdecl Const43b836(void)
+{
+    return 0x200;
+}
+
+// FUNCTION: HOVER 0x0043b843
+uint32_t __cdecl Const43b843(void)
+{
+    return 0x2000;
+}
+
+// FUNCTION: HOVER 0x0043b858
+uint32_t __cdecl Const43b858(void)
+{
+    return 0x200;
+}
+
+// FUNCTION: HOVER 0x0043b865
+uint32_t __cdecl Const43b865(void)
+{
+    return 0x2000;
+}
+// FUNCTION: HOVER 0x0041B866
+int32_t __fastcall Zac1B866(void* self)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x00446D04
+int32_t __fastcall Zac46D04(void* self)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x00449006
+int32_t __fastcall Zac49006(void* self, void* unused, void* a0)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0044900B
+int32_t __fastcall Zac4900B(void* self)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0044AEF3
+int32_t __fastcall Zac4AEF3(void* self)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0044B727
+int32_t __fastcall Zac4B727(void* self, void* unused, void* a0)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0044CC74
+int32_t __fastcall Zac4CC74(void* self, void* unused, void* a0)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0044DA6C
+int32_t __fastcall Zac4DA6C(void* self, void* unused, void* a0)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0044DE19
+int32_t __fastcall Zac4DE19(void* self, void* unused, void* a0, void* a1, void* a2, void* a3)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0044E594
+int32_t __fastcall Zac4E594(void* self)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0044F42B
+int32_t __fastcall Zac4F42B(void* self, void* unused, void* a0, void* a1, void* a2, void* a3)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x00451D70
+int32_t __fastcall Zac51D70(void* self)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x00452FEB
+int32_t __fastcall Zac52FEB(void* self, void* unused, void* a0)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0045308A
+int32_t __fastcall Zac5308A(void* self, void* unused, void* a0, void* a1, void* a2)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0045308F
+int32_t __fastcall Zac5308F(void* self, void* unused, void* a0, void* a1, void* a2)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x00453094
+int32_t __fastcall Zac53094(void* self, void* unused, void* a0, void* a1, void* a2, void* a3)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x00453099
+int32_t __fastcall Zac53099(void* self, void* unused, void* a0, void* a1, void* a2, void* a3)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x0045309E
+int32_t __fastcall Zac5309E(void* self, void* unused, void* a0, void* a1, void* a2, void* a3)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x00456774
+int32_t __fastcall Zac56774(void* self)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x004589CD
+int32_t __fastcall Zac589CD(void* self, void* unused, void* a0)
+{
+    return 0;
+}
+// FUNCTION: HOVER 0x00420F50
+void* __fastcall Idt20F50(void* self)
+{
+    return self;
+}
+// FUNCTION: HOVER 0x0040C20E
+int32_t __fastcall Con0C20E(void* self, void* unused, void* a0)
+{
+    return 0x1;
+}
+// FUNCTION: HOVER 0x0044E0C7
+int32_t __fastcall Con4E0C7(void* self, void* unused, void* a0, void* a1)
+{
+    return 0xffff;
+}
+// FUNCTION: HOVER 0x0045326E
+int32_t __fastcall Con5326E(void* self, void* unused, void* a0)
+{
+    return 0x1;
+}
+// FUNCTION: HOVER 0x0040BC40
+extern uint8_t g_data_5790[1];
+void* __fastcall Get0BC40(void* self)
+{
+    return g_data_5790;
+}
+// FUNCTION: HOVER 0x004298F0
+extern uint8_t g_data_51e0[1];
+void* __fastcall Get298F0(void* self)
+{
+    return g_data_51e0;
+}
+// FUNCTION: HOVER 0x0042AD00
+extern uint8_t g_data_52c0[1];
+void* __fastcall Get2AD00(void* self)
+{
+    return g_data_52c0;
+}
+// FUNCTION: HOVER 0x0042AEC0
+extern uint8_t g_data_5318[1];
+void* __fastcall Get2AEC0(void* self)
+{
+    return g_data_5318;
+}
+// FUNCTION: HOVER 0x0044A64E
+extern uint8_t g_data_fee0[1];
+void* __fastcall Get4A64E(void* self)
+{
+    return g_data_fee0;
+}
+// FUNCTION: HOVER 0x0044AAA5
+extern uint8_t g_data_0320[1];
+void* __fastcall Get4AAA5(void* self)
+{
+    return g_data_0320;
+}
+// FUNCTION: HOVER 0x0044B703
+extern uint8_t g_data_05e0[1];
+void* __fastcall Get4B703(void* self)
+{
+    return g_data_05e0;
+}
+// FUNCTION: HOVER 0x0044B709
+extern uint8_t g_data_0600[1];
+void* __fastcall Get4B709(void* self)
+{
+    return g_data_0600;
+}
+// FUNCTION: HOVER 0x0044B70F
+extern uint8_t g_data_0630[1];
+void* __fastcall Get4B70F(void* self)
+{
+    return g_data_0630;
+}
+// FUNCTION: HOVER 0x0044D041
+extern uint8_t g_data_08b8[1];
+void* __fastcall Get4D041(void* self)
+{
+    return g_data_08b8;
+}
+// FUNCTION: HOVER 0x0044E70A
+extern uint8_t g_data_6a20[1];
+void* __fastcall Get4E70A(void* self)
+{
+    return g_data_6a20;
+}
+// FUNCTION: HOVER 0x0045158A
+extern uint8_t g_data_1d60[1];
+void* __fastcall Get5158A(void* self)
+{
+    return g_data_1d60;
+}
+// FUNCTION: HOVER 0x00452CF3
+extern uint8_t g_data_2380[1];
+void* __fastcall Get52CF3(void* self)
+{
+    return g_data_2380;
+}
+// FUNCTION: HOVER 0x00453D3C
+extern uint8_t g_data_00c0[1];
+void* __fastcall Get53D3C(void* self)
+{
+    return g_data_00c0;
+}
+// FUNCTION: HOVER 0x004550AF
+extern uint8_t g_data_1b00[1];
+void* __fastcall Get550AF(void* self)
+{
+    return g_data_1b00;
+}
+// FUNCTION: HOVER 0x00455A66
+extern uint8_t g_data_2c48[1];
+void* __fastcall Get55A66(void* self)
+{
+    return g_data_2c48;
+}
+// FUNCTION: HOVER 0x00456670
+extern uint8_t g_data_2cb0[1];
+void* __fastcall Get56670(void* self)
+{
+    return g_data_2cb0;
+}
+// FUNCTION: HOVER 0x00458631
+extern uint8_t g_data_31b0[1];
+void* __fastcall Get58631(void* self)
+{
+    return g_data_31b0;
+}
+// FUNCTION: HOVER 0x00458AE0
+extern uint8_t g_data_15a8[1];
+void* __fastcall Get58AE0(void* self)
+{
+    return g_data_15a8;
+}
+// FUNCTION: HOVER 0x0045B43E
+extern uint8_t g_data_34d0[1];
+void* __fastcall Get5B43E(void* self)
+{
+    return g_data_34d0;
+}
+// FUNCTION: HOVER 0x0045C8E4
+extern uint8_t g_data_68b8[1];
+void* __fastcall Get5C8E4(void* self)
+{
+    return g_data_68b8;
+}
+// FUNCTION: HOVER 0x004179d2
+extern uint8_t g_data_79d8[1];
+void* __cdecl Get4179d2(void)
+{
+    return g_data_79d8;
+}
+// FUNCTION: HOVER 0x0045CB8C
+extern uint8_t g_data_68e0[1];
+void* __fastcall Get5CB8C(void* self)
+{
+    return g_data_68e0;
+}
+
+// FUNCTION: HOVER 0x0045CCE9
+extern uint8_t g_data_6908[1];
+void* __fastcall Get5CCE9(void* self)
+{
+    return g_data_6908;
+}
+
+// FUNCTION: HOVER 0x0045CDFD
+extern uint8_t g_data_6938[1];
+void* __fastcall Get5CDFD(void* self)
+{
+    return g_data_6938;
+}
+
+// FUNCTION: HOVER 0x0045CE36
+extern uint8_t g_data_6960[1];
+void* __fastcall Get5CE36(void* self)
+{
+    return g_data_6960;
+}
+
+// FUNCTION: HOVER 0x0045D32E
+extern uint8_t g_data_6998[1];
+void* __fastcall Get5D32E(void* self)
+{
+    return g_data_6998;
+}
+
+// FUNCTION: HOVER 0x0045D455
+extern uint8_t g_data_6a00[1];
+void* __fastcall Get5D455(void* self)
+{
+    return g_data_6a00;
+}
+
+// FUNCTION: HOVER 0x0045D470
+extern uint8_t g_data_6a40[1];
+void* __fastcall Get5D470(void* self)
+{
+    return g_data_6a40;
+}
+
+// FUNCTION: HOVER 0x0045D565
+extern uint8_t g_data_6a70[1];
+void* __fastcall Get5D565(void* self)
+{
+    return g_data_6a70;
+}
+
+// FUNCTION: HOVER 0x0045D57B
+extern uint8_t g_data_6a88[1];
+void* __fastcall Get5D57B(void* self)
+{
+    return g_data_6a88;
+}
+
+// FUNCTION: HOVER 0x0045D591
+extern uint8_t g_data_6aa0[1];
+void* __fastcall Get5D591(void* self)
+{
+    return g_data_6aa0;
+}
+
+// FUNCTION: HOVER 0x0045D5A7
+extern uint8_t g_data_6ab8[1];
+void* __fastcall Get5D5A7(void* self)
+{
+    return g_data_6ab8;
+}
+
+// FUNCTION: HOVER 0x0045D621
+extern uint8_t g_data_6ad0[1];
+void* __fastcall Get5D621(void* self)
+{
+    return g_data_6ad0;
+}
+
+// FUNCTION: HOVER 0x0045D637
+extern uint8_t g_data_6ae8[1];
+void* __fastcall Get5D637(void* self)
+{
+    return g_data_6ae8;
+}
+
+// FUNCTION: HOVER 0x0045D64D
+extern uint8_t g_data_6b00[1];
+void* __fastcall Get5D64D(void* self)
+{
+    return g_data_6b00;
+}
+
+// FUNCTION: HOVER 0x0045D663
+extern uint8_t g_data_6b18[1];
+void* __fastcall Get5D663(void* self)
+{
+    return g_data_6b18;
+}
+
+// FUNCTION: HOVER 0x0045D679
+extern uint8_t g_data_6b30[1];
+void* __fastcall Get5D679(void* self)
+{
+    return g_data_6b30;
+}
+
+// FUNCTION: HOVER 0x0045D68F
+extern uint8_t g_data_6b48[1];
+void* __fastcall Get5D68F(void* self)
+{
+    return g_data_6b48;
+}
+
+// FUNCTION: HOVER 0x0045D6A5
+extern uint8_t g_data_6b60[1];
+void* __fastcall Get5D6A5(void* self)
+{
+    return g_data_6b60;
+}
+
+// FUNCTION: HOVER 0x0045D92E
+extern uint8_t g_data_6d48[1];
+void* __fastcall Get5D92E(void* self)
+{
+    return g_data_6d48;
+}
+
+// FUNCTION: HOVER 0x0045D9AF
+extern uint8_t g_data_6de0[1];
+void* __fastcall Get5D9AF(void* self)
+{
+    return g_data_6de0;
+}
+
+// FUNCTION: HOVER 0x0045D9C5
+extern uint8_t g_data_6df8[1];
+void* __fastcall Get5D9C5(void* self)
+{
+    return g_data_6df8;
+}
+
+// FUNCTION: HOVER 0x0045DC12
+extern uint8_t g_data_6f38[1];
+void* __fastcall Get5DC12(void* self)
+{
+    return g_data_6f38;
+}
+
+// FUNCTION: HOVER 0x0045DC93
+extern uint8_t g_data_6fc8[1];
+void* __fastcall Get5DC93(void* self)
+{
+    return g_data_6fc8;
+}
+
+// FUNCTION: HOVER 0x0045DCA9
+extern uint8_t g_data_6fe0[1];
+void* __fastcall Get5DCA9(void* self)
+{
+    return g_data_6fe0;
+}
+
+// FUNCTION: HOVER 0x0045DCCF
+extern uint8_t g_data_7010[1];
+void* __fastcall Get5DCCF(void* self)
+{
+    return g_data_7010;
+}
+
+// FUNCTION: HOVER 0x0045DCE5
+extern uint8_t g_data_7028[1];
+void* __fastcall Get5DCE5(void* self)
+{
+    return g_data_7028;
+}
+
+// FUNCTION: HOVER 0x0045DD39
+extern uint8_t g_data_7098[1];
+void* __fastcall Get5DD39(void* self)
+{
+    return g_data_7098;
+}
+
+// FUNCTION: HOVER 0x0045DD4F
+extern uint8_t g_data_70b0[1];
+void* __fastcall Get5DD4F(void* self)
+{
+    return g_data_70b0;
+}
+
+// FUNCTION: HOVER 0x0045DD65
+extern uint8_t g_data_70c8[1];
+void* __fastcall Get5DD65(void* self)
+{
+    return g_data_70c8;
+}
+
+// FUNCTION: HOVER 0x0045E1AE
+extern uint8_t g_data_7118[1];
+void* __fastcall Get5E1AE(void* self)
+{
+    return g_data_7118;
+}
+
+// FUNCTION: HOVER 0x0045E1E7
+extern uint8_t g_data_7150[1];
+void* __fastcall Get5E1E7(void* self)
+{
+    return g_data_7150;
+}
+
+// FUNCTION: HOVER 0x0045E232
+extern uint8_t g_data_7180[1];
+void* __fastcall Get5E232(void* self)
+{
+    return g_data_7180;
+}
+
+// FUNCTION: HOVER 0x0045E27D
+extern uint8_t g_data_71a0[1];
+void* __fastcall Get5E27D(void* self)
+{
+    return g_data_71a0;
+}
+
+// FUNCTION: HOVER 0x0045E2B6
+extern uint8_t g_data_71c8[1];
+void* __fastcall Get5E2B6(void* self)
+{
+    return g_data_71c8;
+}
+
+// FUNCTION: HOVER 0x0045E2FF
+extern uint8_t g_data_71e8[1];
+void* __fastcall Get5E2FF(void* self)
+{
+    return g_data_71e8;
+}
+
+// FUNCTION: HOVER 0x0045E36B
+extern uint8_t g_data_7238[1];
+void* __fastcall Get5E36B(void* self)
+{
+    return g_data_7238;
+}
+
+// FUNCTION: HOVER 0x0045E3A4
+extern uint8_t g_data_7268[1];
+void* __fastcall Get5E3A4(void* self)
+{
+    return g_data_7268;
+}
+
+// FUNCTION: HOVER 0x0045E63E
+extern uint8_t g_data_7298[1];
+void* __fastcall Get5E63E(void* self)
+{
+    return g_data_7298;
+}
+
+// FUNCTION: HOVER 0x0045E91F
+extern uint8_t g_data_72f0[1];
+void* __fastcall Get5E91F(void* self)
+{
+    return g_data_72f0;
+}
+
+// FUNCTION: HOVER 0x0045EACA
+extern uint8_t g_data_7330[1];
+void* __fastcall Get5EACA(void* self)
+{
+    return g_data_7330;
+}
+
+// FUNCTION: HOVER 0x0045EB18
+extern uint8_t g_data_73f8[1];
+void* __fastcall Get5EB18(void* self)
+{
+    return g_data_73f8;
+}
+
+// FUNCTION: HOVER 0x0045EB3E
+extern uint8_t g_data_7410[1];
+void* __fastcall Get5EB3E(void* self)
+{
+    return g_data_7410;
+}
+
+// FUNCTION: HOVER 0x0045EC07
+extern uint8_t g_data_7448[1];
+void* __fastcall Get5EC07(void* self)
+{
+    return g_data_7448;
+}
+
+// FUNCTION: HOVER 0x0045EC6D
+extern uint8_t g_data_97d8[1];
+void* __fastcall Get5EC6D(void* self)
+{
+    return g_data_97d8;
+}
+
+// FUNCTION: HOVER 0x0045EC83
+extern uint8_t g_data_97f0[1];
+void* __fastcall Get5EC83(void* self)
+{
+    return g_data_97f0;
+}
+
+// FUNCTION: HOVER 0x0045ED49
+extern uint8_t g_data_98f8[1];
+void* __fastcall Get5ED49(void* self)
+{
+    return g_data_98f8;
+}

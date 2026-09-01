@@ -16,6 +16,7 @@ if(FLYINGDODGEM_PLATFORM_SDL3 AND NOT MSVC_50_FOR_RECCMP)
         platform/sdl3/display.c
         platform/sdl3/main.c
         gdi32_compat.c
+        menu.c
     )
     target_compile_definitions(FlyingDodgem PRIVATE FLYINGDODGEM_GDI_COMPAT=1)
     target_link_libraries(FlyingDodgem PRIVATE SDL3::SDL3)
