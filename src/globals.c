@@ -683,3 +683,65 @@ uint8_t g_data_97f0[1];
 
 // GLOBAL: HOVER 0x004C98F8
 uint8_t g_data_98f8[1];
+
+// GLOBAL: HOVER 0x004177C9
+uint8_t g_data_77c9[1];
+// GLOBAL: HOVER 0x004179F7
+uint8_t g_data_79f7[1];
+// GLOBAL: HOVER 0x0041D3D7
+uint8_t g_data_d3d7[1];
+// GLOBAL: HOVER 0x0041F0B0
+uint8_t g_data_f0b0[1];
+// GLOBAL: HOVER 0x0041F31B
+uint8_t g_data_f31b[1];
+// GLOBAL: HOVER 0x004C5608
+uint8_t g_data_5608[1];
+// GLOBAL: HOVER 0x004BDF78
+uint8_t g_data_df78[1];
+// GLOBAL: HOVER 0x0043E607
+uint8_t g_data_e607[1];
+// GLOBAL: HOVER 0x0043E622
+uint8_t g_data_e622[1];
+// GLOBAL: HOVER 0x0043FB32
+uint8_t g_data_fb32[1];
+// GLOBAL: HOVER 0x0043FB4D
+uint8_t g_data_fb4d[1];
+// GLOBAL: HOVER 0x0044A614
+uint8_t g_data_a614[1];
+// GLOBAL: HOVER 0x0044C339
+uint8_t g_data_c339[1];
+// GLOBAL: HOVER 0x0044C70E
+uint8_t g_data_c70e[1];
+// GLOBAL: HOVER 0x0044E172
+uint8_t g_data_e172[1];
+// GLOBAL: HOVER 0x0044E172
+uint8_t g_data_e172[1];
+// GLOBAL: HOVER 0x0044E7B2
+uint8_t g_data_e7b2[1];
+// GLOBAL: HOVER 0x00451B7E
+uint8_t g_data_1b7e[1];
+// GLOBAL: HOVER 0x0045216C
+uint8_t g_data_216c[1];
+// GLOBAL: HOVER 0x00452188
+uint8_t g_data_2188[1];
+// GLOBAL: HOVER 0x004521AB
+uint8_t g_data_21ab[1];
+// GLOBAL: HOVER 0x004523FB
+uint8_t g_data_23fb[1];
+// GLOBAL: HOVER 0x00452417
+uint8_t g_data_2417[1];
+// GLOBAL: HOVER 0x0045243A
+uint8_t g_data_243a[1];
+// GLOBAL: HOVER 0x004C3118
+uint8_t g_data_3118[1];
+// GLOBAL: HOVER 0x0045C7B5
+uint8_t g_data_c7b5[1];
+// GLOBAL: HOVER 0x0045C7C3
+uint8_t g_data_c7c3[1];
+// GLOBAL: HOVER 0x004C6A58
+uint8_t g_data_6a58[1];
+// GLOBAL: HOVER 0x004C6E10
+uint8_t g_data_6e10[1];
+
+
+
