@@ -60,7 +60,7 @@ if(MSVC_50_FOR_RECCMP)
     set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL}")
 
     set(CMAKE_EXE_LINKER_FLAGS "/machine:I386")
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "/incremental:yes /debug")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "/incremental:no /debug" CACHE STRING "" FORCE)
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/incremental:no")
     set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "/incremental:no /debug")
     set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "/incremental:no")

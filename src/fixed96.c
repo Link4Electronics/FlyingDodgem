@@ -35,13 +35,17 @@ uint32_t __cdecl AddCarry96(uint32_t a, uint32_t b, uint32_t *out)
 }
 
 // FUNCTION: HOVER 0x00447394
+#pragma optimize("s", on)
 void __cdecl Add96(uint32_t dst[3], const uint32_t src[3])
 {
-    if (AddCarry96(dst[0], src[0], &dst[0])) {
-        if (AddCarry96(dst[1], 1u, &dst[1]))
+    if (AddCarry96(dst[0], src[0], dst)) {
+        if (AddCarry96(dst[1], 1u, dst + 1))
             dst[2]++;
     }
-    if (AddCarry96(dst[1], src[1], &dst[1]))
+    if (AddCarry96(dst[1], src[1], dst + 1))
         dst[2]++;
-    AddCarry96(dst[2], src[2], &dst[2]);
+    dst += 2;
+    src += 2;
+    AddCarry96(dst[0], src[0], dst);
 }
+#pragma optimize("", on)
