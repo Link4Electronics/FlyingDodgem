@@ -84,6 +84,31 @@ typedef struct DashMip
     u32 height;
 } DashMip;
 
+/* The 48-byte game object initialized by Init22c80 (HOVER.EXE 0x422c80).
+ * Retail constructs a whole run of these (base + 0x2e0, +0x310, +0x340, ...)
+ * and never reads the constructor's return value. The matched recompilation
+ * is __fastcall void Init22c80(void* self); the trailing `mov eax,ecx; ret`
+ * (return self) lives in the separate Self22CA8 symbol. */
+typedef struct Init22Object
+{
+    u32 f00;
+    u32 f04;
+    u32 f08;
+    u32 f0c;
+    u32 f10;
+    u32 f14;
+    u32 f18;
+    u32 f1c;
+    u32 f20;
+    u32 f24;
+    u32 f28;
+    u32 f2c;
+} Init22Object;
+
+/* FUNCTION: HOVER 0x00422c80
+ * __fastcall void Init22c80(void* self). Defined in stubs.c. */
+extern void __fastcall Init22c80(void *self);
+
 int main(int argc, char **argv)
 {
     HDC screen = NULL;
@@ -125,6 +150,19 @@ int main(int argc, char **argv)
         PlatAudio_Quit();
         SDL_Quit();
         return 1;
+    }
+
+    /* Drive the matched Init22c80 constructor (0x422c80) through the native
+     * pipeline: retail builds a run of these 48-byte sub-objects (base + 0x2e0,
+     * +0x310, ...) and ignores the return value. */
+    {
+        Init22Object widget;
+        Init22c80(&widget);
+        if (widget.f08 != 10 || widget.f0c != 10 || widget.f1c != 1 ||
+            widget.f00 != 0 || widget.f24 != 0 || widget.f2c != 0)
+            SDL_Log("FlyingDodgem: Init22c80 initialized unexpected fields");
+        else
+            printf("FlyingDodgem: Init22c80 built 10x10 widget\n");
     }
 
 #if defined(FLYINGDODGEM_GDI_COMPAT)

@@ -206,11 +206,9 @@ void* __fastcall GetField459d94(void* self)
 extern void* g_46058c;
 void* __cdecl GetSub401140(void)
 {
-    void* obj;
     if (g_46058c == NULL)
         return NULL;
-    obj = g_46058c;
-    return GetField459d94(obj);
+    return GetField459d94(g_46058c);
 }
 
 // FUNCTION: HOVER 0x004038a0
@@ -281,7 +279,13 @@ void __fastcall SetTwo19940(void* self, void* unused, u32 a, u32 b)
 }
 
 // FUNCTION: HOVER 0x00422c80
-void* __fastcall Init22c80(void* self)
+/* Retail ends with `mov eax,ecx; ret` (return self), which is scheduled LAST
+ * only when the function carries no return value; MSVC 5.0 /O2 hoists the copy
+ * to the top whenever Init22c80 actually `return self`. Retail callers reload
+ * `ecx` after every call and ignore the return, so the equivalent C is void:
+ * the trailing `mov eax,ecx; ret` split off into the (fabricated) Self22CA8
+ * symbol reproduces the full 43-byte retail epilogue. */
+void __fastcall Init22c80(void* self)
 {
     *(uint32_t*)((uint8_t*)self + 0x00) = 0;
     *(uint32_t*)((uint8_t*)self + 0x04) = 0;
@@ -293,7 +297,6 @@ void* __fastcall Init22c80(void* self)
     *(uint32_t*)((uint8_t*)self + 0x2c) = 0;
     *(uint32_t*)((uint8_t*)self + 0x1c) = 1;
     *(uint32_t*)((uint8_t*)self + 0x24) = 0;
-    return self;
 }
 
 // FUNCTION: HOVER 0x00422CA8
@@ -1546,11 +1549,6 @@ s32 __fastcall Imm5E948(void* self)
 {
     return (s32)0x310;
 }
-// FUNCTION: HOVER 0x00401149
-s32 __fastcall Zero01149(void* self)
-{
-    return 0;
-}
 // FUNCTION: HOVER 0x0040C209
 s32 __fastcall Zero0C209(void* self, void* unused, s32 a)
 {
@@ -1678,11 +1676,6 @@ s32 __fastcall Zero4E83B(void* self)
 }
 // FUNCTION: HOVER 0x00451D6D
 s32 __fastcall Zero51D6D(void* self)
-{
-    return 0;
-}
-// FUNCTION: HOVER 0x00453380
-s32 __fastcall Zero53380(void* self, void* unused, s32 a, s32 b, s32 c)
 {
     return 0;
 }
