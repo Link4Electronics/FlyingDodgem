@@ -170,6 +170,12 @@ int32_t __stdcall ZeroOut411570(void* a, void* b, void* c, uint32_t* out)
     return 0;
 }
 
+// FUNCTION: HOVER 0x0041157A
+s32 __fastcall Zero1157A(void* self, void* unused, s32 a, s32 b, s32 c, s32 d)
+{
+    return 0;
+}
+
 extern uint32_t g_data_bb670;
 
 // FUNCTION: HOVER 0x00401000
@@ -221,6 +227,7 @@ void __fastcall GetPair38a0(Self38a0* self, void* unused, PtPair* out)
 
 // FUNCTION: HOVER 0x00408530
 extern uint32_t g_4c52d8;
+#pragma optimize("s", on)
 void __fastcall Register8530(void* self)
 {
     if (*(uint32_t*)((uint8_t*)self + 0x68) == 0)
@@ -230,6 +237,7 @@ void __fastcall Register8530(void* self)
         g_4c52d8 = (uint32_t)(uintptr_t)self;
     }
 }
+#pragma optimize("", on)
 
 // FUNCTION: HOVER 0x00413ed0
 void __fastcall Set13ed0(void* self, void* unused, void* arg)
@@ -271,6 +279,12 @@ s32 __fastcall SetThree14a50(void* self, void* unused, s32 v)
     return 1;
 }
 
+// FUNCTION: HOVER 0x00414A62
+s32 __fastcall Imm14A62(void* self, void* unused, s32 a)
+{
+    return (s32)0x1;
+}
+
 // FUNCTION: HOVER 0x00419940
 void __fastcall SetTwo19940(void* self, void* unused, u32 a, u32 b)
 {
@@ -291,6 +305,12 @@ void* __fastcall Init22c80(void* self)
     *(uint32_t*)((uint8_t*)self + 0x2c) = 0;
     *(uint32_t*)((uint8_t*)self + 0x1c) = 1;
     *(uint32_t*)((uint8_t*)self + 0x24) = 0;
+    return self;
+}
+
+// FUNCTION: HOVER 0x00422CA8
+void* __fastcall Self22CA8(void* self)
+{
     return self;
 }
 
@@ -356,6 +376,12 @@ int32_t __stdcall WinHelp42d160(uint32_t arg1, uint32_t arg2)
     return 1;
 }
 
+// FUNCTION: HOVER 0x0042D177
+s32 __fastcall Imm2D177(void* self, void* unused, s32 a, s32 b)
+{
+    return (s32)0x1;
+}
+
 // FUNCTION: HOVER 0x0042e4f0
 int32_t __stdcall WinHelp42e4f0(uint32_t arg1, uint32_t arg2)
 {
@@ -367,6 +393,12 @@ int32_t __stdcall WinHelp42e510(uint32_t arg1, uint32_t arg2)
 {
     WinHelpA((HWND)(uintptr_t)arg1, (const char*)&g_data_4880, 0xa, (DWORD)(uintptr_t)&g_data_dbb8);
     return 1;
+}
+
+// FUNCTION: HOVER 0x0042E527
+s32 __fastcall Imm2E527(void* self, void* unused, s32 a, s32 b)
+{
+    return (s32)0x1;
 }
 
 // FUNCTION: HOVER 0x0042eaa0
@@ -382,6 +414,12 @@ int32_t __stdcall WinHelp42eac0(uint32_t arg1, uint32_t arg2)
     return 1;
 }
 
+// FUNCTION: HOVER 0x0042EAD7
+s32 __fastcall Imm2EAD7(void* self, void* unused, s32 a, s32 b)
+{
+    return (s32)0x1;
+}
+
 // FUNCTION: HOVER 0x0042f850
 int32_t __stdcall WinHelp42f850(uint32_t arg1, uint32_t arg2)
 {
@@ -393,6 +431,12 @@ int32_t __stdcall WinHelp42f870(uint32_t arg1, uint32_t arg2)
 {
     WinHelpA((HWND)(uintptr_t)arg1, (const char*)&g_data_4880, 0xa, (DWORD)(uintptr_t)&g_data_ecd0);
     return 1;
+}
+
+// FUNCTION: HOVER 0x0042F887
+s32 __fastcall Imm2F887(void* self, void* unused, s32 a, s32 b)
+{
+    return (s32)0x1;
 }
 
 // FUNCTION: HOVER 0x00430610
@@ -408,6 +452,12 @@ int32_t __stdcall WinHelp430630(uint32_t arg1, uint32_t arg2)
     return 1;
 }
 
+// FUNCTION: HOVER 0x00430647
+s32 __fastcall Imm30647(void* self, void* unused, s32 a, s32 b)
+{
+    return (s32)0x1;
+}
+
 // FUNCTION: HOVER 0x00434010
 int32_t __stdcall WinHelp434010(uint32_t arg1, uint32_t arg2)
 {
@@ -419,6 +469,12 @@ int32_t __stdcall WinHelp434030(uint32_t arg1, uint32_t arg2)
 {
     WinHelpA((HWND)(uintptr_t)arg1, (const char*)&g_data_4880, 0xa, (DWORD)(uintptr_t)&g_data_f8b8);
     return 1;
+}
+
+// FUNCTION: HOVER 0x00434047
+s32 __fastcall Imm34047(void* self, void* unused, s32 a, s32 b)
+{
+    return (s32)0x1;
 }
 
 // FUNCTION: HOVER 0x0042e3f0
@@ -490,6 +546,12 @@ void __fastcall Zap453ac7(void* self, void* unused, void* out)
 int32_t __fastcall Set4551ad(void* self, void* unused, uint32_t v, void* unused2)
 {
     *(uint32_t*)((uint8_t*)self + 0x68) = v;
+    return 0;
+}
+
+// FUNCTION: HOVER 0x004551B4
+s32 __fastcall Zero551B4(void* self, void* unused, s32 a, s32 b)
+{
     return 0;
 }
 
@@ -1219,11 +1281,6 @@ s32 __fastcall Imm13FD5(void* self)
 {
     return (s32)0x1;
 }
-// FUNCTION: HOVER 0x00414A62
-s32 __fastcall Imm14A62(void* self, void* unused, s32 a)
-{
-    return (s32)0x1;
-}
 // FUNCTION: HOVER 0x004177C3
 void* __fastcall Imm177C3(void* self)
 {
@@ -1275,41 +1332,11 @@ void* __fastcall Imm2CB60(void* self)
     extern uint8_t g_data_5608[1];
     return g_data_5608;
 }
-// FUNCTION: HOVER 0x0042D177
-s32 __fastcall Imm2D177(void* self, void* unused, s32 a, s32 b)
-{
-    return (s32)0x1;
-}
-// FUNCTION: HOVER 0x0042E527
-s32 __fastcall Imm2E527(void* self, void* unused, s32 a, s32 b)
-{
-    return (s32)0x1;
-}
 // FUNCTION: HOVER 0x0042E9F0
 void* __fastcall Imm2E9F0(void* self)
 {
     extern uint8_t g_data_df78[1];
     return g_data_df78;
-}
-// FUNCTION: HOVER 0x0042EAD7
-s32 __fastcall Imm2EAD7(void* self, void* unused, s32 a, s32 b)
-{
-    return (s32)0x1;
-}
-// FUNCTION: HOVER 0x0042F887
-s32 __fastcall Imm2F887(void* self, void* unused, s32 a, s32 b)
-{
-    return (s32)0x1;
-}
-// FUNCTION: HOVER 0x00430647
-s32 __fastcall Imm30647(void* self, void* unused, s32 a, s32 b)
-{
-    return (s32)0x1;
-}
-// FUNCTION: HOVER 0x00434047
-s32 __fastcall Imm34047(void* self, void* unused, s32 a, s32 b)
-{
-    return (s32)0x1;
 }
 // FUNCTION: HOVER 0x00439C13
 s32 __fastcall Imm39C13(void* self)
@@ -1583,11 +1610,6 @@ s32 __fastcall Zero0C209(void* self, void* unused, s32 a)
 {
     return 0;
 }
-// FUNCTION: HOVER 0x0041157A
-s32 __fastcall Zero1157A(void* self, void* unused, s32 a, s32 b, s32 c, s32 d)
-{
-    return 0;
-}
 // FUNCTION: HOVER 0x0041ECD1
 s32 __fastcall Zero1ECD1(void* self)
 {
@@ -1718,11 +1740,6 @@ s32 __fastcall Zero53380(void* self, void* unused, s32 a, s32 b, s32 c)
 {
     return 0;
 }
-// FUNCTION: HOVER 0x004551B4
-s32 __fastcall Zero551B4(void* self, void* unused, s32 a, s32 b)
-{
-    return 0;
-}
 // FUNCTION: HOVER 0x00458E9B
 s32 __fastcall Zero58E9B(void* self, void* unused, s32 a, s32 b)
 {
@@ -1735,11 +1752,6 @@ s32 __fastcall Zero59D8F(void* self, void* unused, s32 a, s32 b)
 }
 // FUNCTION: HOVER 0x0041503D
 void* __fastcall Self1503D(void* self)
-{
-    return self;
-}
-// FUNCTION: HOVER 0x00422CA8
-void* __fastcall Self22CA8(void* self)
 {
     return self;
 }

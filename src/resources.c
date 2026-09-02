@@ -22,6 +22,7 @@ uint32_t g_os_version;
 uint32_t g_os_win32s;
 
 // FUNCTION: HOVER 0x00453352
+#pragma optimize("s", on)
 HRSRC __stdcall FindResourceCompat(HINSTANCE hModule, const char *lpName, const char *lpType)
 {
     HRSRC hres = FindResourceA(hModule, lpName, lpType);
@@ -29,3 +30,4 @@ HRSRC __stdcall FindResourceCompat(HINSTANCE hModule, const char *lpName, const 
         return NULL;
     return hres;
 }
+#pragma optimize("", on)
