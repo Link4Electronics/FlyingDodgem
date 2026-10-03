@@ -38,10 +38,12 @@ jobs:
           echo ${{ github.workspace }}\msvc500\redist>>%GITHUB_PATH%
 
       - name: Setup Ninja
-        shell: sh
+        shell: pwsh
         run: |
-          curl -fsSL https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja.exe -o ${{ github.workspace }}/ninja.exe
-          echo "${{ github.workspace }}" >> $GITHUB_PATH
+          curl.exe -fsSL https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip -o "$env:GITHUB_WORKSPACE\ninja-win.zip"
+          Expand-Archive "$env:GITHUB_WORKSPACE\ninja-win.zip" -DestinationPath "$env:GITHUB_WORKSPACE" -Force
+          Add-Content -Path $env:GITHUB_PATH -Value $env:GITHUB_WORKSPACE
+          & "$env:GITHUB_WORKSPACE\ninja.exe" --version
 
       - name: Setup Python
         uses: actions/setup-python@main
@@ -79,7 +81,9 @@ jobs:
       - name: CMake (build)
         shell: sh
         run: |
-          cmake --build build
+          # MSVC 5.0 cannot share one VC50.PDB between concurrent cl.exe
+          # processes (fatal error C1033), so the build must be serial.
+          cmake --build build -- -j1
 
       - name: Run reccmp
         working-directory: build
@@ -89,13 +93,22 @@ jobs:
           if [ -s ../prev-report.json ]; then
             diff_args+=(--diff ../prev-report.json)
           fi
+          set +e
           reccmp-reccmp --no-color --target "$RECCMP_TARGET" \
             "${diff_args[@]}" \
             --json new-reccmp-report.json \
             --json-diet \
             -S new-reccmp-progress.svg \
-            >reccmp-output.txt
+            >reccmp-output.txt 2>&1
+          status=$?
+          set -e
           cat reccmp-output.txt
+          ls -la
+          if [ "$status" -ne 0 ]; then
+            echo "::error::reccmp-reccmp failed with exit code $status"
+            exit "$status"
+          fi
+          mv new-reccmp-progress.svg new-reccmp-report.json "$GITHUB_WORKSPACE"/
 
       - name: Publish reccmp report
         shell: bash
