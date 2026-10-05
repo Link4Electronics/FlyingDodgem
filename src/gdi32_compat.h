@@ -75,6 +75,7 @@ typedef struct BITMAPINFO
 typedef struct GdiSurface GdiSurface;
 typedef struct GdiDC GdiDC;
 typedef struct GdiBrush GdiBrush;
+typedef struct GdiPen GdiPen;
 
 typedef GdiSurface *HDC;
 typedef GdiSurface *HBITMAP;
@@ -140,7 +141,10 @@ u32 __cdecl GdiCompat_SetDibPalette(const void *dib);
 
 /* --- Device context / surface management --- */
 
-/* Create a memory DC. In this model the DC *is* the 8-bit indexed surface. */
+/* Create a memory DC. It starts out with no bitmap attached; a DIB created by
+ * CreateDIBSection is attached with SelectObject, which is exactly the retail
+ * backbuffer sequence (CreateCompatibleDC -> CreateDIBSection -> SelectObject
+ * -> BitBlt/StretchBlt into it). */
 HDC __cdecl CreateCompatibleDC(HDC hdc);
 
 /* Create an 8-bit indexed DIB section. On success sets *ppBits to the pixel
@@ -160,6 +164,100 @@ u8 __cdecl BitBlt(HDC dst, s32 dx, s32 dy, s32 w, s32 h,
                   HDC src, s32 sx, s32 sy, u32 rop);
 u8 __cdecl StretchBlt(HDC dst, s32 dx, s32 dy, s32 dw, s32 dh,
                       HDC src, s32 sx, s32 sy, s32 sw, s32 sh, u32 rop);
+
+/* --- Object selection / device caps (retail present path) --- */
+
+/* Select a GDI object into a DC. Bitmaps attach to a memory DC (the retail
+ * backbuffer setup does CreateCompatibleDC + SelectObject(memDC, dibDib));
+ * brushes, pens and palettes are stashed in the DC state. Returns the
+ * previously selected object of the same kind, or NULL. */
+HGDIOBJ __cdecl SelectObject(HDC hdc, HGDIOBJ obj);
+
+/* Stock objects (GDI_STOCK_* indices). Brushes/pens resolve their RGB colour
+ * to the nearest palette index at fill time; DEFAULT_PALETTE is the shared
+ * default palette handle. Fonts are not provided. */
+#define GDI_WHITE_BRUSH    0
+#define GDI_LTGRAY_BRUSH   1
+#define GDI_GRAY_BRUSH     2
+#define GDI_DKGRAY_BRUSH   3
+#define GDI_BLACK_BRUSH    4
+#define GDI_NULL_BRUSH     5
+#define GDI_WHITE_PEN      6
+#define GDI_BLACK_PEN      7
+#define GDI_NULL_PEN       8
+#define GDI_DEFAULT_PALETTE 15
+HGDIOBJ __cdecl GetStockObject(s32 i);
+
+/* PatBlt raster ops the present path uses: retail clears regions with
+ * BLACKNESS (0x42) and fills with PATCOPY of the selected brush. */
+#define GDI_PATCOPY    0x00F00021UL
+#define GDI_BLACKNESS  0x00000042UL
+#define GDI_WHITENESS  0x00FF0062UL
+u8 __cdecl PatBlt(HDC hdc, s32 x, s32 y, s32 w, s32 h, u32 rop);
+
+/* Filled/outlined rectangle using the selected brush + pen. */
+u8 __cdecl Rectangle(HDC hdc, s32 left, s32 top, s32 right, s32 bottom);
+
+/* GetDeviceCaps indices the retail setup queries (screen size / surface
+ * format); everything else reports 0. */
+#define GDI_DRIVERVERSION 0
+#define GDI_HORZRES       8
+#define GDI_VERTRES       10
+#define GDI_PLANES        12
+#define GDI_BITSPIXEL     14
+s32 __cdecl GetDeviceCaps(HDC hdc, s32 index);
+
+/* GDI batch/flush controls are no-ops in this layer (they only existed to
+ * batch Win95 GDI calls); they must still link because the retail display
+ * init calls them. */
+u8 __cdecl GdiFlush(void);
+u32 __cdecl GdiSetBatchLimit(u32 limit);
+
+/* Text extent for the layer's fixed 8x8 font. */
+typedef struct GDI_SIZE
+{
+    s32 cx;
+    s32 cy;
+} GDI_SIZE;
+u8 __cdecl GetTextExtentPointA(HDC hdc, const char *str, s32 count, GDI_SIZE *size);
+
+/* Single-pixel access, returned as a COLORREF (0x00bbggrr). */
+u32 __cdecl GetPixel(HDC hdc, s32 x, s32 y);
+
+/* --- Palettes (retail builds a LOGPALETTE from each maze's TEX palette) --- */
+
+typedef u32 COLORREF;
+#define RGB(r, g, b) ((COLORREF)(((u8)(r)) | ((u32)((u8)(g))) << 8 | \
+                                 ((u32)((u8)(b))) << 16))
+
+typedef struct PALETTEENTRY
+{
+    u8 peRed;
+    u8 peGreen;
+    u8 peBlue;
+    u8 peFlags;
+} PALETTEENTRY;
+
+typedef struct LOGPALETTE
+{
+    u16 palVersion;
+    u16 palNumEntries;
+    PALETTEENTRY palPalEntry[256];
+} LOGPALETTE;
+
+typedef struct GdiPalette GdiPalette;
+typedef GdiPalette *HPALETTE;
+
+HPALETTE __cdecl CreatePalette(const LOGPALETTE *lplpal);
+HPALETTE __cdecl SelectPalette(HDC hdc, HPALETTE pal, u8 forceBackground);
+u32 __cdecl RealizePalette(HDC hdc);
+u32 __cdecl SetPaletteEntries(HPALETTE pal, u32 start, u32 count,
+                              const PALETTEENTRY *entries);
+u32 __cdecl GetPaletteEntries(HPALETTE pal, u32 start, u32 count,
+                              PALETTEENTRY *entries);
+u32 __cdecl GetNearestPaletteIndex(HPALETTE pal, COLORREF color);
+u32 __cdecl GetSystemPaletteEntries(HDC hdc, u32 start, u32 count,
+                                    PALETTEENTRY *entries);
 
 /* --- Drawing primitives (indexed surface) --- */
 

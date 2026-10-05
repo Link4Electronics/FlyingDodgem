@@ -745,3 +745,38 @@ uint8_t g_data_6e10[1];
 
 
 
+
+// GLOBAL: HOVER 0x004b7cd8
+void* g_pApp;
+
+/* Wall/floor/span renderer scratch state (0x402990 and friends). */
+// GLOBAL: HOVER 0x004a453c
+int32_t g_4a453c;
+// GLOBAL: HOVER 0x004a4540
+int32_t g_4a4540;
+// GLOBAL: HOVER 0x004a4548
+void* g_4a4548;
+// GLOBAL: HOVER 0x004a4a14
+int32_t g_4a4a14;
+// GLOBAL: HOVER 0x004a4a1c
+int32_t g_4a4a1c;
+// GLOBAL: HOVER 0x004a4a34
+int32_t g_4a4a34;
+// GLOBAL: HOVER 0x004a4a38
+int32_t g_4a4a38;
+// GLOBAL: HOVER 0x004a4a3c
+int32_t g_4a4a3c;
+// GLOBAL: HOVER 0x004a4a40
+int32_t g_4a4a40;
+// GLOBAL: HOVER 0x004a4a44
+int32_t g_4a4a44;
+// GLOBAL: HOVER 0x004a4a4c
+int32_t g_4a4a4c;
+// GLOBAL: HOVER 0x004a4a50
+int32_t g_4a4a50;
+// GLOBAL: HOVER 0x004a1d68
+void* g_4a1d68;
+// GLOBAL: HOVER 0x004a1d78
+int32_t g_4a1d78;
+// GLOBAL: HOVER 0x00461cfc
+int32_t g_461cfc;

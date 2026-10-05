@@ -3,11 +3,13 @@
 
 #include "gdi32_compat.h"
 #include "resources.h"
+#include "texmaze.h"
 
 #include <SDL3/SDL.h>
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 
 #define VIEWPORT_WIDTH  640
@@ -108,6 +110,72 @@ typedef struct Init22Object
 /* FUNCTION: HOVER 0x00422c80
  * __fastcall void Init22c80(void* self). Defined in stubs.c. */
 extern void __fastcall Init22c80(void *self);
+
+/* Locate and parse the retail maze/texture assets to exercise the
+ * reconstructed TEX/MAZ loaders (texmaze.c). Search order: the
+ * FLYINGDODGEM_MAZES environment variable, then build/MAZES and the
+ * usual in-tree layouts. Assets are loaded, validated and released
+ * again; rendering them comes with the 3D pipeline. */
+static void load_maze_assets(void)
+{
+    const char *dirs[5];
+    static const char *files[] = { "SMALL.TEX", "TEXT1.TEX",
+                                   "SMALL.MAZ", "MAZE1.MAZ" };
+    int ndirs = 0;
+    int fi;
+
+    dirs[ndirs++] = getenv("FLYINGDODGEM_MAZES");
+    dirs[ndirs++] = "build/MAZES";
+    dirs[ndirs++] = "../build/MAZES";
+    dirs[ndirs++] = "MAZES";
+    dirs[ndirs++] = "mazes";
+
+    for (fi = 0; fi < 4; fi++)
+    {
+        const char *ext = strrchr(files[fi], '.');
+        int is_tex = (ext != NULL && strcmp(ext, ".TEX") == 0);
+        int di;
+        int done = 0;
+
+        for (di = 0; di < ndirs && !done; di++)
+        {
+            char path[512];
+
+            if (dirs[di] == NULL)
+                continue;
+            SDL_snprintf(path, sizeof(path), "%s/%s", dirs[di], files[fi]);
+            if (is_tex)
+            {
+                TexArchive tex;
+                if (Tex_Load(path, &tex))
+                {
+                    u16 i;
+                    u32 frames = 0;
+                    for (i = 0; i < tex.count; i++)
+                        frames += tex.textures[i].frame_count;
+                    printf("FlyingDodgem: %s: %u textures, %u frames\n",
+                           path, tex.count, frames);
+                    Tex_Free(&tex);
+                    done = 1;
+                }
+            }
+            else
+            {
+                MazDoc maz;
+                if (Maz_Load(path, &maz))
+                {
+                    printf("FlyingDodgem: %s: objs %u/%u/%u/%u\n", path,
+                           maz.arrays[0].count, maz.arrays[1].count,
+                           maz.arrays[2].count, maz.arrays[3].count);
+                    Maz_Free(&maz);
+                    done = 1;
+                }
+            }
+        }
+        if (!done)
+            SDL_Log("FlyingDodgem: could not locate %s", files[fi]);
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -250,7 +318,9 @@ int main(int argc, char **argv)
     }
 #endif
 
-bool running = true;
+    load_maze_assets();
+
+    bool running = true;
 HBRUSH black = CreateSolidBrush(DASH_BLACK_INDEX);
 bool captured = false;
 while (running)

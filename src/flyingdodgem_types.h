@@ -21,7 +21,9 @@ typedef unsigned __int64   uint64_t;
 #ifdef _MSC_VER
 typedef __int32 intptr_t;
 typedef unsigned __int32 uintptr_t;
+#ifndef __cplusplus
 typedef unsigned __int32 size_t;
+#endif
 #else
 #include <stddef.h>
 #endif

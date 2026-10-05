@@ -156,6 +156,8 @@ static const Glyph8 g_font[G_COUNT] = {
 
 #define SURFACE_MAGIC 0x47445253u  /* "SDRG" */
 #define BRUSH_MAGIC   0x48524253u  /* "SBRH" */
+#define PEN_MAGIC     0x4e455053u  /* "SPEN" */
+#define PALETTE_MAGIC 0x4c415053u  /* "SPAL" */
 
 typedef struct GdcState
 {
@@ -167,14 +169,39 @@ typedef struct GdcState
 struct GdiSurface
 {
     u32 magic;
-    SDL_Surface *sdl;   /* INDEX8 backing store */
+    SDL_Surface *sdl;   /* INDEX8 backing store; NULL on a fresh memory DC */
     GdcState state;     /* per-DC drawing state */
+    /* Objects selected into this DC (retail present path:
+     * CreateCompatibleDC -> SelectObject(memDC, dib) -> blit). */
+    HGDIOBJ selectedBitmap;
+    HGDIOBJ selectedBrush;
+    HGDIOBJ selectedPen;
+    HPALETTE selectedPalette;
 };
 
 struct GdiBrush
 {
     u32 magic;
+    u32 color;          /* palette index (CreateSolidBrush) */
+    u8 isNull;          /* NULL_BRUSH stock object: fills are skipped */
+    u8 hasRgb;          /* stock brush: colour given as RGB, resolved on use */
+    u8 r, g, b;
+};
+
+struct GdiPen
+{
+    u32 magic;
     u32 color;          /* palette index */
+    u8 isNull;          /* NULL_PEN stock object: outlines are skipped */
+    u8 hasRgb;          /* stock pen: colour given as RGB, resolved on use */
+    u8 r, g, b;
+};
+
+struct GdiPalette
+{
+    u32 magic;
+    u32 count;
+    PALETTEENTRY entries[256];
 };
 
 /* A resource blob read from the resource-only DLL asset (.dib). Holds the raw
@@ -216,6 +243,10 @@ static GdiSurface *surface_new(SDL_Surface *sdl)
     s->state.textColor = 255;
     s->state.bkColor = 0;
     s->state.bkMode = GDI_TRANSPARENT;
+    s->selectedBitmap = NULL;
+    s->selectedBrush = NULL;
+    s->selectedPen = NULL;
+    s->selectedPalette = NULL;
     return s;
 }
 
@@ -258,7 +289,9 @@ static SDL_Palette *shared_palette(void)
 HDC __cdecl CreateCompatibleDC(HDC hdc)
 {
     (void)hdc;
-    return NULL;
+    /* A memory DC starts out with an empty 1x1 bitmap; the retail backbuffer
+     * setup attaches its CreateDIBSection result with SelectObject. */
+    return surface_new(NULL);
 }
 
 HBITMAP __cdecl CreateDIBSection(HDC hdc, const BITMAPINFO *pbmi,
@@ -343,7 +376,25 @@ u8 __cdecl DeleteObject(HGDIOBJ hgdiobj)
     }
     if (s->magic == BRUSH_MAGIC)
     {
-        SDL_free(s);
+        GdiBrush *b = (GdiBrush *)hgdiobj;
+        /* Stock brushes are static singletons; DeleteObject fails on them
+         * (same as real GDI). */
+        if (b->hasRgb || b->isNull)
+            return 0;
+        SDL_free(b);
+        return 1;
+    }
+    if (s->magic == PEN_MAGIC)
+    {
+        GdiPen *p = (GdiPen *)hgdiobj;
+        if (p->hasRgb || p->isNull)
+            return 0;
+        SDL_free(p);
+        return 1;
+    }
+    if (s->magic == PALETTE_MAGIC)
+    {
+        SDL_free(hgdiobj);
         return 1;
     }
     return 0;
@@ -390,12 +441,208 @@ u32 __cdecl GetDIBColorTable(HDC hdc, u32 iStart, u32 cEntries, RGBQUAD *pColors
     return cEntries;
 }
 
+/* ---------------------------------------------------------------------------
+ * Logical palettes (retail present path).
+ *
+ * The retail backbuffer/palette setup builds a LOGPALETTE from a maze .TEX
+ * palette, selects it into a DC (SelectPalette) and realizes it
+ * (RealizePalette) — the standard Win95 way of putting an 8-bit game palette
+ * onto the screen DC. Every surface in this layer shares one physical palette
+ * (g_paletteStore + the shared SDL palette), so realizing a logical palette
+ * maps its entries straight into that shared table.
+ * ------------------------------------------------------------------------- */
+
+static u32 nearest_palette_entry(u32 r, u32 g, u32 b)
+{
+    u32 best = 0;
+    u32 bestDist = 0xFFFFFFFFu;
+    u32 i;
+    for (i = 0; i < 256; i++)
+    {
+        s32 dr = (s32)r - (s32)g_paletteStore[i].red;
+        s32 dg = (s32)g - (s32)g_paletteStore[i].green;
+        s32 db = (s32)b - (s32)g_paletteStore[i].blue;
+        u32 dist = (u32)(dr * dr + dg * dg + db * db);
+        if (dist < bestDist)
+        {
+            bestDist = dist;
+            best = i;
+            if (dist == 0)
+                break;
+        }
+    }
+    return best;
+}
+
+static GdiPalette *g_defaultPalette = NULL;
+
+/* The stock DEFAULT_PALETTE: a snapshot of the current physical palette.
+ * Used by GetStockObject(GDI_DEFAULT_PALETTE) and as the "previous palette"
+ * placeholder when a DC has never selected one. */
+static HPALETTE default_palette(void)
+{
+    if (g_defaultPalette == NULL)
+    {
+        g_defaultPalette = (GdiPalette *)SDL_malloc(sizeof(GdiPalette));
+        if (g_defaultPalette == NULL)
+            return NULL;
+        g_defaultPalette->magic = PALETTE_MAGIC;
+        g_defaultPalette->count = 256;
+        u32 i;
+        for (i = 0; i < 256; i++)
+        {
+            g_defaultPalette->entries[i].peRed = g_paletteStore[i].red;
+            g_defaultPalette->entries[i].peGreen = g_paletteStore[i].green;
+            g_defaultPalette->entries[i].peBlue = g_paletteStore[i].blue;
+            g_defaultPalette->entries[i].peFlags = 0;
+        }
+    }
+    return g_defaultPalette;
+}
+
+HPALETTE __cdecl CreatePalette(const LOGPALETTE *lplpal)
+{
+    if (lplpal == NULL)
+        return NULL;
+    GdiPalette *p = (GdiPalette *)SDL_malloc(sizeof(GdiPalette));
+    if (p == NULL)
+        return NULL;
+    p->magic = PALETTE_MAGIC;
+    p->count = lplpal->palNumEntries;
+    if (p->count > 256)
+        p->count = 256;
+    memcpy(p->entries, lplpal->palPalEntry, p->count * sizeof(PALETTEENTRY));
+    return p;
+}
+
+HPALETTE __cdecl SelectPalette(HDC hdc, HPALETTE pal, u8 forceBackground)
+{
+    (void)forceBackground; /* all surfaces share one palette anyway */
+    GdiSurface *s = hdc;
+    if (s == NULL || s->magic != SURFACE_MAGIC)
+        return NULL;
+    if (pal != NULL && ((GdiPalette *)pal)->magic != PALETTE_MAGIC)
+        return NULL;
+    HPALETTE prev = s->selectedPalette;
+    s->selectedPalette = pal;
+    return prev;
+}
+
+u32 __cdecl RealizePalette(HDC hdc)
+{
+    GdiSurface *s = hdc;
+    if (s == NULL || s->magic != SURFACE_MAGIC)
+        return 0;
+    HPALETTE pal = s->selectedPalette;
+    if (pal == NULL || pal->magic != PALETTE_MAGIC)
+        return 0;
+
+    SDL_Palette *sp = shared_palette();
+    if (sp == NULL)
+        return 0;
+
+    u32 n = pal->count;
+    u32 i;
+    for (i = 0; i < n; i++)
+    {
+        g_paletteStore[i].blue = pal->entries[i].peBlue;
+        g_paletteStore[i].green = pal->entries[i].peGreen;
+        g_paletteStore[i].red = pal->entries[i].peRed;
+        g_paletteStore[i].reserved = 0;
+    }
+    SDL_Color colors[256];
+    for (i = 0; i < n; i++)
+    {
+        colors[i].r = g_paletteStore[i].red;
+        colors[i].g = g_paletteStore[i].green;
+        colors[i].b = g_paletteStore[i].blue;
+        colors[i].a = 255;
+    }
+    if (!SDL_SetPaletteColors(sp, colors, 0, (int)n))
+        return 0;
+    return n;
+}
+
+u32 __cdecl SetPaletteEntries(HPALETTE pal, u32 start, u32 count,
+                              const PALETTEENTRY *entries)
+{
+    if (pal == NULL || pal->magic != PALETTE_MAGIC || entries == NULL)
+        return 0;
+    if (start >= 256)
+        return 0;
+    if (count > 256 - start)
+        count = 256 - start;
+    memcpy(&pal->entries[start], entries, count * sizeof(PALETTEENTRY));
+    if (start + count > pal->count)
+        pal->count = start + count;
+    return count;
+}
+
+u32 __cdecl GetPaletteEntries(HPALETTE pal, u32 start, u32 count,
+                              PALETTEENTRY *entries)
+{
+    if (pal == NULL || pal->magic != PALETTE_MAGIC || entries == NULL)
+        return 0;
+    if (start >= 256)
+        return 0;
+    if (count > pal->count - start)
+        count = pal->count - start;
+    memcpy(entries, &pal->entries[start], count * sizeof(PALETTEENTRY));
+    return count;
+}
+
+u32 __cdecl GetNearestPaletteIndex(HPALETTE pal, COLORREF color)
+{
+    if (pal == NULL || pal->magic != PALETTE_MAGIC)
+        return 0;
+    u32 r = color & 0xFFu;
+    u32 g = (color >> 8) & 0xFFu;
+    u32 b = (color >> 16) & 0xFFu;
+    u32 best = 0;
+    u32 bestDist = 0xFFFFFFFFu;
+    u32 i;
+    for (i = 0; i < pal->count; i++)
+    {
+        s32 dr = (s32)r - (s32)pal->entries[i].peRed;
+        s32 dg = (s32)g - (s32)pal->entries[i].peGreen;
+        s32 db = (s32)b - (s32)pal->entries[i].peBlue;
+        u32 dist = (u32)(dr * dr + dg * dg + db * db);
+        if (dist < bestDist)
+        {
+            bestDist = dist;
+            best = i;
+            if (dist == 0)
+                break;
+        }
+    }
+    return best;
+}
+
+u32 __cdecl GetSystemPaletteEntries(HDC hdc, u32 start, u32 count,
+                                    PALETTEENTRY *entries)
+{
+    (void)hdc;
+    if (entries == NULL || start >= 256)
+        return 0;
+    if (count > 256 - start)
+        count = 256 - start;
+    u32 i;
+    for (i = 0; i < count; i++)
+    {
+        entries[i].peRed = g_paletteStore[start + i].red;
+        entries[i].peGreen = g_paletteStore[start + i].green;
+        entries[i].peBlue = g_paletteStore[start + i].blue;
+        entries[i].peFlags = 0;
+    }
+    return count;
+}
+
 u8 __cdecl BitBlt(HDC dst, s32 dx, s32 dy, s32 w, s32 h,
                   HDC src, s32 sx, s32 sy, u32 rop)
 {
     GdiSurface *d = dst;
     GdiSurface *s = src;
-    if (d == NULL || s == NULL)
+    if (d == NULL || s == NULL || d->sdl == NULL || s->sdl == NULL)
         return 0;
     if (rop != GDI_SRCCOPY)
         return 0;
@@ -413,7 +660,8 @@ u8 __cdecl StretchBlt(HDC dst, s32 dx, s32 dy, s32 dw, s32 dh,
 {
     GdiSurface *d = dst;
     GdiSurface *s = src;
-    if (d == NULL || s == NULL || dw <= 0 || dh <= 0 || sw == 0 || sh == 0)
+    if (d == NULL || s == NULL || d->sdl == NULL || s->sdl == NULL ||
+        dw <= 0 || dh <= 0 || sw == 0 || sh == 0)
         return 0;
     if (rop != GDI_SRCCOPY)
         return 0;
@@ -423,6 +671,212 @@ u8 __cdecl StretchBlt(HDC dst, s32 dx, s32 dy, s32 dw, s32 dh,
     if (!SDL_BlitSurfaceScaled(s->sdl, &srcrect, d->sdl, &dstrect, SDL_SCALEMODE_NEAREST))
         return 0;
     return 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * Object selection, stock objects, and raster ops (retail present path).
+ *
+ * The retail backbuffer setup runs:
+ *   memDC = CreateCompatibleDC(screenDC);
+ *   hpal  = CreatePalette(texPalette);  SelectPalette(memDC, hpal, 0);
+ *   SelectObject(memDC, dib);           -- attach the backbuffer DIB
+ *   ... blit the frame ...              BitBlt/StretchBlt(PATCOPY/BLACKNESS)
+ * and clears regions with PatBlt(..., BLACKNESS) (observed at 0x4109c6).
+ * ------------------------------------------------------------------------- */
+
+static u32 brush_fill_index(const GdiBrush *b)
+{
+    if (b->hasRgb)
+        return nearest_palette_entry(b->r, b->g, b->b);
+    return b->color;
+}
+
+static u32 pen_color_index(const GdiPen *p)
+{
+    if (p->hasRgb)
+        return nearest_palette_entry(p->r, p->g, p->b);
+    return p->color;
+}
+
+/* Stock objects are static singletons (their RGB colours resolve against the
+ * current physical palette at fill time, so a later RealizePalette keeps
+ * stock fills correct). */
+static GdiBrush g_brushWhite  = { BRUSH_MAGIC, 0, 0, 1, 255, 255, 255 };
+static GdiBrush g_brushLtGray = { BRUSH_MAGIC, 0, 0, 1, 0xC0, 0xC0, 0xC0 };
+static GdiBrush g_brushGray   = { BRUSH_MAGIC, 0, 0, 1, 0x80, 0x80, 0x80 };
+static GdiBrush g_brushDkGray = { BRUSH_MAGIC, 0, 0, 1, 0x40, 0x40, 0x40 };
+static GdiBrush g_brushBlack  = { BRUSH_MAGIC, 0, 0, 1, 0, 0, 0 };
+static GdiBrush g_brushNull   = { BRUSH_MAGIC, 0, 1, 0, 0, 0, 0 };
+static GdiPen   g_penWhite    = { PEN_MAGIC, 0, 0, 1, 255, 255, 255 };
+static GdiPen   g_penBlack    = { PEN_MAGIC, 0, 0, 1, 0, 0, 0 };
+static GdiPen   g_penNull     = { PEN_MAGIC, 0, 1, 0, 0, 0, 0 };
+
+HGDIOBJ __cdecl SelectObject(HDC hdc, HGDIOBJ obj)
+{
+    GdiSurface *dc = hdc;
+    if (dc == NULL || dc->magic != SURFACE_MAGIC || obj == NULL)
+        return NULL;
+    u32 kind = *(const u32 *)obj;
+    if (kind == SURFACE_MAGIC)
+    {
+        /* Bitmap selection retargets the DC's drawing surface at the DIB.
+         * The screen DC is exempt: a display DC does not allow bitmap
+         * selection, and the harness owns that surface outright. */
+        if (dc == g_screen)
+            return NULL;
+        HGDIOBJ prev = dc->selectedBitmap;
+        if (obj != (HGDIOBJ)dc)
+            dc->sdl = ((GdiSurface *)obj)->sdl;
+        dc->selectedBitmap = obj;
+        return prev;
+    }
+    if (kind == BRUSH_MAGIC)
+    {
+        HGDIOBJ prev = dc->selectedBrush;
+        dc->selectedBrush = obj;
+        return prev;
+    }
+    if (kind == PEN_MAGIC)
+    {
+        HGDIOBJ prev = dc->selectedPen;
+        dc->selectedPen = obj;
+        return prev;
+    }
+    /* Palettes must go through SelectObject's counterpart, SelectPalette. */
+    return NULL;
+}
+
+HGDIOBJ __cdecl GetStockObject(s32 i)
+{
+    switch (i)
+    {
+    case GDI_WHITE_BRUSH:   return &g_brushWhite;
+    case GDI_LTGRAY_BRUSH:  return &g_brushLtGray;
+    case GDI_GRAY_BRUSH:    return &g_brushGray;
+    case GDI_DKGRAY_BRUSH:  return &g_brushDkGray;
+    case GDI_BLACK_BRUSH:   return &g_brushBlack;
+    case GDI_NULL_BRUSH:    return &g_brushNull;
+    case GDI_WHITE_PEN:     return &g_penWhite;
+    case GDI_BLACK_PEN:     return &g_penBlack;
+    case GDI_NULL_PEN:      return &g_penNull;
+    case GDI_DEFAULT_PALETTE: return default_palette();
+    default: return NULL;
+    }
+}
+
+u8 __cdecl PatBlt(HDC hdc, s32 x, s32 y, s32 w, s32 h, u32 rop)
+{
+    GdiSurface *s = hdc;
+    if (s == NULL || s->sdl == NULL || w <= 0 || h <= 0)
+        return 0;
+    u32 index;
+    switch (rop)
+    {
+    case GDI_BLACKNESS:
+        index = 0;
+        break;
+    case GDI_WHITENESS:
+        index = 0xFF;
+        break;
+    case GDI_PATCOPY:
+    {
+        GdiBrush *b = s->selectedBrush;
+        if (b == NULL || b->isNull)
+            return 0;
+        index = brush_fill_index(b);
+        break;
+    }
+    default:
+        return 0;
+    }
+    SDL_Rect r = { x, y, w, h };
+    if (!SDL_FillSurfaceRect(s->sdl, &r, index))
+        return 0;
+    return 1;
+}
+
+u8 __cdecl Rectangle(HDC hdc, s32 left, s32 top, s32 right, s32 bottom)
+{
+    GdiSurface *s = hdc;
+    if (s == NULL || s->sdl == NULL || right <= left || bottom <= top)
+        return 0;
+    s32 w = right - left;
+    s32 h = bottom - top;
+
+    /* 1-pixel outline with the selected pen (drawn inside the rect), then the
+     * interior with the selected brush — GDI's Rectangle is border + fill. */
+    GdiPen *pen = s->selectedPen;
+    if (pen != NULL && !pen->isNull)
+    {
+        u32 c = pen_color_index(pen);
+        SDL_Rect rowTop = { left, top, w, 1 };
+        SDL_Rect rowBot = { left, bottom - 1, w, 1 };
+        SDL_Rect colL = { left, top, 1, h };
+        SDL_Rect colR = { right - 1, top, 1, h };
+        SDL_FillSurfaceRect(s->sdl, &rowTop, c);
+        SDL_FillSurfaceRect(s->sdl, &rowBot, c);
+        SDL_FillSurfaceRect(s->sdl, &colL, c);
+        SDL_FillSurfaceRect(s->sdl, &colR, c);
+    }
+    GdiBrush *brush = s->selectedBrush;
+    if (brush != NULL && !brush->isNull && w > 2 && h > 2)
+    {
+        SDL_Rect inner = { left + 1, top + 1, w - 2, h - 2 };
+        SDL_FillSurfaceRect(s->sdl, &inner, brush_fill_index(brush));
+    }
+    return 1;
+}
+
+s32 __cdecl GetDeviceCaps(HDC hdc, s32 index)
+{
+    GdiSurface *s = hdc;
+    switch (index)
+    {
+    case GDI_HORZRES:
+        return (s != NULL && s->sdl != NULL) ? s->sdl->w : 640;
+    case GDI_VERTRES:
+        return (s != NULL && s->sdl != NULL) ? s->sdl->h : 480;
+    case GDI_PLANES:
+        return 1;
+    case GDI_BITSPIXEL:
+        return 8;
+    default:
+        return 0;
+    }
+}
+
+u8 __cdecl GdiFlush(void)
+{
+    return 1;
+}
+
+u32 __cdecl GdiSetBatchLimit(u32 limit)
+{
+    (void)limit;
+    return 0; /* previous batch limit: never batching */
+}
+
+u8 __cdecl GetTextExtentPointA(HDC hdc, const char *str, s32 count, GDI_SIZE *size)
+{
+    (void)hdc;
+    if (str == NULL || size == NULL)
+        return 0;
+    if (count < 0)
+        count = (s32)strlen(str);
+    size->cx = count * 8; /* fixed 8x8 layer font */
+    size->cy = 8;
+    return 1;
+}
+
+u32 __cdecl GetPixel(HDC hdc, s32 x, s32 y)
+{
+    GdiSurface *s = hdc;
+    if (s == NULL || s->sdl == NULL || s->sdl->pixels == NULL ||
+        x < 0 || y < 0 || x >= s->sdl->w || y >= s->sdl->h)
+        return 0xFFFFFFFFu; /* CLR_INVALID */
+    u8 index = ((const u8 *)s->sdl->pixels)[(u32)y * (u32)s->sdl->pitch + (u32)x];
+    const RGBQUAD *q = &g_paletteStore[index];
+    return RGB(q->red, q->green, q->blue);
 }
 
 static int glyph_index(char c)

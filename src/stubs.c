@@ -1766,3 +1766,27 @@ void __fastcall DrawCell3910(void* self, void* unused, int32_t x, int32_t y, int
         buf[(row - 1) * stride + x + 1] = v;
     }
 }
+
+/* MFC startup helpers called from WinMain (HOVER 0x45021e / 0x450272). They
+ * live out-of-line in this translation unit so the calls from WinMain are
+ * never inlined away. Not reccmp targets (MFC static-library code). */
+int __stdcall AfxWinInit(void* hInstance, void* hPrevInstance, char* lpCmdLine, int nCmdShow)
+{
+    (void)hInstance;
+    (void)hPrevInstance;
+    (void)lpCmdLine;
+    (void)nCmdShow;
+    return 1;
+}
+
+void __stdcall AfxWinTerm(void)
+{
+}
+
+/* Not yet reccmp-annotated callee of Run (HOVER 0x45f1a0): the real body is
+ * matched in a later pass; until then Run's call shows as an unannotated
+ * offset diff. */
+void __stdcall AfxPostQuitMessage(int nExitCode)
+{
+    (void)nExitCode;
+}
