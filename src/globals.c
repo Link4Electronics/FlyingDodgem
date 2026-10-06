@@ -780,3 +780,9 @@ void* g_4a1d68;
 int32_t g_4a1d78;
 // GLOBAL: HOVER 0x00461cfc
 int32_t g_461cfc;
+// GLOBAL: HOVER 0x00460644
+uint8_t g_460644[24];
+// GLOBAL: HOVER 0x0046065c
+uint8_t g_46065c[24];
+// GLOBAL: HOVER 0x00460740
+int32_t g_460740;

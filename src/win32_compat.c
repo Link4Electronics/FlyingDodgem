@@ -442,6 +442,16 @@ u32 __cdecl GetTickCount(void)
     return (u32)SDL_GetTicks();
 }
 
+void __cdecl EnterCriticalSection(void *cs)
+{
+    (void)cs;
+}
+
+void __cdecl LeaveCriticalSection(void *cs)
+{
+    (void)cs;
+}
+
 HINSTANCE __cdecl LoadModule(const char *moduleName, void *paramBlock)
 {
     (void)paramBlock;

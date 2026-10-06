@@ -119,4 +119,10 @@ s32 __cdecl GetSystemMetrics(s32 index);
 u32 __cdecl GetTickCount(void);
 HINSTANCE __cdecl LoadModule(const char *moduleName, void *paramBlock);
 
+/* Crit sections used by the render entry (0x402250). The harness drives the
+ * render path from one thread, so these only exist to satisfy the retail call
+ * shape: enter/leave are no-ops. */
+void __cdecl EnterCriticalSection(void *cs);
+void __cdecl LeaveCriticalSection(void *cs);
+
 #endif

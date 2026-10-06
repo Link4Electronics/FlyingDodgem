@@ -211,12 +211,6 @@ void* __cdecl GetSub401140(void)
     return GetField459d94(g_46058c);
 }
 
-// FUNCTION: HOVER 0x004038a0
-void __fastcall GetPair38a0(Self38a0* self, void* unused, PtPair* out)
-{
-    *out = self->p;
-}
-
 // FUNCTION: HOVER 0x00408530
 extern uint32_t g_4c52d8;
 #pragma optimize("s", on)
@@ -1711,28 +1705,6 @@ void* __fastcall Ptr4CC70(void* self)
  * pattern so "this" lands in ECX and the real argument at [esp+4].
  * ------------------------------------------------------------------------- */
 
-// FUNCTION: HOVER 0x00403850
-int32_t __fastcall F403850(void* self, void* unused, int32_t arg)
-{
-    int32_t v = arg - 0x15e;
-    if (v < 1)
-        v = 1;
-    v &= 0xffffffc0;
-    {
-        int32_t base = *(int32_t*)((uint8_t*)self + 0x60);
-        if (v > 0xfc0)
-            return base + 0x3f00;
-        return base + v * 4;
-    }
-}
-
-// FUNCTION: HOVER 0x00403880
-void __fastcall CopyPos33880(void* self, void* unused, int32_t* out)
-{
-    out[0] = *(int16_t*)((uint8_t*)self + 0x46);
-    out[1] = *(int16_t*)((uint8_t*)self + 0x4a);
-}
-
 // FUNCTION: HOVER 0x004087D0
 void __fastcall CopyPos87D0(void* self)
 {
@@ -1740,31 +1712,6 @@ void __fastcall CopyPos87D0(void* self)
     *(int32_t*)(b + 0x4c) = *(int16_t*)(b + 0x46);
     *(int32_t*)(b + 0x50) = *(int16_t*)(b + 0x4a);
     *(int32_t*)(b + 0x60) = *(int32_t*)(b + 0x5c);
-}
-
-// FUNCTION: HOVER 0x00403910
-void __fastcall DrawCell3910(void* self, void* unused, int32_t x, int32_t y, int32_t ignored)
-{
-    uint8_t* selfb = (uint8_t*)self;
-    if (*(int32_t*)(selfb + 4) + 1 > y)
-        return;
-    if (*(int32_t*)selfb + 1 > x)
-        return;
-    if (*(int32_t*)(selfb + 0xc) - 1 < y)
-        return;
-    if (*(int32_t*)(selfb + 8) - 1 < x)
-        return;
-    {
-        int32_t row = *(int32_t*)(selfb + 0x18) - y;
-        int32_t stride = *(int32_t*)(selfb + 0x24);
-        uint8_t* buf = *(uint8_t**)(selfb + 0x10);
-        uint8_t v = *(uint8_t*)(selfb + 0x1c);
-        buf[(row - 2) * stride + x] = v;
-        buf[row * stride + x] = v;
-        buf[(row - 1) * stride + x - 1] = v;
-        buf[(row - 1) * stride + x] = v;
-        buf[(row - 1) * stride + x + 1] = v;
-    }
 }
 
 /* MFC startup helpers called from WinMain (HOVER 0x45021e / 0x450272). They

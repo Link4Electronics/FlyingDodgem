@@ -30,6 +30,8 @@ if(MSVC_50_FOR_RECCMP AND EXISTS "C:/msvc/bin/CL.EXE")
         # WinMain keeps its frame: same VC4.2 toolchain, /Oy only on pump.
         if(_f STREQUAL "pump.c")
             set(_extra_flags /Oy)
+        elseif(_f STREQUAL "render.c")
+            set(_extra_flags /G4)
         else()
             set(_extra_flags "")
         endif()
