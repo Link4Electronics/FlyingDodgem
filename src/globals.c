@@ -20,6 +20,9 @@ void* g_46058c;
 // GLOBAL: HOVER 0x004c52d8
 uint32_t g_4c52d8;
 
+// GLOBAL: HOVER 0x004c52dc
+void* g_4c52dc;
+
 // GLOBAL: HOVER 0x004c79b0
 void* g_4c79b0;
 
@@ -756,6 +759,35 @@ int32_t g_4a453c;
 int32_t g_4a4540;
 // GLOBAL: HOVER 0x004a4548
 void* g_4a4548;
+// GLOBAL: HOVER 0x004a4714
+void* g_4a4714;
+// GLOBAL: HOVER 0x004a471c
+void* g_4a471c;
+/* Centre-cutout viewport box / minimap visibility state (0x407160). */
+// GLOBAL: HOVER 0x004a4790
+int32_t g_4a4790;
+// GLOBAL: HOVER 0x004a4794
+int32_t g_4a4794;
+// GLOBAL: HOVER 0x004a4798
+int32_t g_4a4798;
+// GLOBAL: HOVER 0x004a479c
+int32_t g_4a479c;
+// GLOBAL: HOVER 0x004a47b0
+int32_t g_4a47b0;
+// GLOBAL: HOVER 0x004a47b8
+int32_t g_4a47b8;
+// GLOBAL: HOVER 0x004a47bc
+int32_t g_4a47bc;
+// GLOBAL: HOVER 0x004a47d8
+int32_t g_4a47d8;
+// GLOBAL: HOVER 0x004a47e0
+int32_t g_4a47e0;
+// GLOBAL: HOVER 0x004a47e4
+int32_t g_4a47e4;
+// GLOBAL: HOVER 0x004a4844
+void* g_4a4844;
+// GLOBAL: HOVER 0x004a4848
+int32_t g_4a4848;
 // GLOBAL: HOVER 0x004a4a14
 int32_t g_4a4a14;
 // GLOBAL: HOVER 0x004a4a1c
@@ -786,3 +818,7 @@ uint8_t g_460644[24];
 uint8_t g_46065c[24];
 // GLOBAL: HOVER 0x00460740
 int32_t g_460740;
+// GLOBAL: HOVER 0x00460750
+int32_t g_460750;
+// GLOBAL: HOVER 0x00460970
+void* g_460970;

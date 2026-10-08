@@ -166,6 +166,16 @@ typedef struct GdcState
     s32 bkMode;         /* GDI_OPAQUE or GDI_TRANSPARENT */
 } GdcState;
 
+/* One SaveDC() frame: everything the layer tracks as "DC state". */
+typedef struct GdiSaveState
+{
+    GdcState state;
+    HGDIOBJ selectedBitmap;
+    HGDIOBJ selectedBrush;
+    HGDIOBJ selectedPen;
+    HPALETTE selectedPalette;
+} GdiSaveState;
+
 struct GdiSurface
 {
     u32 magic;
@@ -177,6 +187,9 @@ struct GdiSurface
     HGDIOBJ selectedBrush;
     HGDIOBJ selectedPen;
     HPALETTE selectedPalette;
+    /* SaveDC/RestoreDC stack (retail brackets each HUD repaint with them). */
+    u32 savedCount;
+    GdiSaveState saved[GDI_MAX_SAVEDC];
 };
 
 struct GdiBrush
@@ -247,6 +260,7 @@ static GdiSurface *surface_new(SDL_Surface *sdl)
     s->selectedBrush = NULL;
     s->selectedPen = NULL;
     s->selectedPalette = NULL;
+    s->savedCount = 0;
     return s;
 }
 
@@ -764,6 +778,44 @@ HGDIOBJ __cdecl GetStockObject(s32 i)
     }
 }
 
+s32 __cdecl SaveDC(HDC hdc)
+{
+    GdiSurface *s = hdc;
+    GdiSaveState *e;
+    if (s == NULL || s->magic != SURFACE_MAGIC ||
+        s->savedCount >= GDI_MAX_SAVEDC)
+        return 0;
+    e = &s->saved[s->savedCount];
+    e->state = s->state;
+    e->selectedBitmap = s->selectedBitmap;
+    e->selectedBrush = s->selectedBrush;
+    e->selectedPen = s->selectedPen;
+    e->selectedPalette = s->selectedPalette;
+    s->savedCount++;
+    return (s32)s->savedCount;
+}
+
+s32 __cdecl RestoreDC(HDC hdc, s32 saved)
+{
+    GdiSurface *s = hdc;
+    GdiSaveState *e;
+    if (s == NULL || s->magic != SURFACE_MAGIC || s->savedCount == 0)
+        return 0;
+    if (saved < 0)
+        s->savedCount--;
+    else if ((u32)saved <= s->savedCount)
+        s->savedCount = (u32)saved - 1;
+    else
+        return 0;
+    e = &s->saved[s->savedCount];
+    s->state = e->state;
+    s->selectedBitmap = e->selectedBitmap;
+    s->selectedBrush = e->selectedBrush;
+    s->selectedPen = e->selectedPen;
+    s->selectedPalette = e->selectedPalette;
+    return 1;
+}
+
 u8 __cdecl PatBlt(HDC hdc, s32 x, s32 y, s32 w, s32 h, u32 rop)
 {
     GdiSurface *s = hdc;
@@ -1072,6 +1124,11 @@ HBRUSH __cdecl CreateSolidBrush(u32 color)
         return NULL;
     b->magic = BRUSH_MAGIC;
     b->color = color;
+    b->isNull = 0;
+    b->hasRgb = 0;
+    b->r = 0;
+    b->g = 0;
+    b->b = 0;
     return b;
 }
 
@@ -1655,6 +1712,29 @@ u32 __cdecl GdiCompat_SetDibPalette(const void *dib)
     }
     SDL_SetPaletteColors(pal, colors, 0, 256);
     return 1;
+}
+
+u32 __cdecl GdiCompat_SetMaskColor(HDC hdc, u32 rgb)
+{
+    GdiSurface *s = hdc;
+    u32 i;
+
+    for (i = 0; i < 256; i++)
+    {
+        if ((u32)g_paletteStore[i].red == ((rgb >> 16) & 0xffu) &&
+            (u32)g_paletteStore[i].green == ((rgb >> 8) & 0xffu) &&
+            (u32)g_paletteStore[i].blue == (rgb & 0xffu))
+            break;
+    }
+    if (s == NULL || s->sdl == NULL)
+        return 0xffffffffu;
+    if (i == 256)
+    {
+        SDL_SetSurfaceColorKey(s->sdl, false, 0);
+        return 0xffffffffu;
+    }
+    SDL_SetSurfaceColorKey(s->sdl, true, i);
+    return i;
 }
 
 HDC __cdecl GdiCompat_CreateDibSurface(const void *dib)

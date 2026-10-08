@@ -21,7 +21,7 @@ if(MSVC_50_FOR_RECCMP AND EXISTS "C:/msvc/bin/CL.EXE")
     set(_vc42_objs "")
     foreach(_f IN LISTS FLYINGDODGEM_RECCMP_VC42_SOURCES)
         set(_obj "${CMAKE_CURRENT_BINARY_DIR}/vc42/${_f}.obj")
-        if(_f STREQUAL "winmain.c" OR _f STREQUAL "pump.c")
+        if(_f STREQUAL "winmain.c" OR _f STREQUAL "pump.c" OR _f STREQUAL "render.c")
             set(_lang /TP)
         else()
             set(_lang /TC)
@@ -65,6 +65,7 @@ add_executable(FlyingDodgem ${FLYINGDODGEM_SOURCES})
 # uses __thiscall member dispatch and needs the C++ frontend.
 set_source_files_properties(winmain.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(pump.c PROPERTIES LANGUAGE CXX)
+set_source_files_properties(render.c PROPERTIES LANGUAGE CXX)
 
 target_include_directories(FlyingDodgem PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -76,6 +77,8 @@ if(FLYINGDODGEM_PLATFORM_SDL3 AND NOT MSVC_50_FOR_RECCMP)
         gdi32_compat.c
         win32_compat.c
         menu.c
+        gameframe.c
+        dashhud.c
     )
     target_compile_definitions(FlyingDodgem PRIVATE FLYINGDODGEM_GDI_COMPAT=1)
     target_link_libraries(FlyingDodgem PRIVATE SDL3::SDL3)

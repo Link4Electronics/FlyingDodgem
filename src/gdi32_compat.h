@@ -136,6 +136,15 @@ HDC __cdecl GdiCompat_CreateDibSurface(const void *dib);
  * palette must be applied before presenting it. */
 u32 __cdecl GdiCompat_SetDibPalette(const void *dib);
 
+/* Arm a sprite surface with a mask colour: the shared colour table is scanned
+ * for `rgb` and that palette index becomes the blit colour key, so BitBlt
+ * skips the transparent background instead of painting it. The DASHRES mip
+ * variants each carry the pure-blue mask at a different palette index
+ * (235/241/236/238/245/236), so the lookup must happen at draw time against
+ * the palette that is currently selected. Returns the mask index, or
+ * 0xffffffffu when no colour table entry matches. */
+u32 __cdecl GdiCompat_SetMaskColor(HDC hdc, u32 rgb);
+
 /* DIB creation flag. */
 #define DIB_RGB_COLORS 0
 
@@ -187,6 +196,15 @@ HGDIOBJ __cdecl SelectObject(HDC hdc, HGDIOBJ obj);
 #define GDI_NULL_PEN       8
 #define GDI_DEFAULT_PALETTE 15
 HGDIOBJ __cdecl GetStockObject(s32 i);
+
+/* Save/restore the selected objects (plus text state) of a DC. The retail
+ * dashboard DC brackets every gauge repaint with SaveDC (0x45091b) and
+ * RestoreDC(..., -1) (0x45095e) so the HUD's pen/brush selections do not leak
+ * into the rest of the frame. `saved` is the id returned by SaveDC, or -1 for
+ * "undo the most recent SaveDC". Returns non-zero on success. */
+#define GDI_MAX_SAVEDC 8
+s32 __cdecl SaveDC(HDC hdc);
+s32 __cdecl RestoreDC(HDC hdc, s32 saved);
 
 /* PatBlt raster ops the present path uses: retail clears regions with
  * BLACKNESS (0x42) and fills with PATCOPY of the selected brush. */

@@ -272,6 +272,55 @@ void __fastcall SetTwo19940(void* self, void* unused, u32 a, u32 b)
     *(u32*)((uint8_t*)self + 0x70) = b;
 }
 
+#if defined(_MSC_VER)
+#pragma comment(lib, "gdi32.lib")
+__declspec(dllimport)
+#endif
+u32 __stdcall GetNearestPaletteIndex(void* pal, u32 color);
+
+/* PARKED (0x419960): re-annotate with `// FUNCTION: HOVER 0x00419960` to resume matching. */
+void __fastcall Ramp419960(void* self, void* unused, s32 a, u8 r, u8 g, u8 b, void* pal)
+{
+    s32 i;
+    s32 off;
+    s32 k;
+    u8 rr;
+    u8 gg;
+    u8 bb;
+    u32 idx;
+    u32* base;
+
+    *(s32*)((uint8_t*)self + 0x74) = a;
+
+    for (i = 0, off = 0; i < *(s32*)((uint8_t*)self + 0x8c) / 2; i++, off += 4)
+    {
+        k = *(s32*)((uint8_t*)self + 0x8c) - i;
+        rr = (u8)((k * r) / *(s32*)((uint8_t*)self + 0x2c));
+        gg = (u8)((k * g) / *(s32*)((uint8_t*)self + 0x2c));
+        bb = (u8)((k * b) / *(s32*)((uint8_t*)self + 0x2c));
+        idx = GetNearestPaletteIndex(*(void**)((uint8_t*)pal + 4),
+            (((bb << 8) + gg) << 8) + rr);
+        base = *(u32**)((uint8_t*)self + 0x6c);
+        *(u32*)((uint8_t*)base + off) = idx;
+        *(u32*)((uint8_t*)base + off) |= *(u32*)((uint8_t*)base + off) << 8;
+        *(u32*)((uint8_t*)base + off) |= *(u32*)((uint8_t*)base + off) << 16;
+    }
+
+    for (i = *(s32*)((uint8_t*)self + 0x8c) / 2, off = i * 4;
+         i < *(s32*)((uint8_t*)self + 0x8c); i++, off += 4)
+    {
+        rr = (u8)((i * r) / *(s32*)((uint8_t*)self + 0x2c));
+        gg = (u8)((i * g) / *(s32*)((uint8_t*)self + 0x2c));
+        bb = (u8)((i * b) / *(s32*)((uint8_t*)self + 0x2c));
+        idx = GetNearestPaletteIndex(*(void**)((uint8_t*)pal + 4),
+            (((bb << 8) + gg) << 8) + rr);
+        base = *(u32**)((uint8_t*)self + 0x6c);
+        *(u32*)((uint8_t*)base + off) = idx;
+        *(u32*)((uint8_t*)base + off) |= *(u32*)((uint8_t*)base + off) << 8;
+        *(u32*)((uint8_t*)base + off) |= *(u32*)((uint8_t*)base + off) << 16;
+    }
+}
+
 // FUNCTION: HOVER 0x00422c80
 /* Retail ends with `mov eax,ecx; ret` (return self), which is scheduled LAST
  * only when the function carries no return value; MSVC 5.0 /O2 hoists the copy

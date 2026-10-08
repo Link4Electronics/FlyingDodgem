@@ -1,6 +1,7 @@
 #include "platform/audio.h"
 #include "platform/display.h"
 
+#include "gameframe.h"
 #include "gdi32_compat.h"
 #include "resources.h"
 #include "texmaze.h"
@@ -11,18 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-
-#define VIEWPORT_WIDTH  640
-#define VIEWPORT_HEIGHT 480
-
-/* The DASHRES dashboard set: mip variants of the cockpit dashboard, loaded by
- * the retail DASH loader (HOVER.EXE 0x410518) via
- * FindResourceCompat(0x410534-ish)/FindResourceA. Sizes ascend 320x149 ..
- * 700x325; the 640-wide 0x85 mip fills the 640x480 viewport width exactly. */
-#define DASHRES_FIRST_ID 0x81
-#define DASHRES_COUNT    6
-
-#define DASH_BLACK_INDEX 255u /* every DASH palette maps index 255 to pure black */
 
 /* The DASH assets live in DASHRES.DLL (a resource-only PE DLL of RT_BITMAP
  * 8-bpp DIBs). The asset location is resolved in order: the first CLI
@@ -77,14 +66,6 @@ static const char *find_dashres(int argc, char **argv)
         return "dashres";
     return NULL;
 }
-
-typedef struct DashMip
-{
-    HDC surface;
-    const void *dib;
-    u32 width;
-    u32 height;
-} DashMip;
 
 /* The 48-byte game object initialized by Init22c80 (HOVER.EXE 0x422c80).
  * Retail constructs a whole run of these (base + 0x2e0, +0x310, +0x340, ...)
@@ -210,15 +191,7 @@ int main(int argc, char **argv)
     }
 
     u32 pitch = 0;
-    u8 *back = PlatDisplay_GetBackBuffer(display, &pitch);
-    if (back == NULL)
-    {
-        SDL_Log("FlyingDodgem: failed to lock back buffer");
-        PlatDisplay_Close(display);
-        PlatAudio_Quit();
-        SDL_Quit();
-        return 1;
-    }
+    u8 *back = NULL;
 
     /* Drive the matched Init22c80 constructor (0x422c80) through the native
      * pipeline: retail builds a run of these 48-byte sub-objects (base + 0x2e0,
@@ -321,30 +294,26 @@ int main(int argc, char **argv)
     load_maze_assets();
 
     bool running = true;
-HBRUSH black = CreateSolidBrush(DASH_BLACK_INDEX);
-bool captured = false;
-while (running)
-{
+    bool captured = false;
+    while (running)
+    {
         running = PlatDisplay_PollEvents(display);
         if (!running)
             break;
 
 #if defined(FLYINGDODGEM_GDI_COMPAT)
-        if (selected < dashCount)
+        /* The streaming texture has to be locked again every frame:
+         * PlatDisplay_Present unlocks it (and clears its cached pointer) at
+         * the end of each frame, so locking once before the loop would leave
+         * frames 2..N writing through a stale, already-unlocked pointer. */
+        back = PlatDisplay_GetBackBuffer(display, &pitch);
+        if (back == NULL)
         {
-            /* Clear to the DASH palette's pure black, then blit the selected
-             * mip at native size, centred horizontally and anchored to the
-             * bottom edge. No stretching: the raw paint fills the surrounding
-             * frame instead of smearing the bitmap like a full-screen blit. */
-            GDI_RECT full = { 0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT };
-            FillRect(screen, &full, black);
-
-            s32 dx = ((s32)VIEWPORT_WIDTH - (s32)dash[selected].width) / 2;
-            s32 dy = (s32)VIEWPORT_HEIGHT - (s32)dash[selected].height;
-            BitBlt(screen, dx, dy, (s32)dash[selected].width,
-                   (s32)dash[selected].height, dash[selected].surface, 0, 0,
-                   GDI_SRCCOPY);
+            SDL_Log("FlyingDodgem: failed to lock back buffer");
+            break;
         }
+
+        Game_RenderFrame(screen, dash, dashCount, selected);
         GdiCompat_Present(screen, back, pitch, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         if (getenv("FLYINGDODGEM_CAPTURE") != NULL && !captured)
         {
@@ -376,8 +345,6 @@ while (running)
     }
 
 #if defined(FLYINGDODGEM_GDI_COMPAT)
-    if (black != NULL)
-        DeleteObject((HGDIOBJ)black);
     {
         u32 i;
         for (i = 0; i < dashCount; i++)
