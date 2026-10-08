@@ -8,6 +8,7 @@ set(FLYINGDODGEM_SOURCES
     winmain.c
     pump.c
     render.c
+    wallspan.c
 )
 
 # Retail codegen for these TUs is closer to MSVC 4.2 than MSVC 5.0 (WinMain
@@ -15,13 +16,13 @@ set(FLYINGDODGEM_SOURCES
 # so when a VC4.2 toolchain is present in the wine prefix they are compiled
 # separately and the rest keeps the MSVC 5.0 rules. CI, which only has MSVC
 # 5.0, is unaffected because of the EXISTS() guard.
-set(FLYINGDODGEM_RECCMP_VC42_SOURCES fixed96.c winmain.c pump.c render.c)
+set(FLYINGDODGEM_RECCMP_VC42_SOURCES fixed96.c winmain.c pump.c render.c wallspan.c)
 
 if(MSVC_50_FOR_RECCMP AND EXISTS "C:/msvc/bin/CL.EXE")
     set(_vc42_objs "")
     foreach(_f IN LISTS FLYINGDODGEM_RECCMP_VC42_SOURCES)
         set(_obj "${CMAKE_CURRENT_BINARY_DIR}/vc42/${_f}.obj")
-        if(_f STREQUAL "winmain.c" OR _f STREQUAL "pump.c" OR _f STREQUAL "render.c")
+        if(_f STREQUAL "winmain.c" OR _f STREQUAL "pump.c" OR _f STREQUAL "render.c" OR _f STREQUAL "wallspan.c")
             set(_lang /TP)
         else()
             set(_lang /TC)
@@ -31,6 +32,8 @@ if(MSVC_50_FOR_RECCMP AND EXISTS "C:/msvc/bin/CL.EXE")
         if(_f STREQUAL "pump.c")
             set(_extra_flags /Oy)
         elseif(_f STREQUAL "render.c")
+            set(_extra_flags /G4)
+        elseif(_f STREQUAL "wallspan.c")
             set(_extra_flags /G4)
         else()
             set(_extra_flags "")
@@ -66,6 +69,7 @@ add_executable(FlyingDodgem ${FLYINGDODGEM_SOURCES})
 set_source_files_properties(winmain.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(pump.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(render.c PROPERTIES LANGUAGE CXX)
+set_source_files_properties(wallspan.c PROPERTIES LANGUAGE CXX)
 
 target_include_directories(FlyingDodgem PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

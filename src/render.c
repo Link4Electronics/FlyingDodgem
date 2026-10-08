@@ -23,6 +23,13 @@ extern "C" int32_t g_4a4a50;
 extern "C" void* g_4a1d68;
 extern "C" int32_t g_4a1d78;
 extern "C" int32_t g_461cfc;
+extern "C" int32_t g_4a4534;
+extern "C" int32_t g_4a454c;
+extern "C" int32_t g_4a4554;
+extern "C" int32_t g_4a455c;
+extern "C" int32_t g_4a4a18;
+extern "C" int32_t g_4a4a20;
+extern "C" int32_t g_4a1d70;
 extern "C" void* g_4c52dc;
 extern "C" void* g_4a4714;
 extern "C" void* g_4a471c;
@@ -87,10 +94,12 @@ public:
 static void* __stdcall PrevObject4512ff(void* prev);
 
 typedef void (__cdecl *HostFn0)(void);
+typedef void (__cdecl *HostFn1)(void);
 
 struct HostObj
 {
     HostFn0 fn0;
+    HostFn1 fn1;
     int32_t F403850(int32_t arg);
 };
 
@@ -920,12 +929,6 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
             *(int32_t*)((uint8_t*)item + 0x40) = *(int32_t*)(s + 0x98);
         }
     }
-}
-
-int32_t* __fastcall DivFix(int32_t* p, void* unused, int32_t d)
-{
-    *p = (int32_t)(((int64_t)*p << 16) / d);
-    return p;
 }
 
 // FUNCTION: HOVER 0x004066b0
