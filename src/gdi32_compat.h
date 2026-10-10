@@ -302,6 +302,8 @@ HBRUSH __cdecl CreateSolidBrush(u32 color);
 HDC __cdecl GdiCompat_GetScreenDC(u32 width, u32 height,
                                   const RGBQUAD *palette, u32 paletteSize);
 
+u8 *__cdecl GdiCompat_SurfaceBits(HDC hdc, u32 *pitch);
+
 /* Present the screen DC: map the indexed frame through its palette into an
  * RGBA32 back buffer (byte order R,G,B,A). */
 void __cdecl GdiCompat_Present(HDC screen, u8 *dst, u32 dstPitch,

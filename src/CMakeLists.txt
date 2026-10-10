@@ -3,12 +3,15 @@ set(FLYINGDODGEM_SOURCES
     fixed96.c
     resources.c
     globals.c
+    callees.c
+    scene.c
     stubs.c
     texmaze.c
     winmain.c
     pump.c
     render.c
     wallspan.c
+    display.c
 )
 
 # Retail codegen for these TUs is closer to MSVC 4.2 than MSVC 5.0 (WinMain
@@ -16,25 +19,31 @@ set(FLYINGDODGEM_SOURCES
 # so when a VC4.2 toolchain is present in the wine prefix they are compiled
 # separately and the rest keeps the MSVC 5.0 rules. CI, which only has MSVC
 # 5.0, is unaffected because of the EXISTS() guard.
-set(FLYINGDODGEM_RECCMP_VC42_SOURCES fixed96.c winmain.c pump.c render.c wallspan.c)
+set(FLYINGDODGEM_RECCMP_VC42_SOURCES fixed96.c winmain.c pump.c render.c wallspan.c scene.c)
 
 if(MSVC_50_FOR_RECCMP AND EXISTS "C:/msvc/bin/CL.EXE")
     set(_vc42_objs "")
     foreach(_f IN LISTS FLYINGDODGEM_RECCMP_VC42_SOURCES)
         set(_obj "${CMAKE_CURRENT_BINARY_DIR}/vc42/${_f}.obj")
-        if(_f STREQUAL "winmain.c" OR _f STREQUAL "pump.c" OR _f STREQUAL "render.c" OR _f STREQUAL "wallspan.c")
+        if(_f STREQUAL "winmain.c" OR _f STREQUAL "pump.c" OR _f STREQUAL "render.c" OR _f STREQUAL "wallspan.c" OR _f STREQUAL "scene.c")
             set(_lang /TP)
         else()
             set(_lang /TC)
         endif()
         # The retail pump frame-omits (sub esp,4 + reg saves, no frame) while
         # WinMain keeps its frame: same VC4.2 toolchain, /Oy only on pump.
-        if(_f STREQUAL "pump.c")
+        # scene.c holds CWorld::CWorld (HOVER 0x41e230): retail gives it a
+        # full C++ unwinding frame, which MSVC only emits under /GX.
+        # render.c likewise holds DrawEntry402250 (HOVER 0x402250), whose
+        # case-local CBeaconKey objects force the same /GX prolog in retail.
+        if(_f STREQUAL "scene.c")
+            set(_extra_flags /GX)
+        elseif(_f STREQUAL "pump.c")
             set(_extra_flags /Oy)
         elseif(_f STREQUAL "render.c")
-            set(_extra_flags /G4)
+            set(_extra_flags /GX /G4 /Ow)
         elseif(_f STREQUAL "wallspan.c")
-            set(_extra_flags /G4)
+            set(_extra_flags /G4 /Oa)
         else()
             set(_extra_flags "")
         endif()
@@ -47,7 +56,7 @@ if(MSVC_50_FOR_RECCMP AND EXISTS "C:/msvc/bin/CL.EXE")
                 "INCLUDE=C:\\msvc\\include;C:\\msvc\\mfc\\include"
                 "LIB=C:\\msvc\\lib;C:\\msvc\\mfc\\lib"
                 C:/msvc/bin/CL.EXE /nologo /c
-                /DWIN32 /D_WINDOWS /Zm1000 /O2 /Oi /G5 /Zi /ML
+                /DWIN32 /D_WINDOWS /Zm1000 /O2 /Ow /Oi /G5 /Zi /ML
                 ${_extra_flags}
                 /I${CMAKE_CURRENT_SOURCE_DIR} ${_lang}
                 /Fo${_obj}
@@ -70,6 +79,13 @@ set_source_files_properties(winmain.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(pump.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(render.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(wallspan.c PROPERTIES LANGUAGE CXX)
+# callees.c declares __thiscall-shaped members of a throw-away class, which the
+# C frontend rejects, so it too goes through the C++ frontend.  It is compiled
+# with the default MSVC 5.0 rules: the stub bodies are excluded from the reccmp
+# statistics and only their address markers matter.
+set_source_files_properties(callees.c PROPERTIES LANGUAGE CXX)
+set_source_files_properties(scene.c PROPERTIES LANGUAGE CXX)
+set_source_files_properties(display.c PROPERTIES LANGUAGE CXX)
 
 target_include_directories(FlyingDodgem PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -17,6 +17,11 @@ extern "C" int32_t g_4a455c;
 extern "C" int32_t g_4a4a18;
 extern "C" int32_t g_4a4a14;
 
+extern "C" int32_t g_4a4540;
+extern "C" int32_t g_4a4a38;
+extern "C" int32_t g_4a4a3c;
+extern "C" int32_t g_4a4a40;
+extern "C" int32_t g_4a4a44;
 typedef void (__cdecl *HostFn0)(void);
 typedef void (__cdecl *HostFn1)(void);
 
@@ -24,6 +29,7 @@ struct HostObj
 {
     HostFn0 fn0;
     HostFn1 fn1;
+    int32_t F403850(int32_t arg);
 };
 
 
@@ -200,4 +206,26 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
         }
         ((struct HostObj*)g_4a1d68)->fn1();
     }
+}
+// FUNCTION: HOVER 0x004066b0
+extern "C" void __stdcall F4066b0(void* a1, void* a2, int32_t a3, int32_t a4)
+{
+    uint8_t* o = (uint8_t*)a1;
+    uint8_t* v = (uint8_t*)a2;
+    int32_t f98;
+    int32_t shade;
+
+    g_4a4a14 = g_4a453c - a3 + a4;
+    if (g_4a4a14 < 1)
+        return;
+    g_4a4a4c = g_4a4540 + a3 * g_4a4a34;
+    shade = *(int16_t*)(o + 0x8);
+    g_4a4a44 = shade;
+    g_4a4a38 = *(int32_t*)(o + 0x94);
+    f98 = *(int32_t*)(o + 0x98);
+    g_4a4a50 = f98;
+    g_4a4a1c = *(int32_t*)(v + 0x10);
+    g_4a4a40 = (a3 - *(int32_t*)(v + 0x8)) * f98;
+    g_4a4a3c = ((struct HostObj*)g_4a1d68)->F403850(shade);
+    ((struct HostObj*)g_4a1d68)->fn0();
 }

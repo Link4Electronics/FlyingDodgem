@@ -753,6 +753,8 @@ uint8_t g_data_6e10[1];
 void* g_pApp;
 
 /* Wall/floor/span renderer scratch state (0x402990 and friends). */
+// GLOBAL: HOVER 0x004a4524
+int32_t g_4a4524;
 // GLOBAL: HOVER 0x004a4534
 int32_t g_4a4534;
 // GLOBAL: HOVER 0x004a453c
@@ -767,8 +769,12 @@ int32_t g_4a454c;
 int32_t g_4a4554;
 // GLOBAL: HOVER 0x004a455c
 int32_t g_4a455c;
+// GLOBAL: HOVER 0x004a4564
+int32_t g_4a4564;
 // GLOBAL: HOVER 0x004a4714
 void* g_4a4714;
+// GLOBAL: HOVER 0x004a4718
+void* g_4a4718;
 // GLOBAL: HOVER 0x004a471c
 void* g_4a471c;
 /* Centre-cutout viewport box / minimap visibility state (0x407160). */
@@ -793,7 +799,7 @@ int32_t g_4a47e0;
 // GLOBAL: HOVER 0x004a47e4
 int32_t g_4a47e4;
 // GLOBAL: HOVER 0x004a4844
-void* g_4a4844;
+void** g_4a4844;
 // GLOBAL: HOVER 0x004a4848
 int32_t g_4a4848;
 // GLOBAL: HOVER 0x004a4a14
@@ -836,3 +842,29 @@ int32_t g_460740;
 int32_t g_460750;
 // GLOBAL: HOVER 0x00460970
 void* g_460970;
+// GLOBAL: HOVER 0x004aca58
+uint8_t g_sineTable[32768];
+// GLOBAL: HOVER 0x00460744
+int32_t g_460744;
+// GLOBAL: HOVER 0x00460570
+int32_t g_460570;
+// GLOBAL: HOVER 0x004605d0
+int32_t g_4605d0;
+// GLOBAL: HOVER 0x00460734
+int32_t g_460734;
+// GLOBAL: HOVER 0x00460960
+int32_t g_460960;
+// GLOBAL: HOVER 0x00460958
+int32_t g_460958;
+// GLOBAL: HOVER 0x004a4768
+int32_t g_4a4768;
+// GLOBAL: HOVER 0x004a4774
+int32_t g_4a4774;
+// GLOBAL: HOVER 0x004a4840
+int32_t g_4a4840;
+// GLOBAL: HOVER 0x004a4858
+int32_t g_4a4858;
+// GLOBAL: HOVER 0x004c57a8
+void* g_4c57a8;
+// GLOBAL: HOVER 0x004c57ac
+int32_t g_4c57ac;

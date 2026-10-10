@@ -1845,6 +1845,16 @@ HDC __cdecl GdiCompat_GetScreenDC(u32 width, u32 height,
     return s;
 }
 
+u8 *__cdecl GdiCompat_SurfaceBits(HDC hdc, u32 *pitch)
+{
+    GdiSurface *s = (GdiSurface *)hdc;
+    if (s == NULL || s->magic != SURFACE_MAGIC || s->sdl == NULL)
+        return NULL;
+    if (pitch != NULL)
+        *pitch = (u32)s->sdl->pitch;
+    return (u8 *)s->sdl->pixels;
+}
+
 void __cdecl GdiCompat_Present(HDC screen, u8 *dst, u32 dstPitch,
                                u32 dstWidth, u32 dstHeight)
 {

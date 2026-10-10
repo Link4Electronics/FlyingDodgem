@@ -112,6 +112,9 @@ typedef struct GdiMsg
 
 int __stdcall PeekMessageA(void *pMsg, void *hWnd, u32 nMin, u32 nMax, u32 nRemove);
 
+/* In-place upper-caser used by the beacon build (0x423ea0); returns psz. */
+char * __stdcall CharUpperA(char *psz);
+
 s32 __cdecl GetSystemMetrics(s32 index);
 
 /* --- KERNEL32 bits used by the display init --- */
@@ -124,5 +127,25 @@ HINSTANCE __cdecl LoadModule(const char *moduleName, void *paramBlock);
  * shape: enter/leave are no-ops. */
 void __cdecl EnterCriticalSection(void *cs);
 void __cdecl LeaveCriticalSection(void *cs);
+
+/* Win32 event primitives used by the display entry (0x41ece0).  The reccmp
+ * build links the retail-shaped calls; the native harness drives the display
+ * loop from a single thread so the waits are behavioural shims. */
+#ifndef INFINITE
+#define INFINITE 0xffffffffu
+#endif
+
+typedef void *HANDLE;
+
+HANDLE __cdecl CreateEventA(void *sa, int manualReset, int initialState,
+                            const char *name);
+int __cdecl SetEvent(HANDLE ev);
+int __cdecl ResetEvent(HANDLE ev);
+u32 __cdecl WaitForSingleObject(HANDLE ev, u32 ms);
+
+/* USER32 message + module lookup used by the display entry (0x41ece0). */
+s32 __cdecl SendMessageA(GdiWindow *hwnd, u32 msg, uintptr_t wParam,
+                         intptr_t lParam);
+void *__cdecl GetProcAddress(HINSTANCE inst, const char *procName);
 
 #endif

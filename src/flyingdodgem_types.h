@@ -75,6 +75,16 @@ typedef uint32_t bool8;
 #ifndef __fastcall
 #define __fastcall
 #endif
+/* SEH. MSVC provides __try/__except as built-in keywords; other compilers do
+ * not. The retail handlers in these translation units are empty (the frames
+ * exist only so the compiled code carries the same FS:[0] unwind chain), so on
+ * native compilers we simply run the protected body inline. */
+#ifndef __try
+#define __try if (1)
+#endif
+#ifndef __except
+#define __except(x) else
+#endif
 #endif
 
 #endif

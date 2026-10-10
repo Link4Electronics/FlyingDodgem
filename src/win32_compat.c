@@ -442,6 +442,21 @@ u32 __cdecl GetTickCount(void)
     return (u32)SDL_GetTicks();
 }
 
+char * __stdcall CharUpperA(char *psz)
+{
+    char *p = psz;
+    if (p != NULL)
+    {
+        while (*p != '\0')
+        {
+            if (*p >= 'a' && *p <= 'z')
+                *p = (char)(*p - 'a' + 'A');
+            p++;
+        }
+    }
+    return psz;
+}
+
 void __cdecl EnterCriticalSection(void *cs)
 {
     (void)cs;
@@ -461,4 +476,36 @@ HINSTANCE __cdecl LoadModule(const char *moduleName, void *paramBlock)
     if (h == NULL)
         return (HINSTANCE)(uintptr_t)2; /* ERROR_FILE_NOT_FOUND */
     return h;
+}
+
+/* Display-path synchronisation. The retail dispatcher hands work to a render
+ * thread through a critical section plus a four-event handshake; the native
+ * reconstruction runs the display entry inline, so the events are inert. */
+int __cdecl SetEvent(HANDLE ev)
+{
+    (void)ev;
+    return 1;
+}
+
+int __cdecl ResetEvent(HANDLE ev)
+{
+    (void)ev;
+    return 1;
+}
+
+u32 __cdecl WaitForSingleObject(HANDLE ev, u32 ms)
+{
+    (void)ev;
+    (void)ms;
+    return 0; /* WAIT_OBJECT_0 */
+}
+
+s32 __cdecl SendMessageA(GdiWindow *hwnd, u32 msg, uintptr_t wParam,
+                         intptr_t lParam)
+{
+    (void)hwnd;
+    (void)msg;
+    (void)wParam;
+    (void)lParam;
+    return 0;
 }

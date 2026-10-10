@@ -1702,11 +1702,6 @@ s32 __fastcall Zero4E5BA(void* self)
 {
     return 0;
 }
-// FUNCTION: HOVER 0x0044E727
-s32 __fastcall Zero4E727(void* self, void* unused, s32 a)
-{
-    return 0;
-}
 // FUNCTION: HOVER 0x0044E807
 s32 __fastcall Zero4E807(void* self, void* unused, s32 a)
 {
@@ -1766,6 +1761,7 @@ void __fastcall CopyPos87D0(void* self)
 /* MFC startup helpers called from WinMain (HOVER 0x45021e / 0x450272). They
  * live out-of-line in this translation unit so the calls from WinMain are
  * never inlined away. Not reccmp targets (MFC static-library code). */
+// STUB: HOVER 0x0045edf6
 int __stdcall AfxWinInit(void* hInstance, void* hPrevInstance, char* lpCmdLine, int nCmdShow)
 {
     (void)hInstance;
@@ -1775,14 +1771,33 @@ int __stdcall AfxWinInit(void* hInstance, void* hPrevInstance, char* lpCmdLine, 
     return 1;
 }
 
+// STUB: HOVER 0x0045f4b5
 void __stdcall AfxWinTerm(void)
 {
 }
 
-/* Not yet reccmp-annotated callee of Run (HOVER 0x45f1a0): the real body is
- * matched in a later pass; until then Run's call shows as an unannotated
- * offset diff. */
+/* MFC PostQuit helper called from Run (HOVER 0x44aaab). Out-of-line so the
+ * call is never inlined away. Not a reccmp target (CRT/MFC code). */
+// STUB: HOVER 0x0045f1a0
 void __stdcall AfxPostQuitMessage(int nExitCode)
 {
     (void)nExitCode;
+}
+
+/* Callees of PrevObject4512ff (HOVER 0x4512ff). Kept out-of-line here so the
+ * calls are never inlined away. Not yet implemented (real bodies match later). */
+// STUB: HOVER 0x0045128b
+void* __cdecl Sub45128b(int flag)
+{
+    (void)flag;
+    return NULL;
+}
+
+// STUB: HOVER 0x0044f9a3
+void* __fastcall Sub44f9a3(void* self, void* unused, void* prev)
+{
+    (void)self;
+    (void)unused;
+    (void)prev;
+    return NULL;
 }
