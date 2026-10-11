@@ -11,6 +11,9 @@ extern "C" char* __stdcall CharUpperA(char* psz);
 #endif
 
 extern "C" void* g_460970;
+extern "C" MerlinPlane g_4a4498;
+extern "C" MerlinPlane g_4a44e0;
+extern "C" int16_t g_4a4528;
 extern "C" int32_t g_4a4768;
 extern "C" int32_t g_4a4774;
 extern "C" void** g_4a4844;
@@ -97,4 +100,44 @@ void __cdecl BuildBeacons(void)
     }
 
     Ext423cd0();
+}
+
+// FUNCTION: HOVER 0x00405fa0
+void HoverTc::M405fa0(int16_t a1)
+{
+    int16_t idx = a1;
+
+    while (idx != -1)
+    {
+        uint8_t* wall = *(uint8_t**)((uint8_t*)*(void**)((uint8_t*)this + 0x20) + 0x54);
+        int32_t back;
+
+        wall = *(uint8_t**)(wall + idx * 4);
+        back = (g_4a4498.m_p14 - *(int32_t*)(wall + 0x14)) * *(int32_t*)(wall + 0x3c)
+             + (*(int32_t*)(wall + 0x18) - g_4a44e0.m_p18) * *(int32_t*)(wall + 0x38);
+        if (back < 0)
+        {
+            this->M405fa0(*(int16_t*)(wall + 0x48));
+            if (this->M405b90(wall) != 0)
+            {
+                uint8_t* disp = *(uint8_t**)((uint8_t*)this + 0x20);
+                void* grp = *(void**)((uint8_t*)*(void**)(disp + 0x18) + *(int16_t*)(wall + 0x44) * 4);
+                if (this->M405ce0(grp, wall, 0, g_4a4528) != 0)
+                    g_4a4528++;
+            }
+            idx = *(int16_t*)(wall + 0x4a);
+        }
+        else
+        {
+            this->M405fa0(*(int16_t*)(wall + 0x4a));
+            if (this->M405b90(wall) != 0)
+            {
+                uint8_t* disp = *(uint8_t**)((uint8_t*)this + 0x20);
+                void* grp = *(void**)((uint8_t*)*(void**)(disp + 0x18) + *(int16_t*)(wall + 0x44) * 4);
+                if (this->M405ce0(grp, wall, 0, g_4a4528) != 0)
+                    g_4a4528++;
+            }
+            idx = *(int16_t*)(wall + 0x48);
+        }
+    }
 }

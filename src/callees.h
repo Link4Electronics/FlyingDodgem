@@ -19,8 +19,13 @@
 
 struct HoverTc
 {
+    int32_t F404030(void* a1, void* a2, void* a3);
+    int32_t M402e00(void* a1);
     int32_t M4053a0(void* a1, void* a2);
     int32_t M405a10(void* a1, void* a2);
+    int32_t M405b90(void* a1);
+    int32_t M405ce0(void* a1, void* a2, int32_t a3, int16_t a4);
+    void M405fa0(int16_t a1);
     int32_t M406090(void* a1, void* a2);
     int32_t M40cce0(void* a1, void* a2, void* a3, void* a4);
     int32_t M413c10(void* a1);
@@ -30,6 +35,44 @@ struct HoverTc
     int32_t M44994f(void* a1);
     int32_t M44a003(void* a1, void* a2, void* a3);
 };
+
+/* Column-plane object (retail 0x401160/0x401210, normalized by F4010c0).
+ * Size is 0x48: field spacing between the two globals g_4a4498/g_4a44e0.
+ * Offsets +0x14/+0x18/+0x1c/+0x20 are the endpoint pair F4010c0 reads. */
+class MerlinPlane
+{
+public:
+    MerlinPlane();
+    ~MerlinPlane();
+    uint8_t m_pad00[0x14];
+    int32_t m_p14;
+    int32_t m_p18;
+    int32_t m_p1c;
+    int32_t m_p20;
+    int16_t m_w24;
+    int16_t m_pad26;
+    int32_t m_p28;
+    int32_t m_p2c;
+    int32_t m_p30;
+    int32_t m_p34;
+    int32_t m_p38;
+    int32_t m_p3c;
+    int32_t m_p40;
+    int32_t m_p44;
+};
+
+/* Span-bucket arena at [hover+0] (retail 0x406d00/0x403a60 take it in ECX).
+ * Both are __thiscall with stack args, so they are members here. */
+class SpanChain
+{
+public:
+    void AddPair6d00(int32_t a1, int32_t a2);
+    void F403a60(void* a1);
+};
+
+/* __thiscall, `this` in ECX only (spelled __fastcall on a free function). */
+extern "C" void __fastcall F4010c0(void* self);
+extern "C" void __fastcall F4030f0(void* self);
 
 /* __thiscall, `this` in ECX only (spelled __fastcall on a free function). */
 extern "C" void __fastcall Ext407430(void* self);

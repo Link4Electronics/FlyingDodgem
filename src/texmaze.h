@@ -3,6 +3,10 @@
 
 #include "flyingdodgem_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* TEX / MAZ asset loaders reconstructed from HOVER.EXE's CMerlinTexture
  * (Serialize 0x412980, vtable 0x4bbd20) and the maze document serializer
  * (doc 0x418dc0, CMerlinStatic 0x419e00, CMerlinLocation 0x41b940,
@@ -117,5 +121,9 @@ typedef struct MazDoc {
 
 int Maz_Load(const char *path, MazDoc *out);
 void Maz_Free(MazDoc *maz);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,10 +1,18 @@
 #include "platform/audio.h"
 #include "platform/display.h"
 
+#include "app.h"
 #include "gameframe.h"
 #include "gdi32_compat.h"
 #include "resources.h"
 #include "texmaze.h"
+
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+#include "dashhud.h"
+#include "display_native.h"
+#include "win32_compat.h"
+#include "winmm_compat.h"
+#endif
 
 #include <SDL3/SDL.h>
 
@@ -95,8 +103,19 @@ extern void __fastcall Init22c80(void *self);
 /* Locate and parse the retail maze/texture assets to exercise the
  * reconstructed TEX/MAZ loaders (texmaze.c). Search order: the
  * FLYINGDODGEM_MAZES environment variable, then build/MAZES and the
- * usual in-tree layouts. Assets are loaded, validated and released
- * again; rendering them comes with the 3D pipeline. */
+ * usual in-tree layouts. The menu maze (SMALL.MAZ) and its textures
+ * (SMALL.TEX) are retained for the 3D pipeline; the rest are loaded,
+ * validated and released again. */
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+static TexArchive g_menuTex;
+static int g_menuTexOk = 0;
+static MazDoc g_menuMaz;
+static int g_menuMazOk = 0;
+/* First playable maze (MAZE1), retained for IDM_STARTGAME. */
+static MazDoc g_level1Maz;
+static int g_level1MazOk = 0;
+#endif
+
 static void load_maze_assets(void)
 {
     const char *dirs[5];
@@ -127,6 +146,19 @@ static void load_maze_assets(void)
             SDL_snprintf(path, sizeof(path), "%s/%s", dirs[di], files[fi]);
             if (is_tex)
             {
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+                /* Retain the menu maze's textures for wall colours. */
+                if (strcmp(files[fi], "SMALL.TEX") == 0 && !g_menuTexOk)
+                {
+                    if (Tex_Load(path, &g_menuTex))
+                    {
+                        g_menuTexOk = 1;
+                        printf("FlyingDodgem: %s: %u textures (retained)\n",
+                               path, g_menuTex.count);
+                        done = 1;
+                    }
+                }
+#endif
                 TexArchive tex;
                 if (Tex_Load(path, &tex))
                 {
@@ -142,6 +174,48 @@ static void load_maze_assets(void)
             }
             else
             {
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+                /* Retain the menu maze for the 3D wall pass, and MAZE1
+                 * for the F2 Start Game path (IDM_STARTGAME). */
+                if (strcmp(files[fi], "SMALL.MAZ") == 0 && !g_menuMazOk)
+                {
+                    if (Maz_Load(path, &g_menuMaz))
+                    {
+                        g_menuMazOk = 1;
+                        printf("FlyingDodgem: %s: objs %u/%u/%u/%u (retained)\n",
+                               path, g_menuMaz.arrays[0].count,
+                               g_menuMaz.arrays[1].count,
+                               g_menuMaz.arrays[2].count,
+                               g_menuMaz.arrays[3].count);
+                        done = 1;
+                    }
+                }
+                else if (strcmp(files[fi], "MAZE1.MAZ") == 0 && !g_level1MazOk)
+                {
+                    if (Maz_Load(path, &g_level1Maz))
+                    {
+                        g_level1MazOk = 1;
+                        printf("FlyingDodgem: %s: objs %u/%u/%u/%u (retained)\n",
+                               path, g_level1Maz.arrays[0].count,
+                               g_level1Maz.arrays[1].count,
+                               g_level1Maz.arrays[2].count,
+                               g_level1Maz.arrays[3].count);
+                        done = 1;
+                    }
+                }
+                else
+                {
+                    MazDoc maz;
+                    if (Maz_Load(path, &maz))
+                    {
+                        printf("FlyingDodgem: %s: objs %u/%u/%u/%u\n", path,
+                               maz.arrays[0].count, maz.arrays[1].count,
+                               maz.arrays[2].count, maz.arrays[3].count);
+                        Maz_Free(&maz);
+                        done = 1;
+                    }
+                }
+#else
                 MazDoc maz;
                 if (Maz_Load(path, &maz))
                 {
@@ -151,12 +225,151 @@ static void load_maze_assets(void)
                     Maz_Free(&maz);
                     done = 1;
                 }
+#endif
             }
         }
         if (!done)
             SDL_Log("FlyingDodgem: could not locate %s", files[fi]);
     }
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    if (g_menuMazOk)
+        DisplayDriver_SetMenuMaze(&g_menuMaz, g_menuTexOk ? &g_menuTex : NULL);
+#endif
 }
+
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+/* Locate SOUNDS/MIXED (retail builds "%sSounds\\Mixed\\%s.WAV" for every
+ * CSound name). Search mirrors the maze-asset order.  Returns 1 and fills
+ * `out` with the MIXED directory. */
+static int find_sounds_mixed(char *out, size_t outSize)
+{
+    static const char *dirs[] = {
+        NULL, /* FLYINGDODGEM_SOUNDS, filled below */
+        "build/SOUNDS/MIXED",
+        "../build/SOUNDS/MIXED",
+        "SOUNDS/MIXED",
+        "sounds/mixed",
+        "build/SOUNDS",
+        "SOUNDS",
+    };
+    size_t i;
+
+    dirs[0] = getenv("FLYINGDODGEM_SOUNDS");
+    for (i = 0; i < sizeof(dirs) / sizeof(dirs[0]); i++)
+    {
+        char path[512];
+        if (dirs[i] == NULL)
+            continue;
+        SDL_snprintf(path, sizeof(path), "%s/LEVLSTRT.WAV", dirs[i]);
+        if (path_exists(path))
+        {
+            SDL_snprintf(out, outSize, "%s", dirs[i]);
+            return 1;
+        }
+        /* Also accept a SOUNDS root that contains MIXED/. */
+        SDL_snprintf(path, sizeof(path), "%s/MIXED/LEVLSTRT.WAV", dirs[i]);
+        if (path_exists(path))
+        {
+            SDL_snprintf(out, outSize, "%s/MIXED", dirs[i]);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* Set once IDM_STARTGAME has put the harness into retail game state 3. */
+static int g_inMaze;
+static int g_engineBand = -1;
+
+/* Retail engine-band selector (0x409180 / play sites 0x40927e..0x4092d4):
+ * throttle held picks eng_low/norm/high (bands 1..3) from the car's speed
+ * fields; throttle released is eng_idle (band 0).  The keyboard path is
+ * GetAsyncKeyState (0x408bf5) on the reboundable throttle keys; the default
+ * accelerate binding is the Up arrow.  Band 2 = eng_norm (sounds[0x1c]).
+ *
+ * The dashboard gauges are deliberately NOT driven here. Retail feeds each
+ * widget's lit count from live game-state fields every frame (HOVER.EXE
+ * 0x417f60 clamps obj+0x2fc/+0x32c/+0x35c/+0x38c/+0x3bc/+0x3ec/+0x41c into
+ * widget+0x24 for 0x2e0/0x310/0x340/0x370/0x3a0/0x3d0/0x400), and the three
+ * small bars (0x3a0/0x400/0x3d0) are powerup gauges, not steering meters:
+ * wiring them to the left/right keys invents behaviour retail does not
+ * have. Until the car/powerup state is matched, every gauge keeps its
+ * retail boot value (0, all segments dark). */
+static void update_game_state(void)
+{
+    u32 band;
+    s16 up;
+
+    if (!g_inMaze)
+        return;
+
+    up = GetAsyncKeyState(VK_UP);
+
+    if ((up & 0x8000) != 0)
+        band = 2; /* eng_norm */
+    else
+        band = 0; /* eng_idle */
+    if ((int)band != g_engineBand && WinmmPlayEngineBand(band, NULL))
+    {
+        static const char *name[4] = {
+            "ENG_IDLE", "ENG_LOW", "ENG_NORM", "ENG_HIGH"
+        };
+        printf("FlyingDodgem: engine band %u -> %s\n", band, name[band]);
+        g_engineBand = (int)band;
+    }
+}
+
+/* Retail IDM_STARTGAME (menu id 0x8009, F2 accelerator): enter the first
+ * maze and play the levlstrt sting (sound index 1; retail tick at
+ * 0x408d26 calls CSound on sounds[1] when the level-start counter hits
+ * 0x28).  Once the car is live (retail game state 3) the engine band
+ * selector at 0x40927e keeps CSound on eng_idle (index 0x1a) while the
+ * throttle is at 0; we start that loop here so a fresh maze begins with
+ * the idle engine hum under the sting. */
+static void start_game(void)
+{
+    char mixed[512];
+    char wav[512];
+    int haveMixed;
+
+    if (g_level1MazOk)
+    {
+        DisplayDriver_SetMenuMaze(&g_level1Maz,
+                                  g_menuTexOk ? &g_menuTex : NULL);
+        printf("FlyingDodgem: Start Game -> MAZE1\n");
+    }
+    else
+    {
+        SDL_Log("FlyingDodgem: Start Game but MAZE1.MAZ was not retained");
+    }
+
+    haveMixed = find_sounds_mixed(mixed, sizeof(mixed));
+    if (haveMixed)
+    {
+        SDL_snprintf(wav, sizeof(wav), "%s/LEVLSTRT.WAV", mixed);
+        if (sndPlaySoundA(wav, SND_ASYNC))
+            printf("FlyingDodgem: playing %s\n", wav);
+        else
+            SDL_Log("FlyingDodgem: sndPlaySoundA failed for %s", wav);
+
+        /* Throttle band 0 = eng_idle loop (retail CSound play args
+         * (5, 5, 0xffff) on sounds[0x1a] while state==3). */
+        if (WinmmPlayEngineBand(0, mixed))
+        {
+            printf("FlyingDodgem: engine idle loop (%s/ENG_IDLE.WAV)\n",
+                   mixed);
+            g_engineBand = 0;
+        }
+        else
+            SDL_Log("FlyingDodgem: failed to start eng_idle");
+        g_inMaze = 1;
+    }
+    else
+    {
+        SDL_Log("FlyingDodgem: SOUNDS/MIXED not found");
+    }
+}
+#endif
 
 int main(int argc, char **argv)
 {
@@ -170,6 +383,14 @@ int main(int argc, char **argv)
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
         return 1;
+
+    /* Construct CBumperApp (g_pApp) and run the document-template half of
+     * InitInstance so CWorld is published into g_460970 before the display
+     * draw dispatch.  A C++ static initializer in app.c also does this; the
+     * explicit call is idempotent and keeps the ordering obvious for the
+     * native harness (retail does the same work from 0x426546 before
+     * WinMain). */
+    App_Bootstrap();
 
     PlatAudio_Init();
 
@@ -222,6 +443,11 @@ int main(int argc, char **argv)
                    dashres);
 
         screen = GdiCompat_GetScreenDC(VIEWPORT_WIDTH, VIEWPORT_HEIGHT, NULL, 0);
+        /* Start DisplayEntry41ece0 on a worker thread with case 3 so the
+         * DrawEntry/F406740 rasterizer paints into the shared INDEX8 bits
+         * while the main loop composites the dashboard and presents. */
+        if (screen != NULL)
+            DisplayDriver_Init(screen);
         dashmod = (dashres != NULL) ? LoadLibraryA(dashres) : NULL;
         if (dashmod != NULL)
         {
@@ -302,6 +528,48 @@ int main(int argc, char **argv)
             break;
 
 #if defined(FLYINGDODGEM_GDI_COMPAT)
+        /* Win32 main-loop shape: drain queued input through Translate +
+         * Dispatch so key/mouse messages reach any retail consumer
+         * (pump.c).  Wndprocs land in DefWindowProcA until matched.
+         *
+         * Retail turns F2 into WM_COMMAND IDM_STARTGAME via the accelerator
+         * table (menu id 128) before Dispatch; we have no matched wndproc
+         * yet, so synthesise the same command here and handle it. */
+        {
+            GdiMsg msg;
+            int drain = 256;
+            while (drain-- > 0 &&
+                   PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
+            {
+                if (msg.message == WM_KEYDOWN && msg.wParam == VK_F2)
+                {
+                    msg.message = WM_COMMAND;
+                    msg.wParam = IDM_STARTGAME;
+                    msg.lParam = 0;
+                }
+                if (msg.message == WM_COMMAND &&
+                    (msg.wParam & 0xffffU) == IDM_STARTGAME)
+                {
+                    start_game();
+                    continue;
+                }
+                TranslateMessage(&msg);
+                DispatchMessageA(msg.hwnd, msg.message, msg.wParam,
+                                 msg.lParam);
+                if (msg.message == WM_QUIT)
+                {
+                    running = false;
+                    break;
+                }
+            }
+            if (!running)
+                break;
+        }
+
+        /* Throttle/steer -> engine band + dashboard (retail 0x409180 / OnPaint). */
+        update_game_state();
+#endif
+#if defined(FLYINGDODGEM_GDI_COMPAT)
         /* The streaming texture has to be locked again every frame:
          * PlatDisplay_Present unlocks it (and clears its cached pointer) at
          * the end of each frame, so locking once before the loop would leave
@@ -345,6 +613,14 @@ int main(int argc, char **argv)
     }
 
 #if defined(FLYINGDODGEM_GDI_COMPAT)
+    DisplayDriver_Shutdown();
+    WinmmStopEngine();
+    if (g_menuMazOk)
+        Maz_Free(&g_menuMaz);
+    if (g_level1MazOk)
+        Maz_Free(&g_level1Maz);
+    if (g_menuTexOk)
+        Tex_Free(&g_menuTex);
     {
         u32 i;
         for (i = 0; i < dashCount; i++)

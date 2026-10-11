@@ -12,6 +12,7 @@ set(FLYINGDODGEM_SOURCES
     render.c
     wallspan.c
     display.c
+    app.c
 )
 
 # Retail codegen for these TUs is closer to MSVC 4.2 than MSVC 5.0 (WinMain
@@ -41,7 +42,7 @@ if(MSVC_50_FOR_RECCMP AND EXISTS "C:/msvc/bin/CL.EXE")
         elseif(_f STREQUAL "pump.c")
             set(_extra_flags /Oy)
         elseif(_f STREQUAL "render.c")
-            set(_extra_flags /GX /G4 /Ow)
+            set(_extra_flags /GX /G4 /Ow /QIfdiv)
         elseif(_f STREQUAL "wallspan.c")
             set(_extra_flags /G4 /Oa)
         else()
@@ -86,6 +87,9 @@ set_source_files_properties(wallspan.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(callees.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(scene.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(display.c PROPERTIES LANGUAGE CXX)
+# app.c hosts the CBumperApp bootstrap (C++ static initializer, placement
+# new into the CBumperDoc CRuntimeClass factory) and must use the C++ frontend.
+set_source_files_properties(app.c PROPERTIES LANGUAGE CXX)
 
 target_include_directories(FlyingDodgem PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -96,10 +100,15 @@ if(FLYINGDODGEM_PLATFORM_SDL3 AND NOT MSVC_50_FOR_RECCMP)
         platform/sdl3/main.c
         gdi32_compat.c
         win32_compat.c
+        winmm_compat.c
         menu.c
         gameframe.c
         dashhud.c
+        display_native.c
     )
+    # display_native.c hosts the DisplayEntry worker and uses extern "C" for
+    # the matched entry points; it must go through the C++ frontend.
+    set_source_files_properties(display_native.c PROPERTIES LANGUAGE CXX)
     target_compile_definitions(FlyingDodgem PRIVATE FLYINGDODGEM_GDI_COMPAT=1)
     target_link_libraries(FlyingDodgem PRIVATE SDL3::SDL3)
 

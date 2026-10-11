@@ -1,5 +1,9 @@
 #include "flyingdodgem_types.h"
 #include <string.h>
+#include "callees.h"
+
+extern "C" MerlinPlane g_4a4498;
+extern "C" MerlinPlane g_4a44e0;
 
 extern "C" int32_t g_4a453c;
 extern "C" void* g_4a1d68;
@@ -22,6 +26,19 @@ extern "C" int32_t g_4a4a38;
 extern "C" int32_t g_4a4a3c;
 extern "C" int32_t g_4a4a40;
 extern "C" int32_t g_4a4a44;
+#if !defined(_MSC_VER)
+/* Native 64-bit: host+0x28 / host+0x6c only hold 4 bytes; the live
+ * framebuffer and row-colour table live in g_nativePlanes (same side
+ * table DrawEntry's GDI path uses). */
+extern "C" struct NativePlanes
+{
+    void* host;
+    void* planeB;
+    void* ctx;
+    uint8_t* bits;
+    uint32_t* rowColours;
+} g_nativePlanes;
+#endif
 typedef void (__cdecl *HostFn0)(void);
 typedef void (__cdecl *HostFn1)(void);
 
@@ -47,7 +64,6 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
     int32_t n;
     int32_t scale;
     int32_t w;
-    int32_t six;
     int32_t span;
     int32_t base;
     int32_t top;
@@ -63,6 +79,13 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
     int32_t saved;
     int32_t mask;
     uint8_t* tbl;
+#if defined(_MSC_VER)
+    int32_t six;
+#else
+    /* Native 64-bit: the host framebuffer pointer at +0x28 does not fit
+     * in int32_t.  The MSVC matching build keeps the retail int32 shape. */
+    uintptr_t six;
+#endif
 
     (void)self;
     (void)unused;
@@ -73,13 +96,31 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
 
     if (*(int32_t*)(host + 0x74) == 1)
     {
+#if defined(_MSC_VER)
         base = a1 * g_4a4a34 + *(int32_t*)(host + 0x28);
+#else
+        base = (int32_t)((uintptr_t)a1 * (uintptr_t)g_4a4a34 +
+                         (uintptr_t)g_nativePlanes.bits);
+#endif
         g_4a4a4c = base + a0;
         if (n > 0)
         {
+#if defined(_MSC_VER)
             w = *(uint8_t*)(*(uint8_t**)(host + 0x6c) + a1 * 4);
+#else
+            w = (uint8_t)g_nativePlanes.rowColours[a1];
+#endif
             span = g_4a4534 - a0;
+#if defined(_MSC_VER)
             six = base + a0;
+#else
+            /* Reconstruct the full 64-bit framebuffer address so memset
+             * writes the real surface (base/g_4a4a4c stay 32-bit for the
+             * retail-shaped globals). */
+            six = (uintptr_t)g_nativePlanes.bits
+                + (uintptr_t)a1 * (uintptr_t)g_4a4a34
+                + (uintptr_t)a0;
+#endif
             do
             {
                 memset((void*)six, w, span);
@@ -207,6 +248,41 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
         ((struct HostObj*)g_4a1d68)->fn1();
     }
 }
+// FUNCTION: HOVER 0x00405b90
+int32_t HoverTc::M405b90(void* a1)
+{
+    uint8_t* node = (uint8_t*)a1;
+    int32_t ax = *(int32_t*)(node + 0x14);
+    int32_t ay = *(int32_t*)(node + 0x18);
+    int32_t bx = *(int32_t*)(node + 0x1c);
+    int32_t by = *(int32_t*)(node + 0x20);
+    int32_t s1 = ((g_4a4498.m_p18 - ay) * g_4a4498.m_p38 + (ax - g_4a4498.m_p14) * g_4a4498.m_p3c) >= 0;
+    int32_t s2 = ((ax - g_4a44e0.m_p14) * g_4a44e0.m_p3c + (g_4a44e0.m_p18 - ay) * g_4a44e0.m_p38) >= 0;
+    int32_t s3;
+    int32_t s4;
+    int32_t s5;
+
+    (void)this;
+    if (!s1 && s2)
+        return 1;
+    s3 = ((g_4a4498.m_p18 - by) * g_4a4498.m_p38 + (bx - g_4a4498.m_p14) * g_4a4498.m_p3c) >= 0;
+    s4 = ((bx - g_4a44e0.m_p14) * g_4a44e0.m_p3c + (g_4a44e0.m_p18 - by) * g_4a44e0.m_p38) >= 0;
+    if (!s3 && s4)
+        return 1;
+    s5 = ((ay - g_4a4498.m_p18) * *(int32_t*)(node + 0x38) + (g_4a4498.m_p14 - ax) * *(int32_t*)(node + 0x3c)) >= 0;
+    if (s5)
+    {
+        if (!s1 && !s2 && s3 && s4)
+            return 1;
+    }
+    else
+    {
+        if (s1 && s2 && !s3 && !s4)
+            return 1;
+    }
+    return 0;
+}
+
 // FUNCTION: HOVER 0x004066b0
 extern "C" void __stdcall F4066b0(void* a1, void* a2, int32_t a3, int32_t a4)
 {

@@ -39,8 +39,13 @@ void __cdecl PlatAudio_Free(void *ptr)
 
 static SDL_AudioFormat SdlFormat(const PlatWaveFormat *fmt)
 {
-    if (fmt->channels > 1)
-        return SDL_AUDIO_S16LE;
+    /* Retail SFX are 8-bit unsigned mono (LEVLSTRT.WAV: PCM U8 @ 11025).
+     * Claiming S16LE while queueing raw U8 bytes makes SDL pair adjacent
+     * samples into garbage 16-bit words (audible corruption). */
+    if (fmt->bits_per_sample == 8)
+        return SDL_AUDIO_U8;
+    if (fmt->bits_per_sample == 32)
+        return SDL_AUDIO_S32LE;
     return SDL_AUDIO_S16LE;
 }
 
@@ -68,7 +73,7 @@ PlatWaveOut * __cdecl PlatWaveOut_Open(const PlatWaveOutDesc *desc)
     }
     h->stream = stream;
     h->spec = spec;
-    h->paused = true;   /* SDL opens paused; leave paused until first write */
+    h->paused = false;  /* OpenAudioDeviceStream starts the device */
     h->gain = 1.0f;
 
     SDL_ResumeAudioStreamDevice(stream);

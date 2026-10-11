@@ -1,6 +1,10 @@
 #include "gameframe.h"
 #include "dashhud.h"
 
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+#include "display_native.h"
+#endif
+
 /* Frame composer for the native SDL3 driver. Everything here is compiled only
  * when FLYINGDODGEM_GDI_COMPAT is set; the reccmp matching build never links
  * this unit, so it cannot perturb assembly matching. */
@@ -19,9 +23,14 @@ static HBRUSH black_brush(void)
 void __cdecl Game_RenderFrame(void *screen, const DashMip *mip, u32 count,
                               u32 selected)
 {
-    GDI_RECT full = { 0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT };
-
-    FillRect(screen, &full, black_brush());
+    /* The DisplayEntry thread (case 3) has already rasterized the floor
+     * through F406740 into the shared INDEX8 bits; re-sync the host in case
+     * the surface moved, then composite the dashboard on top.  The dashboard
+     * art's pure-blue mask leaves the windshield band open, so the 3D pass
+     * stays visible without a full-screen clear wiping it. */
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    DisplayDriver_Sync(screen);
+#endif
 
     if (mip != NULL && selected < count && mip[selected].surface != NULL)
     {
@@ -51,6 +60,14 @@ void __cdecl Game_RenderFrame(void *screen, const DashMip *mip, u32 count,
         BitBlt(screen, dx, dy + split, (s32)mip[selected].width,
                (s32)mip[selected].height - split, mip[selected].surface, 0,
                split, GDI_SRCCOPY);
+
+        /* Score windows + flag slots: retail's 0x413c70 OnPaint tail updates
+         * the 30100/30101 score controls and the 1000..1002 flag-slot
+         * controls after the panel is drawn. The strip geometry is shared
+         * so the paint lands on the same 1:1 placement as the art. */
+        DashHud_PaintScores(screen, mip[selected].surface,
+                            mip[selected].width, mip[selected].height, dx,
+                            split, dy);
     }
 
     /* The gauges sit on top of the dashboard art, exactly like retail's

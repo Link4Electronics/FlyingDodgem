@@ -1,5 +1,12 @@
 #include "flyingdodgem_types.h"
 #include <stdlib.h>
+#ifdef _MSC_VER
+#include <math.h>
+#else
+extern "C" double sqrt(double);
+extern "C" double fabs(double);
+#endif
+#include <string.h>
 #include "callees.h"
 #include "scene.h"
 
@@ -56,10 +63,55 @@ extern "C" int32_t g_4a4524;
 extern "C" int32_t g_4a4564;
 extern "C" uint8_t g_460644[24];
 extern "C" uint8_t g_46065c[24];
+extern "C" int32_t g_4a452c;
+extern "C" int32_t g_4a4538;
+extern "C" int32_t g_4a4544;
+extern "C" int32_t g_4a4550;
+extern "C" int16_t g_4a4528;
+extern "C" int32_t g_4a4530;
+extern "C" int32_t g_4a4568;
+extern "C" int32_t g_4a456c;
+extern "C" int32_t g_4a1d64;
+extern "C" int32_t g_4a1d6c;
+extern "C" int32_t g_4a4a30;
+extern "C" MerlinPlane g_4a4498;
+extern "C" MerlinPlane g_4a44e0;
+extern "C" int32_t __cdecl F406d30(void* a0, void* a1);
 
 extern "C" void* __cdecl GetSub401140(void);
 
 extern "C" void __fastcall F407160(void* self, void* unused, void* a0);
+
+/* Retail packs adjacent 4-byte address fields (host +0x30/+0x34/+0x38/+0x64,
+ * arena +0x04/+0x08/+0x18/+0x1c). An 8-byte void* access straddles the
+ * neighbour on 64-bit; the 4-byte form below emits the identical mov on
+ * 32-bit retail/matching and zero-extends the MAP_32BIT base on 64-bit
+ * native. Matching sees the exact original tokens. */
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+#define HOVER_LPTR(b, o) ((uint8_t*)(uintptr_t)*(uint32_t*)((uint8_t*)(b) + (o)))
+#define HOVER_SPTR(b, o, v) (*(uint32_t*)((uint8_t*)(b) + (o)) = (uint32_t)(uintptr_t)(v))
+#else
+#define HOVER_LPTR(b, o) (*(uint8_t**)((uint8_t*)(b) + (o)))
+#define HOVER_SPTR(b, o, v) (*(void**)((uint8_t*)(b) + (o)) = (void*)(v))
+#endif
+
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+/* Retail packs t+0xc8/+0xcc/+0xd0 as three 4-byte pointers.  On 64-bit each
+ * void* store is 8 bytes and the slots overlap, so the native display driver
+ * parks the live objects here.  bits holds the full framebuffer pointer that
+ * does not fit in the host's 4-byte +0x28 field.  The matching MSVC build
+ * never defines this macro. */
+struct NativePlanes
+{
+    void* host;  /* *fc8: span host handed to M406090 */
+    void* planeB;
+    void* ctx;   /* render context (t+0xd0 on 32-bit) */
+    uint8_t* bits;
+    uint32_t* rowColours;
+};
+extern "C" struct NativePlanes g_nativePlanes;
+struct NativePlanes g_nativePlanes;
+#endif
 
 #if defined(_MSC_VER)
 #pragma comment(lib, "gdi32.lib")
@@ -484,11 +536,22 @@ extern "C" void __fastcall DrawEntry402250(void* self, void* unused)
     int32_t* pp;
     HovRect rect;
     PtPair pair;
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    NativePlanes* planes = &g_nativePlanes;
+#endif
 
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    if (planes->ctx == NULL)
+        return;
+    world = *(uint8_t**)(t + 0x30);
+    if (world == NULL)
+        return;
+#else
     if (*(int32_t*)(t + 0xd0) == 0)
         return;
 
     world = *(uint8_t**)(t + 0x30);
+#endif
     EnterCriticalSection(g_460644);
     Release6c60();
 
@@ -525,6 +588,42 @@ extern "C" void __fastcall DrawEntry402250(void* self, void* unused)
     LeaveCriticalSection(g_460644);
     EnterCriticalSection(g_46065c);
 
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    slot = &planes->planeB;
+    fc8 = &planes->host;
+    obj = *slot;
+    if (*(int32_t*)(t + 0x21c) != 0)
+    {
+        if (obj != NULL)
+            *(void**)((uint8_t*)obj + 0x60) = world + 0x418c;
+        node = world + 0x418c;
+    }
+    else
+    {
+        if (obj != NULL)
+            *(void**)((uint8_t*)obj + 0x60) = world + 0x18c;
+        node = world + 0x18c;
+    }
+
+    /* 4-byte store: an 8-byte void* store here would clobber host+0x64
+     * (dir-table base) on 64-bit, faulting M406090's entry calc. The value
+     * (view node for a future textured F402b10) is unread by the current
+     * real+stub set. Matching build is 32-bit (no overlap) and untouched
+     * below in the #else path. */
+    *(int32_t*)((uint8_t*)*fc8 + 0x60) = (int32_t)(uintptr_t)node;
+
+    if (*(int32_t*)(t + 0x540) == 0)
+    {
+        Set6c00(*fc8, self, pp[0], pp[1], *(int32_t*)(t + 0xe0), *(int32_t*)(t + 0xdc));
+        ((HoverTc*)planes->ctx)->M406090(*(void**)(*(uint8_t**)(t + 0x30) + 0x188), *fc8);
+        if (g_460740 != 0 && *slot != NULL)
+        {
+            Set6c00(*slot, self, pp[0], pp[1], *(int32_t*)(t + 0xe0), (*(int32_t*)(t + 0xdc) + 0x100) & 0x1ff);
+            ((HoverTc*)planes->ctx)->M406090(*(void**)(*(uint8_t**)(t + 0x30) + 0x188), *slot);
+        }
+        ((HoverTc*)(t + 0xe8))->M405a10(self, world);
+    }
+#else
     if (*(int32_t*)(t + 0x21c) != 0)
     {
         slot = (void**)(t + 0xcc);
@@ -557,6 +656,7 @@ extern "C" void __fastcall DrawEntry402250(void* self, void* unused)
         }
         ((HoverTc*)(t + 0xe8))->M405a10(self, world);
     }
+#endif
 
     rect = *(HovRect*)(t + 0x1ac);
     PatBlt(*(void**)(t + 0xb8), rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, 0x42);
@@ -600,57 +700,68 @@ extern "C" void __fastcall DrawEntry402250(void* self, void* unused)
 }
 
 // FUNCTION: HOVER 0x00406c90
-extern "C" void __fastcall Setup6c90(void* self, void* unused)
+extern "C" void __fastcall Setup6c90(void* self)
 {
+    /* 32-bit address semantics: the arena packs 4-byte fields every 4 bytes
+     * (+0x04/+0x08/+0x0c/+0x10/+0x14/+0x18/+0x1c). An 8-byte void* access
+     * would straddle neighbours on 64-bit (e.g. +0x18 scratch ptr high half
+     * vs +0x1c store). The uint32_t+(uintptr_t) pattern emits the identical
+     * 4-byte mov on 32-bit retail/matching and zero-extends the MAP_32BIT
+     * base on 64-bit native. */
     uint8_t* b = (uint8_t*)self;
-    uint8_t* p = *(uint8_t**)(b + 0x18);
+    uint8_t* p = (uint8_t*)(uintptr_t)*(uint32_t*)(b + 0x18);
 
-    *(void**)(b + 0x1c) = p;
-    *(void**)(b + 4) = p;
+    *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)p;
+    *(uint32_t*)(b + 4) = (uint32_t)(uintptr_t)p;
     *(int32_t*)(b + 0x10) = 0;
     uint8_t* t = p + 0xcc;
     p = p + 0xa0;
-    *(void**)(b + 0x1c) = p;
+    *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)p;
     *(int32_t*)(b + 0xc) = 0;
     uint8_t* r = p + 4;
     *(int32_t*)(b + 0x14) = 0;
-    *(void**)(b + 8) = p;
-    *(void**)(b + 0x1c) = t;
-    *(void**)p = t;
+    *(uint32_t*)(b + 8) = (uint32_t)(uintptr_t)p;
+    *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)t;
+    *(uint32_t*)p = (uint32_t)(uintptr_t)t;
     t = t + 0xa0;
-    *(void**)(b + 0x1c) = t;
-    *(void**)r = t;
+    *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)t;
+    *(uint32_t*)r = (uint32_t)(uintptr_t)t;
     *(int32_t*)(p + 0x28) = 0;
     t = t + 0xa0;
     *(int32_t*)(p + 0x14) = 0;
-    *(void**)(b + 0x1c) = t;
-    *(void**)(p + 0x10) = t;
+    *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)t;
+    *(uint32_t*)(p + 0x10) = (uint32_t)(uintptr_t)t;
     int32_t size = *(int32_t*)b;
     t = t + size * 2;
     *(int32_t*)(p + 0x18) = 0;
-    *(void**)(b + 0x1c) = t;
-    *(void**)(p + 8) = p;
-    *(void**)(p + 0xc) = r;
+    *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)t;
+    *(uint32_t*)(p + 8) = (uint32_t)(uintptr_t)p;
+    *(uint32_t*)(p + 0xc) = (uint32_t)(uintptr_t)r;
 }
 
 // FUNCTION: HOVER 0x00406d00
-extern "C" void __fastcall AddPair6d00(void* self, void* unused, int32_t a1, int32_t a2)
+void SpanChain::AddPair6d00(int32_t a1, int32_t a2)
 {
-    uint8_t* q = *(uint8_t**)((uint8_t*)self + 8);
+    uint8_t* q = (uint8_t*)(uintptr_t)*(uint32_t*)((uint8_t*)this + 8);
     int32_t n = *(int32_t*)(q + 0x14);
     if (n < 0x28)
     {
-        int32_t** base = *(int32_t***)(q + 0xc);
-        int32_t* arr;
+        uint32_t* base = (uint32_t*)(uintptr_t)*(uint32_t*)(q + 0xc);
+        uint8_t* arr = (uint8_t*)(uintptr_t)*base;
         int16_t* slot;
 
         n = n + 1;
         *(int32_t*)(q + 0x14) = n;
-        arr = *base;
-        slot = (int16_t*)((uint8_t*)arr + n * 4 - 4);
+        slot = (int16_t*)(arr + n * 4 - 4);
         slot[1] = (int16_t)a2;
         slot[0] = (int16_t)a1;
     }
+}
+
+// FUNCTION: HOVER 0x00403a60
+void SpanChain::F403a60(void* a1)
+{
+    (void)a1;
 }
 
 /* Segment-intersection projector (retail 0x401260): intersects the line
@@ -1417,6 +1528,235 @@ void RenderNode::F4055b0(void* a0, int32_t a1, int32_t a2, int32_t a3, int32_t a
 #pragma optimize("", on)
 #endif
 
+// FUNCTION: HOVER 0x004010c0
+void __fastcall F4010c0(void* self)
+{
+    MerlinPlane* p = (MerlinPlane*)self;
+    int32_t y1;
+    int32_t y0;
+    int32_t x1 = p->m_p1c;
+    int32_t x0 = p->m_p14;
+
+    p->m_w24 &= (int16_t)0xfff8;
+    if (x0 < x1)
+    {
+        p->m_p28 = x0;
+        p->m_p2c = x1;
+    }
+    else
+    {
+        p->m_p28 = x1;
+        p->m_p2c = x0;
+    }
+    y0 = p->m_p18;
+    y1 = p->m_p20;
+    if (y0 < y1)
+    {
+        p->m_p30 = y0;
+        p->m_p34 = y1;
+    }
+    else
+    {
+        p->m_p30 = y1;
+        p->m_p34 = y0;
+    }
+    if (x0 != x1)
+        p->m_w24 |= 2;
+    if (y0 != y1)
+        p->m_w24 |= 4;
+    if ((p->m_w24 & 6) == 0)
+        p->m_w24 |= 1;
+    x1 -= x0;
+    y1 -= y0;
+    p->m_p38 = x1;
+    p->m_p3c = y1;
+    p->m_p40 = x1 * x1 + y1 * y1;
+}
+
+// FUNCTION: HOVER 0x00406090
+int32_t HoverTc::M406090(void* a1, void* a2)
+{
+    MerlinPlane w;
+    int32_t py;
+    int32_t idx;
+    int32_t first;
+    int32_t d2;
+    int32_t u;
+    int32_t v;
+    int32_t px;
+    uint8_t* entry;
+    int32_t pv;
+    double r;
+    int32_t c1;
+    int32_t c2;
+    int32_t n1;
+    int32_t n2;
+    int32_t mask;
+    int32_t hi;
+    int32_t lo;
+
+    *(void**)((uint8_t*)this + 0x20) = a1;
+    g_4a1d68 = a2;
+    g_4a453c = *(int32_t*)((uint8_t*)g_4a1d68 + 0x40);
+    g_4a455c = *(int32_t*)((uint8_t*)g_4a1d68 + 0x3c);
+    g_4a4548 = *(void**)((uint8_t*)g_4a1d68 + 0x14);
+    g_4a1d70 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x2c);
+    g_4a452c = *(int32_t*)((uint8_t*)g_4a1d68 + 0x5c);
+    g_4a454c = *(int32_t*)((uint8_t*)g_4a1d68 + 0x20);
+    g_4a4544 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x50);
+    n1 = g_4a453c;
+    n1 >>= 1;
+    c1 = 0;
+    while (n1 != 0)
+    {
+        n1 >>= 1;
+        c1++;
+    }
+    g_4a455c = *(int32_t*)((uint8_t*)g_4a1d68 + 0x3c);
+    c2 = 0;
+    n2 = g_4a455c;
+    n2 >>= 1;
+    g_4a4538 = c1;
+    while (n2 != 0)
+    {
+        n2 >>= 1;
+        c2++;
+    }
+    g_4a4554 = c2;
+    g_4a1d78 = *(int32_t*)((uint8_t*)this + 0x24);
+    g_4a4a34 = *(int32_t*)((uint8_t*)this + 0x2c);
+    g_4a4a30 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x7c);
+    Setup6c90(*(void**)this);
+    *(int32_t*)((uint8_t*)this + 0x30) = (g_4a454c << 16) / 0x55;
+    *(int32_t*)((uint8_t*)this + 0x34) = (*(int32_t*)((uint8_t*)g_4a1d68 + 0x54) << 16) - 0x2aaaab;
+    *(int32_t*)((uint8_t*)this + 0x34) &= 0x1ffffff;
+    memset(*(void**)((uint8_t*)this + 0x40), 0, g_4a454c * 4);
+    entry = HOVER_LPTR(g_4a1d68, 0x64) + ((*(int32_t*)((uint8_t*)g_4a1d68 + 0x88) * (*(int32_t*)((uint8_t*)g_4a1d68 + 0x54) & 0x1ff) * 6) / 512) * 8;
+    w.m_p14 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
+    w.m_p18 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
+    g_4a4498.m_p14 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
+    g_4a4498.m_p18 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
+    g_4a4498.m_p1c = *(int32_t*)entry + *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
+    g_4a4498.m_p20 = *(int32_t*)(entry + 4) + *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
+    F4010c0(&g_4a4498);
+    entry += g_4a454c * 8;
+    g_4a44e0.m_p14 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
+    g_4a44e0.m_p18 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
+    g_4a44e0.m_p1c = *(int32_t*)entry + *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
+    g_4a44e0.m_p20 = *(int32_t*)(entry + 4) + *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
+    F4010c0(&g_4a44e0);
+    entry -= g_4a454c * 8;
+    g_4a4550 = *(int32_t*)((uint8_t*)this + 0x3c);
+    for (idx = (*(int32_t*)(*(uint8_t**)((uint8_t*)this + 0x20) + 0x30) - 1) * 4; idx >= 0; idx -= 4)
+    {
+        uint8_t* node = *(uint8_t**)((uint8_t*)*(void***)((uint8_t*)*(void**)((uint8_t*)this + 0x20) + 0x2c) + idx);
+        if (*(int32_t*)(node + 0x64) != 0)
+        {
+            px = (int32_t)*(int16_t*)(node + 0x5a) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
+            py = (int32_t)*(int16_t*)(node + 0x5c) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
+            pv = (int32_t)*(int16_t*)(node + 0x58);
+            d2 = py * py + px * px;
+            r = sqrt(fabs((double)d2));
+            u = px * pv;
+            u = (int)((double)u / r);
+            v = (int)((double)(py * pv) / r);
+            px += *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
+            py += *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
+            *(int32_t*)(node + 0x14) = px + v;
+            *(int32_t*)(node + 0x18) = py - u;
+            *(int32_t*)(node + 0x1c) = px - v;
+            *(int32_t*)(node + 0x20) = py + u;
+            F4010c0(node);
+        }
+        if (this->M405b90(node) != 0)
+            this->M405ce0(node, node, 1, 0);
+    }
+    g_4a4528 = 0;
+    this->M405fa0(0);
+    g_4a4718 = *(void**)((uint8_t*)this + 0x44);
+    g_4a4714 = 0;
+    g_4a471c = 0;
+    first = 1;
+    *(int32_t*)((uint8_t*)this + 0x28) = 0;
+    g_4a4534 = 0;
+    mask = g_4a455c - 1;
+    if (g_4a454c > 0)
+    {
+        do
+        {
+            if ((mask & g_4a4534) == 0)
+            {
+                w.m_p14 = *(int32_t*)entry + *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
+                w.m_p18 = *(int32_t*)(entry + 4) + *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
+                entry += g_4a455c * 8;
+                F4010c0(&w);
+            }
+            {
+                uint8_t* bucket = *(uint8_t**)((uint8_t*)*(void**)((uint8_t*)this + 0x40) + g_4a4534 * 4);
+                if (bucket != 0)
+                {
+                    while (bucket != 0)
+                    {
+                        if (*(int32_t*)(bucket + 4) != 0)
+                            F4044a0(*(int32_t*)(bucket + 8), *(int32_t*)(bucket + 0xc), *(int16_t*)bucket, *(int32_t*)(bucket + 0x10));
+                        else
+                            *(int32_t*)((uint8_t*)this + 0x28) |= F404580(*(void**)(bucket + 0xc), *(void**)(bucket + 0x10));
+                        bucket = *(uint8_t**)(bucket + 0x14);
+                    }
+                    if ((mask & g_4a4534) == 0)
+                    {
+                        first = 0;
+                        *(int32_t*)((uint8_t*)this + 0x28) |= F4045e0((void*)g_4a4544, &w);
+                    }
+                    else
+                    {
+                        first = 1;
+                    }
+                }
+                else
+                {
+                    if ((mask & g_4a4534) == 0)
+                    {
+                        if (first)
+                        {
+                            *(int32_t*)((uint8_t*)this + 0x28) |= F4045e0((void*)g_4a4544, &w);
+                            first = 0;
+                        }
+                        else
+                            *(int32_t*)((uint8_t*)this + 0x28) |= F406d30((void*)g_4a4544, &w);
+                    }
+                }
+            }
+            if ((mask & g_4a4534) == 0)
+            {
+                hi = *(int32_t*)(HOVER_LPTR(g_4a1d68, 0x34) + g_4a4534 * 4) & -g_4a453c;
+                lo = *(int32_t*)(HOVER_LPTR(g_4a1d68, 0x38) + g_4a4534 * 4) & -g_4a453c;
+                g_4a1d64 = hi;
+                g_4a4568 = hi - g_4a453c - 1;
+                g_4a4530 = g_4a453c + lo + 1;
+                g_4a1d6c = *(int32_t*)(HOVER_LPTR(g_4a1d68, 0x30) + g_4a4534 * 4) << 10;
+                if (*(int32_t*)((uint8_t*)g_4a1d68 + 0x68) != 0)
+                    g_4a4540 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x28) - g_4a455c - g_4a4534 + g_4a454c - 1;
+                else
+                    g_4a4540 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x28) + g_4a4534;
+                g_4a456c = lo;
+                if (g_4a471c != 0)
+                    this->M402e00(g_4a471c);
+                else
+                {
+                    g_4a456c = lo;
+                    *(int32_t*)((uint8_t*)this + 0x28) |= 1;
+                    if (g_4a454c - 1 > g_4a4534)
+                        ((SpanChain*)*(void**)this)->AddPair6d00(g_4a1d64, lo);
+                    ((SpanChain*)*(void**)this)->F403a60(this);
+                }
+            }
+            g_4a4534++;
+        } while (g_4a4534 < g_4a454c);
+    }
+    ((SpanChain*)*(void**)this)->F403a60(this);
+    return 0;
+}
 
 // FUNCTION: HOVER 0x00406d30
 extern "C" int32_t __cdecl F406d30(void* a0, void* a1)

@@ -21,6 +21,13 @@
 
 #define GDI_ERROR ((s32)-1)
 
+/* The GDI entry points are called from both C (gameframe.c, main.c) and C++
+ * (display_native.c, render.c via GDI paths).  Match the Win32 ABI so both
+ * frontends link to the same symbols. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct RGBQUAD
 {
     u8 blue;
@@ -308,5 +315,9 @@ u8 *__cdecl GdiCompat_SurfaceBits(HDC hdc, u32 *pitch);
  * RGBA32 back buffer (byte order R,G,B,A). */
 void __cdecl GdiCompat_Present(HDC screen, u8 *dst, u32 dstPitch,
                                u32 dstWidth, u32 dstHeight);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

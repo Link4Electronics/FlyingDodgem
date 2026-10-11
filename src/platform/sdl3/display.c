@@ -135,11 +135,18 @@ void __cdecl PlatDisplay_Present(PlatDisplay *d)
 bool __cdecl PlatDisplay_PollEvents(PlatDisplay *d)
 {
     SDL_Event event;
-    while (SDL_PollEvent(&event))
-    {
-        if (event.type == SDL_EVENT_QUIT ||
-            event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
-            return false;
-    }
+
+    (void)d;
+    /* Peek, don't drain: every other event belongs to the USER32 message
+     * pump (PeekMessageA), which consumes the SDL queue itself.  Only quit
+     * is taken here so the main loop can exit. */
+    SDL_PumpEvents();
+    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT,
+                           SDL_EVENT_QUIT, SDL_EVENT_QUIT) == 1)
+        return false;
+    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT,
+                           SDL_EVENT_WINDOW_CLOSE_REQUESTED,
+                           SDL_EVENT_WINDOW_CLOSE_REQUESTED) == 1)
+        return false;
     return true;
 }

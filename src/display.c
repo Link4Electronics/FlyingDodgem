@@ -42,7 +42,7 @@ extern "C" HOVER_IMPORT uint32_t __stdcall WaitForSingleObject(void* ev, uint32_
 extern "C" HOVER_IMPORT int32_t __stdcall SendMessageA(void* hwnd, uint32_t msg,
     uintptr_t wParam, intptr_t lParam);
 
-extern "C" int32_t g_460570;
+extern "C" uint8_t g_460570[];
 extern "C" int32_t g_4605d0;
 extern "C" int32_t g_460734;
 extern "C" int32_t g_460958;
@@ -67,12 +67,12 @@ extern "C" void __fastcall DisplayEntry41ece0(void* self, void* unused)
         FIELD32(disp, 0x52c) = FIELD32(disp, 0x528);
         FIELD32(disp, 0x530) = 0;
 
-        gdisp = (uint8_t*)(uintptr_t)g_460570;
+        gdisp = g_460570;
         FIELD32(gdisp, 0x3e4) = 0;
 
         if (LoadModule("DISPDIB.DLL", NULL) < 0x20)
         {
-            gdisp = (uint8_t*)(uintptr_t)g_460570;
+            gdisp = g_460570;
             FIELD32(gdisp, 0x3f0) = 0;
         }
         else
@@ -83,28 +83,28 @@ extern "C" void __fastcall DisplayEntry41ece0(void* self, void* unused)
             hwnd = CreateWindowExA(0, "DisplayDibWindow", NULL, 0x40000000u,
                 0, 0, GetSystemMetrics(0), GetSystemMetrics(1),
                 NULL, NULL, (void*)(uintptr_t)hinst, NULL);
-            gdisp = (uint8_t*)(uintptr_t)g_460570;
+            gdisp = g_460570;
             FIELD32(gdisp, 0x3f0) = (int32_t)(uintptr_t)hwnd;
         }
 
-        gdisp = (uint8_t*)(uintptr_t)g_460570;
+        gdisp = g_460570;
         FIELD32(gdisp, 0x3e0) = (g_460960 != 0) ? 1 : 0;
 
         running = 1;
         while (running != 0)
         {
-            EnterCriticalSection((void*)(uintptr_t)((uint32_t)g_460570 + 0x11c));
+            EnterCriticalSection(g_460570 + 0x11c);
             SetEvent((void*)(uintptr_t)(uint32_t)FIELD32(disp, 0x50));
             ResetEvent((void*)(uintptr_t)(uint32_t)FIELD32(disp, 0x4c));
-            LeaveCriticalSection((void*)(uintptr_t)((uint32_t)g_460570 + 0x11c));
+            LeaveCriticalSection(g_460570 + 0x11c);
             WaitForSingleObject((void*)(uintptr_t)(uint32_t)FIELD32(disp, 0x48), 0xffffffffu);
-            EnterCriticalSection((void*)(uintptr_t)((uint32_t)g_460570 + 0x11c));
+            EnterCriticalSection(g_460570 + 0x11c);
 
             ResetEvent((void*)(uintptr_t)(uint32_t)FIELD32(disp, 0x50));
             SetEvent((void*)(uintptr_t)(uint32_t)FIELD32(disp, 0x4c));
             ResetEvent((void*)(uintptr_t)(uint32_t)FIELD32(disp, 0x48));
             SetEvent((void*)(uintptr_t)(uint32_t)FIELD32(disp, 0x54));
-            LeaveCriticalSection((void*)(uintptr_t)((uint32_t)g_460570 + 0x11c));
+            LeaveCriticalSection(g_460570 + 0x11c);
 
             caseSel2 = FIELD32(disp, 0xac);
             switch (caseSel2)
@@ -144,10 +144,10 @@ extern "C" void __fastcall DisplayEntry41ece0(void* self, void* unused)
             if (g_460958 != 0)
                 SendMessageA((void*)(uintptr_t)g_460960, 0x404, 0, 0);
             SendMessageA((void*)(uintptr_t)g_460960, 0x402, 0, 0);
-            FIELD32((void*)(uintptr_t)g_460570, 0x3f0) = 0;
+            FIELD32(g_460570, 0x3f0) = 0;
         }
 
-        gdisp = (uint8_t*)(uintptr_t)g_460570;
+        gdisp = g_460570;
         FIELD32(gdisp, 0x3e0) = 0;
 
         ResetEvent((void*)(uintptr_t)(uint32_t)FIELD32(disp, 0x4c));

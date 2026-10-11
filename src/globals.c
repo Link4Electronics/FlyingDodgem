@@ -717,8 +717,6 @@ uint8_t g_data_c339[1];
 uint8_t g_data_c70e[1];
 // GLOBAL: HOVER 0x0044E172
 uint8_t g_data_e172[1];
-// GLOBAL: HOVER 0x0044E172
-uint8_t g_data_e172[1];
 // GLOBAL: HOVER 0x0044E7B2
 uint8_t g_data_e7b2[1];
 // GLOBAL: HOVER 0x00451B7E
@@ -755,16 +753,26 @@ void* g_pApp;
 /* Wall/floor/span renderer scratch state (0x402990 and friends). */
 // GLOBAL: HOVER 0x004a4524
 int32_t g_4a4524;
+// GLOBAL: HOVER 0x004a4528
+int16_t g_4a4528;
+// GLOBAL: HOVER 0x004a452c
+int32_t g_4a452c;
 // GLOBAL: HOVER 0x004a4534
 int32_t g_4a4534;
+// GLOBAL: HOVER 0x004a4538
+int32_t g_4a4538;
 // GLOBAL: HOVER 0x004a453c
 int32_t g_4a453c;
 // GLOBAL: HOVER 0x004a4540
 int32_t g_4a4540;
+// GLOBAL: HOVER 0x004a4544
+int32_t g_4a4544;
 // GLOBAL: HOVER 0x004a4548
 void* g_4a4548;
 // GLOBAL: HOVER 0x004a454c
 int32_t g_4a454c;
+// GLOBAL: HOVER 0x004a4550
+int32_t g_4a4550;
 // GLOBAL: HOVER 0x004a4554
 int32_t g_4a4554;
 // GLOBAL: HOVER 0x004a455c
@@ -810,6 +818,8 @@ int32_t g_4a4a18;
 int32_t g_4a4a1c;
 // GLOBAL: HOVER 0x004a4a20
 int32_t g_4a4a20;
+// GLOBAL: HOVER 0x004a4a30
+int32_t g_4a4a30;
 // GLOBAL: HOVER 0x004a4a34
 int32_t g_4a4a34;
 // GLOBAL: HOVER 0x004a4a38
@@ -846,8 +856,13 @@ void* g_460970;
 uint8_t g_sineTable[32768];
 // GLOBAL: HOVER 0x00460744
 int32_t g_460744;
+/* CBumperApp instance (theApp). Retail constructs it at 0x460570 from the
+ * static-init block (0x426546). Size 0x418 covers every offset InitInstance /
+ * ExitInstance / DisplayEntry reference (+0xd4..+0x410). The CWorld* the
+ * scene publishes is a separate global (g_460970) even though retail stores it
+ * at app+0x400; reccmp only cares about the instruction shape. */
 // GLOBAL: HOVER 0x00460570
-int32_t g_460570;
+uint8_t g_460570[0x418];
 // GLOBAL: HOVER 0x004605d0
 int32_t g_4605d0;
 // GLOBAL: HOVER 0x00460734
@@ -868,3 +883,21 @@ int32_t g_4a4858;
 void* g_4c57a8;
 // GLOBAL: HOVER 0x004c57ac
 int32_t g_4c57ac;
+// GLOBAL: HOVER 0x004a4498
+uint8_t g_4a4498[0x48];
+// GLOBAL: HOVER 0x004a44e0
+uint8_t g_4a44e0[0x48];
+// GLOBAL: HOVER 0x004a4530
+int32_t g_4a4530;
+// GLOBAL: HOVER 0x004a4568
+int32_t g_4a4568;
+// GLOBAL: HOVER 0x004a456c
+int32_t g_4a456c;
+// GLOBAL: HOVER 0x004a1d64
+int32_t g_4a1d64;
+// GLOBAL: HOVER 0x004a1d6c
+int32_t g_4a1d6c;
+// GLOBAL: HOVER 0x004a1d60
+void* g_4a1d60;
+// GLOBAL: HOVER 0x004a4720
+void* g_4a4720;
