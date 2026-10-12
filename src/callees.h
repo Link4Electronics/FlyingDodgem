@@ -22,6 +22,7 @@ struct HoverTc
     void F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1);
     void F401c00(void* a1, void* a2);
     void F402630(void* a1, void* a2, void* a3);
+    int32_t F401520(void* a1, void* a2);
     int32_t F404030(void* a1, void* a2, void* a3);
     int32_t M402e00(void* a1);
     int32_t M4053a0(void* a1, void* a2);
@@ -37,6 +38,32 @@ struct HoverTc
     int32_t M449598(int32_t a1, int32_t a2);
     int32_t M44994f(void* a1);
     int32_t M44a003(void* a1, void* a2, void* a3);
+};
+
+/* Render-node discriminated by RTTI IsKindOf (retail 0x44e710). Shared by
+ * render.c (F404bb0/F4055b0/CopyPos/GetPair) and scene.c (F401c00
+ * dispatcher) so both TUs resolve the same `RenderNode::IsKindOf` symbol
+ * and reccmp sees one call target. Signatures match render.c exactly. */
+typedef struct
+{
+    int32_t x;
+    int32_t y;
+} IntPair;
+
+typedef struct
+{
+    uint32_t x;
+    uint32_t y;
+} PtPair;
+
+class RenderNode
+{
+public:
+    int32_t IsKindOf(void* pClass);
+    IntPair CopyPos();
+    PtPair* GetPair(PtPair* out);
+    void F404bb0(void* a0, void* a1, int32_t a2);
+    void F4055b0(void* a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7);
 };
 
 /* Column-plane object (retail 0x401160/0x401210, normalized by F4010c0).

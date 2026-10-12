@@ -1,6 +1,6 @@
 #include "platform/audio.h"
 
-/* Null audio backend for configurations that do not use SDL3 (e.g. the MSVC 5.0
+/* Null audio backend for configurations that do not use SDL3 (e.g. the MSVC 4
  * matching build). Keeps the platform audio API linkable without a real device. */
 
 bool __cdecl PlatAudio_Init(void) { return true; }

@@ -234,14 +234,14 @@ extern "C" void __fastcall SpanSetup2990(void* self, void* unused, void* a1, voi
             shade = g_461cfc;
         }
         rowbase = *(int32_t*)(child + 0x28);
-        row = (int32_t*)(rowbase + shade * 32);
+        row = (int32_t*)(uintptr_t)(uint32_t)(rowbase + shade * 32);
         f9c = *(int32_t*)(o + 0x9c);
         tex = *(int16_t*)(o + 0xa);
         sh = (uint8_t)(f9c + shade);
         mask = (int16_t)(tex >> sh) & *row;
         tbl = *(int32_t*)((uint8_t*)row + 0x1c);
-        entry = *(int32_t*)(tbl + mask * 8 + 4);
-        x = *(int32_t*)(entry + 4);
+        entry = *(int32_t*)(uintptr_t)(uint32_t)(tbl + mask * 8 + 4);
+        x = *(int32_t*)(uintptr_t)(uint32_t)(entry + 4);
         span = *(int32_t*)(v + 0xc) - *(int32_t*)(v + 0x8);
         *(int32_t*)(v + 0x10) = x;
         g_4a4a1c = x;
@@ -411,18 +411,6 @@ int32_t SpanArena::F4065f0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32
     return 0;
 }
 
-typedef struct
-{
-    int32_t x;
-    int32_t y;
-} IntPair;
-
-typedef struct
-{
-    uint32_t x;
-    uint32_t y;
-} PtPair;
-
 // Runtime-class side of the retail scene objects: only the entry the binary
 // actually dispatches through (vtable slot 0) plus the base-class link at +0x10.
 class RtHost
@@ -431,15 +419,7 @@ public:
     virtual void* GetRuntimeClass() = 0;
 };
 
-class RenderNode
-{
-public:
-    int32_t IsKindOf(void* pClass);
-    IntPair CopyPos();
-    PtPair* GetPair(PtPair* out);
-    void F404bb0(void* a0, void* a1, int32_t a2);
-    void F4055b0(void* a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7);
-};
+/* RenderNode/IntPair/PtPair live in callees.h (shared with scene.c F401c00). */
 
 // FUNCTION: HOVER 0x00403880
 IntPair RenderNode::CopyPos()
@@ -609,8 +589,8 @@ extern "C" void __fastcall Set6c00(void* self, void* unused, int32_t a1, int32_t
 {
     uint8_t* b = (uint8_t*)self;
     int32_t* q = (int32_t*)(b + 0x48);
-    *(int32_t*)(b + 0x50) = a3;
     *(int32_t*)(b + 0x54) = a4 & 0x1ff;
+    *(int32_t*)(b + 0x50) = a3;
     q[0] = a1;
     q[1] = a2;
     if (*(int32_t*)(b + 0xa8) != a3)
@@ -1831,7 +1811,8 @@ int32_t HoverTc::M406090(void* a1, void* a2)
                 F4010c0(&w);
             }
             {
-                uint8_t* bucket = *(uint8_t**)((uint8_t*)*(void**)((uint8_t*)this + 0x40) + g_4a4534 * 4);
+                uint8_t* bucketBase = *(uint8_t**)((uint8_t*)this + 0x40);
+                uint8_t* bucket = HOVER_LPTR(bucketBase, g_4a4534 * 4);
                 if (bucket != 0)
                 {
                     while (bucket != 0)
@@ -1839,13 +1820,13 @@ int32_t HoverTc::M406090(void* a1, void* a2)
                         if (*(int32_t*)(bucket + 4) != 0)
                             F4044a0(*(int32_t*)(bucket + 8), *(int32_t*)(bucket + 0xc), *(int16_t*)bucket, *(int32_t*)(bucket + 0x10));
                         else
-                            *(int32_t*)((uint8_t*)this + 0x28) |= F404580(*(void**)(bucket + 0xc), *(void**)(bucket + 0x10));
-                        bucket = *(uint8_t**)(bucket + 0x14);
+                            *(int32_t*)((uint8_t*)this + 0x28) |= F404580(HOVER_LPTR(bucket, 0xc), HOVER_LPTR(bucket, 0x10));
+                        bucket = HOVER_LPTR(bucket, 0x14);
                     }
                     if ((mask & g_4a4534) == 0)
                     {
                         first = 0;
-                        *(int32_t*)((uint8_t*)this + 0x28) |= F4045e0((void*)g_4a4544, &w);
+                        *(int32_t*)((uint8_t*)this + 0x28) |= F4045e0((void*)(uintptr_t)(uint32_t)g_4a4544, &w);
                     }
                     else
                     {
@@ -1858,11 +1839,11 @@ int32_t HoverTc::M406090(void* a1, void* a2)
                     {
                         if (first)
                         {
-                            *(int32_t*)((uint8_t*)this + 0x28) |= F4045e0((void*)g_4a4544, &w);
+                            *(int32_t*)((uint8_t*)this + 0x28) |= F4045e0((void*)(uintptr_t)(uint32_t)g_4a4544, &w);
                             first = 0;
                         }
                         else
-                            *(int32_t*)((uint8_t*)this + 0x28) |= F406d30((void*)g_4a4544, &w);
+                            *(int32_t*)((uint8_t*)this + 0x28) |= F406d30((void*)(uintptr_t)(uint32_t)g_4a4544, &w);
                     }
                 }
             }

@@ -13,7 +13,7 @@
  * HOVER-style menu code can drive an interactive menu bar exactly the way the
  * original did, rendering it as chrome over the 640x480 presentation.
  *
- * The matching (MSVC 5.0 reccmp) build never compiles this unit.
+ * The matching (MSVC 4 reccmp) build never compiles this unit.
  */
 
 /* Opaque menu / window handles. A menu handle is a GdiMenu*; an HWND is the

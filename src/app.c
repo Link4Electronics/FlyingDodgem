@@ -128,7 +128,9 @@ static void* CreateMultiDocTemplate(void* pDocClass, void* pFrameClass, void* pV
     *(void**)(t + 0x40) = pDocClass;
     *(void**)(t + 0x44) = pFrameClass;
     *(void**)(t + 0x48) = pViewClass;
-    *(void**)(t + 0x60) = NULL;
+    /* +0x60 m_pOnlyDoc is a 4-byte packed retail field: a pointer-width
+     * store would write past the 100-byte block on 64-bit. */
+    *(uint32_t*)(t + 0x60) = 0;
     return t;
 }
 

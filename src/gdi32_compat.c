@@ -26,7 +26,7 @@
  * The HUD code is therefore written against the *same* GDI entry points the
  * retail binary imports, and the rendering happens on real SDL3 surfaces.
  * This unit is only compiled by the SDL3 native driver (FLYINGDODGEM_GDI_COMPAT);
- * the MSVC 5.0 reccmp build never compiles it.
+ * the MSVC 4 reccmp build never compiles it.
  * ------------------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------------------

@@ -785,6 +785,22 @@ void* g_4a4714;
 void* g_4a4718;
 // GLOBAL: HOVER 0x004a471c
 void* g_4a471c;
+// GLOBAL: HOVER 0x004a44b0
+int32_t g_4a44b0;
+// GLOBAL: HOVER 0x004a44ac
+int32_t g_4a44ac;
+// GLOBAL: HOVER 0x004a44d0
+int32_t g_4a44d0;
+// GLOBAL: HOVER 0x004a44d4
+int32_t g_4a44d4;
+// GLOBAL: HOVER 0x004a44f8
+int32_t g_4a44f8;
+// GLOBAL: HOVER 0x004a44f4
+int32_t g_4a44f4;
+// GLOBAL: HOVER 0x004a451c
+int32_t g_4a451c;
+// GLOBAL: HOVER 0x004a4518
+int32_t g_4a4518;
 /* Centre-cutout viewport box / minimap visibility state (0x407160). */
 // GLOBAL: HOVER 0x004a4790
 int32_t g_4a4790;

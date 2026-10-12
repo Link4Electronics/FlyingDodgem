@@ -1,8 +1,8 @@
 #ifndef FLYINGDODGEM_TYPES_H
 #define FLYINGDODGEM_TYPES_H
 
-/* Fixed-width integer types that work on both the MSVC 5.0 (matching) toolchain
- * and modern 64-bit compilers (SDL3 native build). MSVC 5.0 predates C99
+/* Fixed-width integer types that work on both the MSVC 4 (matching) toolchain
+ * and modern 64-bit compilers (SDL3 native build). MSVC 4 predates C99
  * <stdint.h>, so we spell out the __intN/MSVC types explicitly. */
 
 #ifdef _MSC_VER
@@ -47,7 +47,7 @@ typedef double   f64;
 typedef int32_t  bool32;
 typedef uint32_t bool8;
 
-/* MSVC 5.0 predates C99, so it has no <stdbool.h>. Provide bool/true/false. */
+/* MSVC 4 predates C99, so it has no <stdbool.h>. Provide bool/true/false. */
 #ifdef _MSC_VER
 #ifndef __cplusplus
 #ifndef bool
@@ -62,7 +62,7 @@ typedef uint32_t bool8;
 #endif
 #endif
 
-/* Calling conventions. MSVC 5.0 provides these as built-in keywords; other
+/* Calling conventions. MSVC 4 provides these as built-in keywords; other
  * compilers (e.g. the GCC/Clang SDL3 native build) do not, so define them as
  * empty there. */
 #ifndef _MSC_VER

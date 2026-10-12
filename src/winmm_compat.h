@@ -3,7 +3,7 @@
 
 #include "flyingdodgem_types.h"
 
-/* WINMM shims over SDL3 (native-only, FLYINGDODGEM_GDI_COMPAT; the MSVC 5.0
+/* WINMM shims over SDL3 (native-only, FLYINGDODGEM_GDI_COMPAT; the MSVC 4
  * reccmp build never compiles this).
  *
  * HOVER.EXE drives sound through waveOut + mmio (WAV assets), midiOut

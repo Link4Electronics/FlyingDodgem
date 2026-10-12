@@ -965,7 +965,7 @@ int32_t HoverTc::M402e00(void* a1)
             uint8_t* st = node + 0xac;
             int32_t row;
             int32_t col;
-            scale = *(int32_t*)g_4a1d6c / depth;
+            scale = *(int32_t*)(uintptr_t)(uint32_t)g_4a1d6c / depth;
             *(int32_t*)(node + 0x58) = 1;
             row = (*(int32_t*)(node + 0x6c) * scale >> 10) + g_4a1d70;
             col = (*(int32_t*)(node + 0x70) * scale >> 10) + g_4a1d70;
@@ -1007,23 +1007,23 @@ int32_t HoverTc::M402e00(void* a1)
                 tex = *(int16_t*)(node + 0xa);
                 sh = (uint8_t)(*(int32_t*)(node + 0x9c) + shade);
                 rowbase = *(int32_t*)(child + 0x28) + shade * 32;
-                rp = (int32_t*)rowbase;
+                rp = (int32_t*)(uintptr_t)(uint32_t)rowbase;
                 mask = (int16_t)(tex >> sh) & *rp;
                 tbl = *(int32_t*)((uint8_t*)rp + 0x1c);
-                rec = *(int32_t*)(tbl + mask * 8 + 4);
-                span = *(int32_t*)(rec + 4);
+                rec = *(int32_t*)(uintptr_t)(uint32_t)(tbl + mask * 8 + 4);
+                span = *(int32_t*)(uintptr_t)(uint32_t)(rec + 4);
                 den = span - row;
                 if (den != 0)
                     *(int32_t*)(node + 0x98) = *(int32_t*)(node + 0x68) / den;
                 else
                     *(int32_t*)(node + 0x98) = 0;
                 {
-                    int16_t n = *(int16_t*)(rec + 0);
+                    int16_t n = *(int16_t*)(uintptr_t)(uint32_t)(rec + 0);
                     uint8_t* bump = (uint8_t*)g_4a1d60;
                     g_4a1d60 = (void*)(bump + n * 20);
                     if (n != 0)
                     {
-                        int32_t* arr = *(int32_t**)(rec + 4);
+                        int32_t* arr = (int32_t*)(uintptr_t)(uint32_t)*(int32_t*)(uintptr_t)(uint32_t)(rec + 4);
                         cnt = n;
                         while (cnt > 0)
                         {
@@ -1085,7 +1085,7 @@ int32_t HoverTc::M402e00(void* a1)
         }
         node = *(uint8_t**)(node + 0x34);
     }
-    this->F404030(g_4a4720, (void*)g_4a1d64, (void*)g_4a456c);
+    this->F404030(g_4a4720, (void*)(uintptr_t)(uint32_t)g_4a1d64, (void*)(uintptr_t)(uint32_t)g_4a456c);
     ((SpanChain*)*(void**)this)->F403a60(this);
     if (g_4a1d60 > (void*)0x4a40a8)
         OutputDebugStringA(g_4c520c);
@@ -1270,7 +1270,7 @@ int32_t HoverTc::M4053a0(void* a1, void* a2)
             n--;
         } while (n != 0);
     }
-    /* Retail falls off here (garbage EAX, ignored by the caller); VC4.2
+    /* Retail falls off here (garbage EAX, ignored by the caller); MSVC 4
      * errors out on a missing return (C2561), so return explicitly. */
     return 0;
 }

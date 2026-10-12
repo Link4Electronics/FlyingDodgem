@@ -40,6 +40,14 @@ extern "C" int32_t g_4a4a38;
 extern "C" int32_t g_4a4a3c;
 extern "C" int32_t g_4a4a40;
 extern "C" int32_t g_4a4a44;
+extern "C" int32_t g_4a44b0;
+extern "C" int32_t g_4a44ac;
+extern "C" int32_t g_4a44d0;
+extern "C" int32_t g_4a44d4;
+extern "C" int32_t g_4a44f8;
+extern "C" int32_t g_4a44f4;
+extern "C" int32_t g_4a451c;
+extern "C" int32_t g_4a4518;
 #if !defined(_MSC_VER)
 /* Native 64-bit: host+0x28 / host+0x6c only hold 4 bytes; the live
  * framebuffer and row-colour table live in g_nativePlanes (same side
@@ -266,61 +274,15 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
 int32_t HoverTc::M405b90(void* a1)
 {
     uint8_t* node = (uint8_t*)a1;
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-    static int s_calls = 0;
-    static int s_ones = 0;
-    if (++s_calls % 60 == 0)
-        fprintf(stderr, "M405b90 calls=%d ones=%d\n", s_calls, s_ones);
-#endif
-    int32_t ax = *(int32_t*)(node + 0x14);
-    int32_t ay = *(int32_t*)(node + 0x18);
-    int32_t bx = *(int32_t*)(node + 0x1c);
-    int32_t by = *(int32_t*)(node + 0x20);
-    int32_t s1 = ((g_4a4498.m_p18 - ay) * g_4a4498.m_p38 + (ax - g_4a4498.m_p14) * g_4a4498.m_p3c) >= 0;
-    int32_t s2 = ((ax - g_4a44e0.m_p14) * g_4a44e0.m_p3c + (g_4a44e0.m_p18 - ay) * g_4a44e0.m_p38) >= 0;
-    int32_t s3;
-    int32_t s4;
-    int32_t s5;
-
-    (void)this;
-    if (!s1 && s2)
-    {
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-        s_ones++;
-#endif
-        return 1;
-    }
-    s3 = ((g_4a4498.m_p18 - by) * g_4a4498.m_p38 + (bx - g_4a4498.m_p14) * g_4a4498.m_p3c) >= 0;
-    s4 = ((bx - g_4a44e0.m_p14) * g_4a44e0.m_p3c + (g_4a44e0.m_p18 - by) * g_4a44e0.m_p38) >= 0;
-    if (!s3 && s4)
-    {
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-        s_ones++;
-#endif
-        return 1;
-    }
-    s5 = ((ay - g_4a4498.m_p18) * *(int32_t*)(node + 0x38) + (g_4a4498.m_p14 - ax) * *(int32_t*)(node + 0x3c)) >= 0;
-    if (s5)
-    {
-        if (!s1 && !s2 && s3 && s4)
-        {
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-            s_ones++;
-#endif
-            return 1;
-        }
-    }
-    else
-    {
-        if (s1 && s2 && !s3 && !s4)
-        {
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-            s_ones++;
-#endif
-            return 1;
-        }
-    }
-    return 0;
+    int32_t node_14 = *(int32_t*)(node + 0x14);
+    int32_t node_18 = *(int32_t*)(node + 0x18);
+    int32_t first = (g_4a44b0 - node_18) * g_4a44d0 + (node_14 - g_4a44ac) * g_4a44d4;
+    int32_t second = (node_14 - g_4a44f4) * g_4a451c + (g_4a44f8 - node_18) * g_4a4518;
+    if (first >= 0)
+        return 0;
+    if (second < 0)
+        return 0;
+    return 1;
 }
 
 // FUNCTION: HOVER 0x00405ce0
@@ -396,64 +358,134 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
         colLo -= 3;
         colHi += 3;
         if (colLo < 0)
-            colLo = 0;
-        if (colHi < 0)
-            colHi = 0;
-        if (colLo > g_4a454c - 1)
         {
+            colLo = 0;
+            if (colHi < 0)
+            {
 #if defined(FLYINGDODGEM_GDI_COMPAT)
-            fprintf(stderr, "M405ce0 empty clip lo=%d hi=%d\n", colLo, colHi);
+                fprintf(stderr, "M405ce0 empty clip lo=%d hi=%d\n", colLo, colHi);
 #endif
-            return 0;
+                return 0;
+            }
         }
-        if (colHi > g_4a454c - 1)
-            colHi = g_4a454c - 1;
-        if (colLo < 0)
-            colLo = 0;
-        if (colLo > colHi)
-            colLo = colHi;
-        if (colLo == colHi)
         {
+            int32_t maxCol = g_4a454c - 1;
+            if (maxCol < colLo)
+            {
 #if defined(FLYINGDODGEM_GDI_COMPAT)
-            fprintf(stderr, "M405ce0 empty equal lo=%d hi=%d\n", colLo, colHi);
+                fprintf(stderr, "M405ce0 empty clip lo=%d hi=%d\n", colLo, colHi);
 #endif
-            return 0;
+                return 0;
+            }
+            if (colHi < 0)
+                colHi = 0;
+            if (maxCol < colHi)
+                colHi = maxCol;
+            if (colLo == colHi)
+            {
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+                fprintf(stderr, "M405ce0 empty equal lo=%d hi=%d\n", colLo, colHi);
+#endif
+                return 0;
+            }
         }
     }
     {
-        uint8_t* base = (uint8_t*)g_4a4550;
-        rec0 = base;
-        g_4a4550 = (int32_t)(uintptr_t)*(void**)(base + 0x50);
+        uint8_t* bump = (uint8_t*)(uintptr_t)(uint32_t)g_4a4550;
+        uint8_t* hover = (uint8_t*)this;
+        uint8_t* bbase = *(uint8_t**)(hover + 0x40);
+        uint8_t* slot;
+        uint8_t* old;
+        /* Retail records are 0x18 bytes with 4-byte pointer fields (+8/+0xc/
+         * +0x10/+0x14). An 8-byte void* store would overlap neighbours and
+         * overflow the record on 64-bit; the bump arena is MAP_32BIT so the
+         * 4-byte truncation is exact (matching sees identical movs). */
+        rec0 = bump;
+        bump += 0x18;
         *(int16_t*)(rec0 + 0) = a4;
         *(int32_t*)(rec0 + 4) = 1;
-        *(void**)(rec0 + 8) = a1;
-        *(void**)(rec0 + 0xc) = node;
-        *(void**)(rec0 + 0x10) = node;
-        base = (uint8_t*)g_4a4550;
-        rec1 = base;
-        g_4a4550 = (int32_t)(uintptr_t)*(void**)(base + 0x50);
+        *(uint32_t*)(rec0 + 8) = (uint32_t)(uintptr_t)a1;
+        *(uint32_t*)(rec0 + 0xc) = (uint32_t)(uintptr_t)node;
+        if (a1 == 0)
+            *(uint32_t*)(rec0 + 0x10) = (uint32_t)(uintptr_t)node;
+        else
+            *(uint32_t*)(rec0 + 0x10) = 0;
+        slot = bbase + colLo * 4;
+        old = (uint8_t*)(uintptr_t)*(uint32_t*)slot;
+        *(uint32_t*)(rec0 + 0x14) = (uint32_t)(uintptr_t)old;
+        *(uint32_t*)slot = (uint32_t)(uintptr_t)rec0;
+        rec1 = bump;
+        bump += 0x18;
         *(int16_t*)(rec1 + 0) = a4;
         *(int32_t*)(rec1 + 4) = 0;
-        *(void**)(rec1 + 8) = node;
-        *(void**)(rec1 + 0xc) = node;
-        *(void**)(rec1 + 0x10) = node;
+        *(uint32_t*)(rec1 + 8) = (uint32_t)(uintptr_t)a1;
+        *(uint32_t*)(rec1 + 0xc) = (uint32_t)(uintptr_t)node;
+        if (a1 == 0)
+            *(uint32_t*)(rec1 + 0x10) = (uint32_t)(uintptr_t)node;
+        else
+            *(uint32_t*)(rec1 + 0x10) = 0;
+        slot = bbase + colHi * 4;
+        old = (uint8_t*)(uintptr_t)*(uint32_t*)slot;
+        *(uint32_t*)(rec1 + 0x14) = (uint32_t)(uintptr_t)old;
+        *(uint32_t*)slot = (uint32_t)(uintptr_t)rec1;
+        g_4a4550 = (int32_t)(uint32_t)(uintptr_t)bump;
+        /* Parent-link fixups (retail 0x405ecc-0x405f89): a3!=0 advances
+         * *(node+0x50) via +0x38 once; a3==0 advances node+0x8c/0x90/0x94/
+         * 0x98/0x9c/0xa0 each via +0x38 once. Reuses rec0/rec1 (dead after
+         * chaining) so no new locals and `sub esp` stays put. */
+        if (a3 != 0)
         {
-            /* 4-byte bucket slots (retail array stride col*4 голосов): an 8-byte
-             * pointer store would overlap neighbours and walk off the
-             * width*4 table on 64-bit. Records come from the MAP_32BIT bump
-             * arena so truncation is exact. */
-            uint8_t* hover = (uint8_t*)this;
-            uint8_t* bbase = *(uint8_t**)(hover + 0x40);
-            *(uint32_t*)(bbase + colLo * 4) = (uint32_t)(uintptr_t)rec0;
-            *(uint32_t*)(bbase + colHi * 4) = (uint32_t)(uintptr_t)rec1;
-        }
-        {
-            uint8_t* p = node;
-            while (p != NULL)
+            rec0 = HOVER_LPTR(node, 0x50);
+            if (rec0 != 0)
             {
-                p = *(uint8_t**)(p + 0x38);
-                if (p == NULL)
-                    break;
+                rec1 = HOVER_LPTR(rec0, 0x38);
+                if (rec1 != 0)
+                    HOVER_SPTR(node, 0x50, rec1);
+            }
+        }
+        else
+        {
+            rec0 = HOVER_LPTR(node, 0x8c);
+            if (rec0 != 0)
+            {
+                rec1 = HOVER_LPTR(rec0, 0x38);
+                if (rec1 != 0)
+                    HOVER_SPTR(node, 0x8c, rec1);
+            }
+            rec0 = HOVER_LPTR(node, 0x90);
+            if (rec0 != 0)
+            {
+                rec1 = HOVER_LPTR(rec0, 0x38);
+                if (rec1 != 0)
+                    HOVER_SPTR(node, 0x90, rec1);
+            }
+            rec0 = HOVER_LPTR(node, 0x94);
+            if (rec0 != 0)
+            {
+                rec1 = HOVER_LPTR(rec0, 0x38);
+                if (rec1 != 0)
+                    HOVER_SPTR(node, 0x94, rec1);
+            }
+            rec0 = HOVER_LPTR(node, 0x98);
+            if (rec0 != 0)
+            {
+                rec1 = HOVER_LPTR(rec0, 0x38);
+                if (rec1 != 0)
+                    HOVER_SPTR(node, 0x98, rec1);
+            }
+            rec0 = HOVER_LPTR(node, 0x9c);
+            if (rec0 != 0)
+            {
+                rec1 = HOVER_LPTR(rec0, 0x38);
+                if (rec1 != 0)
+                    HOVER_SPTR(node, 0x9c, rec1);
+            }
+            rec0 = HOVER_LPTR(node, 0xa0);
+            if (rec0 != 0)
+            {
+                rec1 = HOVER_LPTR(rec0, 0x38);
+                if (rec1 != 0)
+                    HOVER_SPTR(node, 0xa0, rec1);
             }
         }
     }
@@ -477,8 +509,8 @@ extern "C" void __stdcall F4066b0(void* a1, void* a2, int32_t a3, int32_t a4)
     g_4a4a14 = g_4a453c - a3 + a4;
     if (g_4a4a14 < 1)
         return;
-    g_4a4a4c = g_4a4540 + a3 * g_4a4a34;
     shade = *(int16_t*)(o + 0x8);
+    g_4a4a4c = g_4a4540 + a3 * g_4a4a34;
     g_4a4a44 = shade;
     g_4a4a38 = *(int32_t*)(o + 0x94);
     f98 = *(int32_t*)(o + 0x98);

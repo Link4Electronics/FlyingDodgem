@@ -5,7 +5,7 @@
 #include "menu.h" /* HWND: the single main window type shared with the menu layer */
 
 /* USER32 + small KERNEL32 shims for the retail present path (native-only,
- * FLYINGDODGEM_GDI_COMPAT; the MSVC 5.0 reccmp build never compiles this).
+ * FLYINGDODGEM_GDI_COMPAT; the MSVC 4 reccmp build never compiles this).
  *
  * The retail display path around 0x41ece0 does GetTickCount, LoadModule of
  * DISPDIB.DLL (the Win95 fullscreen-DIB helper), GetWindowLong(GWL_HINSTANCE),

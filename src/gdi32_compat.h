@@ -11,7 +11,7 @@
  * with the colour table, exactly as confirmed from the disassembly.
  *
  * This build unit is only compiled by the native SDL3 driver
- * (FLYINGDODGEM_GDI_COMPAT). The MSVC 5.0 reccmp matching build never compiles
+ * (FLYINGDODGEM_GDI_COMPAT). The MSVC 4 reccmp matching build never compiles
  * these files, so they cannot perturb assembly matching.
  *
  * The wrapper keeps the same 8-bit-indexed surface model as GDI so the HUD code

@@ -13,7 +13,7 @@
  * MFC load array; plain back-reference tags never occur.
  *
  * Strict C89: this file is part of the base source list and also compiles
- * under the MSVC 5.0 matching build. */
+ * under the MSVC 4 matching build. */
 #include "texmaze.h"
 
 #include <stdio.h>

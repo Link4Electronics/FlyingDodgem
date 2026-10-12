@@ -146,15 +146,13 @@ void __fastcall ZeroWords41d6a0(void* self)
 // FUNCTION: HOVER 0x00425ec0
 void __fastcall Toggle425ec0(void* self)
 {
-    uint32_t* m = (uint32_t*)((uint8_t*)self + 0x3bc);
-    *m = (uint32_t)(*m < 1u);
+    *(uint32_t*)((uint8_t*)self + 0x3bc) = (uint32_t)(*(uint32_t*)((uint8_t*)self + 0x3bc) == 0);
 }
 
 // FUNCTION: HOVER 0x00425f00
 void __fastcall Toggle425f00(void* self)
 {
-    uint32_t* m = (uint32_t*)((uint8_t*)self + 0x1e0);
-    *m = (uint32_t)(*m < 1u);
+    *(uint32_t*)((uint8_t*)self + 0x1e0) = (uint32_t)(*(uint32_t*)((uint8_t*)self + 0x1e0) == 0);
 }
 
 // FUNCTION: HOVER 0x004089e0
@@ -323,7 +321,7 @@ void __fastcall Ramp419960(void* self, void* unused, s32 a, u8 r, u8 g, u8 b, vo
 
 // FUNCTION: HOVER 0x00422c80
 /* Retail ends with `mov eax,ecx; ret` (return self), which is scheduled LAST
- * only when the function carries no return value; MSVC 5.0 /O2 hoists the copy
+ * only when the function carries no return value; MSVC 4 /O2 hoists the copy
  * to the top whenever Init22c80 actually `return self`. Retail callers reload
  * `ecx` after every call and ignore the return, so the equivalent C is void:
  * the trailing `mov eax,ecx; ret` split off into the (fabricated) Self22CA8
@@ -353,7 +351,7 @@ extern uint32_t g_data_4ca8;
 // FUNCTION: HOVER 0x00429340
 void __cdecl Toggle429340(void)
 {
-    g_data_4ca8 = (uint32_t)(g_data_4ca8 < 1u);
+    g_data_4ca8 = (uint32_t)(g_data_4ca8 == 0);
 }
 
 #if !defined(FLYINGDODGEM_GDI_COMPAT)

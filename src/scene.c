@@ -182,28 +182,463 @@ struct HostObj
 };
 typedef void (__fastcall *HostDrawFn)(void* self);
 
-// STUB: HOVER 0x00401c00
+extern "C" uint8_t g_data_5570[1];
+extern "C" uint8_t g_data_5340[1];
+extern "C" uint8_t g_data_5318[1];
+extern "C" uint8_t g_data_53f8[1];
+extern "C" uint8_t g_data_5488[1];
+extern "C" uint8_t g_data_54b8[1];
+extern "C" void __fastcall DrawCell3910(void* self, void* unused, int32_t x, int32_t y, int32_t ignored);
+extern "C" int32_t g_4a4524;
+extern "C" int32_t g_4a4564;
+extern "C" int32_t g_4a453c;
+extern "C" void __fastcall SpanSetup2990(void* self, void* unused, void* a1, void* a2, int32_t a3, int32_t a4);
+
+// FUNCTION: HOVER 0x00401520
+int32_t HoverTc::F401520(void* a1, void* a2)
+{
+    uint8_t* self = (uint8_t*)this;
+    int32_t* pt = (int32_t*)a1;
+    int32_t* org = (int32_t*)a2;
+    int32_t x0 = *(int32_t*)(self + 0);
+    int32_t y0 = *(int32_t*)(self + 4);
+    int32_t x1 = *(int32_t*)(self + 8);
+    int32_t y1 = *(int32_t*)(self + 0xc);
+    int32_t px = pt[0];
+    int32_t py = pt[1];
+    int32_t ox = org[0];
+    int32_t oy = org[1];
+    int32_t dx = px - ox;
+    int32_t dy = py - oy;
+    int32_t i;
+    /* Axis-aligned short-circuit (retail checks +0x2c/+0x30): no slope to
+     * divide by, so only test containment and clamp the moving axis. */
+    if (dx == 0 && dy == 0)
+    {
+        if (px < x0 || px > x1 || py < y0 || py > y1)
+            return 0;
+        return 1;
+    }
+    if (dx == 0)
+    {
+        if (px < x0 || px > x1)
+            return 0;
+        if (py < y0)
+            py = y0;
+        else if (py > y1)
+            py = y1;
+        pt[1] = py;
+        return 1;
+    }
+    if (dy == 0)
+    {
+        if (py < y0 || py > y1)
+            return 0;
+        if (px < x0)
+            px = x0;
+        else if (px > x1)
+            px = x1;
+        pt[0] = px;
+        return 1;
+    }
+    /* Cohen-Sutherland style: walk the point towards the origin until it is
+     * inside, recomputing the crossing with 16.16 direct (retail `shl 16 /
+     * idiv / imul / sar 16` shape, no FP helpers). At most 4 iterations. */
+    for (i = 0; i < 4; i++)
+    {
+        int32_t slope;
+        if (px >= x0 && px <= x1 && py >= y0 && py <= y1)
+        {
+            pt[0] = px;
+            pt[1] = py;
+            return 1;
+        }
+        if (px < x0)
+        {
+            slope = (int32_t)(((int32_t)(py - oy) << 16) / dx);
+            py = oy + (int32_t)((int32_t)(slope * (x0 - ox)) >> 16);
+            px = x0;
+        }
+        else if (px > x1)
+        {
+            slope = (int32_t)(((int32_t)(py - oy) << 16) / dx);
+            py = oy + (int32_t)((int32_t)(slope * (x1 - ox)) >> 16);
+            px = x1;
+        }
+        else if (py < y0)
+        {
+            slope = (int32_t)(((int32_t)(px - ox) << 16) / dy);
+            px = ox + (int32_t)((int32_t)(slope * (y0 - oy)) >> 16);
+            py = y0;
+        }
+        else if (py > y1)
+        {
+            slope = (int32_t)(((int32_t)(px - ox) << 16) / dy);
+            px = ox + (int32_t)((int32_t)(slope * (y1 - oy)) >> 16);
+            py = y1;
+        }
+        dx = px - ox;
+        dy = py - oy;
+        if (dx == 0 && dy == 0)
+        {
+            if (px < x0 || px > x1 || py < y0 || py > y1)
+                return 0;
+            pt[0] = px;
+            pt[1] = py;
+            return 1;
+        }
+    }
+    if (px < x0 || px > x1 || py < y0 || py > y1)
+        return 0;
+    pt[0] = px;
+    pt[1] = py;
+    return 1;
+}
+
+// FUNCTION: HOVER 0x00401c00
 void HoverTc::F401c00(void* a1, void* a2)
 {
-    (void)a1;
-    (void)a2;
+    uint8_t* obj = (uint8_t*)a1;
+    uint8_t* rend;
+    uint8_t color;
+    uint16_t w;
+    uint32_t dw;
+    int32_t hasColor;
+
+    if (((RenderNode*)obj)->IsKindOf(g_data_5570) == 0)
+    {
+        if (((RenderNode*)obj)->IsKindOf(g_data_5340) == 0)
+        {
+            if (((RenderNode*)obj)->IsKindOf(g_data_5318) == 0)
+            {
+                if (((RenderNode*)obj)->IsKindOf(g_data_53f8) == 0)
+                    return;
+                hasColor = 0;
+                if (((RenderNode*)obj)->IsKindOf(g_data_5488) != 0)
+                {
+                    color = *(uint8_t*)((uint8_t*)this + 0x8c);
+                    hasColor = 1;
+                }
+                else if (((RenderNode*)obj)->IsKindOf(g_data_54b8) != 0)
+                {
+                    if (*(int32_t*)(obj + 0xc0) != 0)
+                        color = *(uint8_t*)((uint8_t*)this + 0x98);
+                    else if (*(int32_t*)(obj + 0x21c) != 0)
+                        color = *(uint8_t*)((uint8_t*)this + 0x94);
+                    else
+                        color = *(uint8_t*)((uint8_t*)this + 0x90);
+                    hasColor = 1;
+                }
+                if (hasColor != 0)
+                {
+                    *(uint8_t*)((uint8_t*)this + 0x1c) = color;
+                    w = color;
+                    w = (uint16_t)((w << 8) | w);
+                    dw = w;
+                    dw = (dw << 16) | dw;
+                    *(uint32_t*)((uint8_t*)this + 0x20) = dw;
+                }
+                this->F401980(*(int32_t*)(obj + 0x164), *(int32_t*)(obj + 0x168), *(int32_t*)(obj + 0x16c), *(int32_t*)(obj + 0x170));
+                this->F401980(*(int32_t*)(obj + 0x16c), *(int32_t*)(obj + 0x170), *(int32_t*)(obj + 0x174), *(int32_t*)(obj + 0x178));
+                this->F401980(*(int32_t*)(obj + 0x174), *(int32_t*)(obj + 0x178), *(int32_t*)(obj + 0x164), *(int32_t*)(obj + 0x168));
+                return;
+            }
+            if (a2 == 0)
+            {
+                uint8_t* parent = *(uint8_t**)(obj + 0x78);
+                if (parent == 0)
+                    return;
+                if ((*(uint8_t*)(parent + 0x24) & 8) == 0)
+                    return;
+            }
+            if (*(int32_t*)(obj + 0x3c) == 0)
+                return;
+            color = *(uint8_t*)(obj + 0x40);
+            *(uint8_t*)((uint8_t*)this + 0x1c) = color;
+            w = color;
+            w = (uint16_t)((w << 8) | w);
+            dw = w;
+            dw = (dw << 16) | dw;
+            *(uint32_t*)((uint8_t*)this + 0x20) = dw;
+            DrawCell3910(this, NULL, *(int32_t*)(obj + 0xc0), *(int32_t*)(obj + 0xc4), 5);
+            return;
+        }
+        if (*(int32_t*)(obj + 0x28) == 0)
+            return;
+        color = *(uint8_t*)((uint8_t*)this + 0x9c);
+        *(uint8_t*)((uint8_t*)this + 0x1c) = color;
+        w = color;
+        w = (uint16_t)((w << 8) | w);
+        dw = w;
+        dw = (dw << 16) | dw;
+        *(uint32_t*)((uint8_t*)this + 0x20) = dw;
+        this->F401980(*(int32_t*)(obj + 0xf0), *(int32_t*)(obj + 0xf4), *(int32_t*)(obj + 0xf8), *(int32_t*)(obj + 0xfc));
+        return;
+    }
+
+    if (*(int32_t*)(obj + 0x38) != 0)
+        return;
+
+    if (a2 == 0)
+    {
+        uint8_t* parent = *(uint8_t**)(obj + 0x78);
+        if (parent == 0)
+            return;
+        if ((*(uint8_t*)(parent + 0x24) & 8) == 0)
+            return;
+    }
+
+    if (*(int32_t*)(obj + 0x3c) == 0)
+        return;
+
+    rend = *(uint8_t**)(obj + 0x78);
+    if (*(int32_t*)(rend + 0xbc) == 0)
+        color = *(uint8_t*)((uint8_t*)this + 0x98);
+    else if (*(int16_t*)(rend + 0xa4) > 0)
+        color = *(uint8_t*)((uint8_t*)this + 0xa8);
+    else
+        color = *(uint8_t*)((uint8_t*)this + 0x9c);
+
+    *(uint8_t*)((uint8_t*)this + 0x1c) = color;
+    w = color;
+    w = (uint16_t)((w << 8) | w);
+    dw = w;
+    dw = (dw << 16) | dw;
+    *(uint32_t*)((uint8_t*)this + 0x20) = dw;
+
+    this->F401980(*(int32_t*)(obj + 0x84), *(int32_t*)(obj + 0x88), *(int32_t*)(obj + 0x8c), *(int32_t*)(obj + 0x90));
 }
 
-// STUB: HOVER 0x00401980
+// FUNCTION: HOVER 0x00401980
 void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
 {
-    (void)x0;
-    (void)y0;
-    (void)x1;
-    (void)y1;
+    int32_t dx;
+    int32_t dy;
+    int32_t pt0[2];
+    int32_t pt1[2];
+    int32_t fx0;
+    int32_t fy0;
+    int32_t fx1;
+    int32_t fy1;
+    int32_t adx;
+    int32_t ady;
+    uint8_t* bits;
+    int32_t pitch;
+    uint8_t color;
+    uint8_t* base;
+    int32_t xstep;
+    int32_t ystep;
+    int32_t slope;
+    int32_t acc;
+    int32_t n;
+
+    dx = x0 - x1;
+    if (dx < 0)
+        dx = -dx;
+    dy = y0 - y1;
+    if (dy < 0)
+        dy = -dy;
+    *(int32_t*)((uint8_t*)this + 0x2c) = dx;
+    *(int32_t*)((uint8_t*)this + 0x30) = dy;
+
+    pt0[0] = x0;
+    pt0[1] = y0;
+    pt1[0] = x1;
+    pt1[1] = y1;
+    if (this->F401520(pt0, pt1) == 0)
+        return;
+    if (this->F401520(pt1, pt0) == 0)
+        return;
+
+    fx0 = pt0[0];
+    fy0 = *(int32_t*)((uint8_t*)this + 0x18) - pt0[1] - 1;
+    fx1 = pt1[0];
+    fy1 = *(int32_t*)((uint8_t*)this + 0x18) - pt1[1] - 1;
+
+    adx = fx0 - fx1;
+    if (adx < 0)
+        adx = -adx;
+    ady = fy0 - fy1;
+    if (ady < 0)
+        ady = -ady;
+    *(int32_t*)((uint8_t*)this + 0x2c) = adx;
+    *(int32_t*)((uint8_t*)this + 0x30) = ady;
+    if (adx == 0 && ady == 0)
+        return;
+
+    bits = *(uint8_t**)((uint8_t*)this + 0x10);
+    pitch = *(int32_t*)((uint8_t*)this + 0x24);
+    color = *(uint8_t*)((uint8_t*)this + 0x1c);
+    if (bits == 0 || pitch == 0)
+        return;
+    base = bits + fy0 * pitch + fx0;
+
+    if (adx >= ady)
+    {
+        slope = (int32_t)(((int32_t)ady << 16) / adx);
+        if (fy1 < fy0)
+            pitch = -pitch;
+        if (fx1 >= fx0)
+            xstep = 1;
+        else
+            xstep = -1;
+        ystep = pitch;
+        acc = 0x8000;
+        for (n = adx; n != 0; n--)
+        {
+            *base = color;
+            acc += slope;
+            if ((acc & 0xffff0000) != 0)
+            {
+                base += ystep;
+                acc &= 0xffff;
+            }
+            base += xstep;
+        }
+    }
+    else
+    {
+        slope = (int32_t)(((int32_t)adx << 16) / ady);
+        if (fx1 < fx0)
+            slope = -slope;
+        if (fy1 < fy0)
+            pitch = -pitch;
+        ystep = pitch;
+        acc = 0x8000;
+        for (n = ady; n != 0; n--)
+        {
+            int32_t off = acc >> 16;
+            base[off] = color;
+            acc += slope;
+            base += ystep;
+        }
+    }
 }
 
-// STUB: HOVER 0x00402630
+extern "C" int32_t g_4a4524;
+extern "C" int32_t g_4a4564;
+extern "C" int32_t g_4a453c;
+extern "C" void __fastcall SpanSetup2990(void* self, void* unused, void* a1, void* a2, int32_t a3, int32_t a4);
+
+struct SpanArena
+{
+    void F403980(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
+    int32_t F4065f0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
+};
+
+// FUNCTION: HOVER 0x00402630
 void HoverTc::F402630(void* a1, void* a2, void* a3)
 {
-    (void)a1;
-    (void)a2;
-    (void)a3;
+    uint8_t* node = (uint8_t*)a1;
+    int32_t a2i = (int32_t)(intptr_t)a2;
+    int32_t a3i = (int32_t)(intptr_t)a3;
+    int32_t local1 = *(int32_t*)(node + 0xb4);
+    uint8_t* local2 = node + 0xac;
+    int32_t result = 0;
+    int32_t ebx, ecx, edx, ebp;
+
+    g_4a4564 = a3i;
+    g_4a4524 = a2i;
+    *(uint8_t*)(uintptr_t)(uint32_t)(*(int32_t*)(node + 0x10) + 0x24) |= 8;
+
+    if (*(int32_t*)(node + 0x40) == 0)
+        goto R3;
+
+    if (*(int32_t*)(node + 0x6c) > 0)
+    {
+        edx = *(int32_t*)(node + 0x60);
+        ebx = *(int32_t*)(uintptr_t)(uint32_t)*(int32_t*)(node + 0x84);
+        if (ebx > local1)
+        {
+            if (ebx > a2i)
+            {
+                if (ebx >= a3i)
+                {
+                    ((SpanArena*)(*(void**)this))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
+                    result = 1;
+                    goto R1_flag;
+                }
+                ((SpanArena*)(*(void**)this))->F403980(edx, a2i, ebx, *(int32_t*)(node + 0x48));
+                g_4a4524 = g_4a453c + ebx;
+                goto R1_flag;
+            }
+            if (a2i >= local1)
+            {
+                if (a3i <= local1)
+                {
+                    ((SpanArena*)(*(void**)this))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
+                    result = 1;
+                    goto R1_flag;
+                }
+                ((SpanArena*)(*(void**)this))->F403980(edx, a2i, local1, *(int32_t*)(node + 0x48));
+                g_4a4524 = g_4a453c + local1;
+                goto R1_flag;
+            }
+        }
+        else
+        {
+            if (a2i < local1 && a3i > local1)
+            {
+                ((SpanArena*)(*(void**)this))->F403980(edx, a2i, local1, *(int32_t*)(node + 0x48));
+                g_4a4524 = g_4a453c + local1;
+                goto R1_flag;
+            }
+        }
+        goto R1_flag;
+    }
+
+R2:
+    if (*(int32_t*)(node + 0x4c) == 0)
+        goto R3;
+    edx = *(int32_t*)(node + 0x64);
+    ebx = *(int32_t*)(uintptr_t)(uint32_t)*(int32_t*)(node + 0x88);
+    ebp = *(int32_t*)(node + 0xb8);
+    if (ebx > ebp)
+    {
+        if (a3i > ebp)
+        {
+            if (a2i >= ebp)
+            {
+                ((SpanArena*)(*(void**)this))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
+                result = 1;
+                goto R2_flag;
+            }
+            ((SpanArena*)(*(void**)this))->F403980(edx, ebp, a3i, *(int32_t*)(node + 0x48));
+            g_4a4564 = ebp - g_4a453c;
+            goto R2_flag;
+        }
+        if (a3i > ebx)
+        {
+            if (a2i >= ebx)
+            {
+                ((SpanArena*)(*(void**)this))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
+                result = 1;
+                goto R2_flag;
+            }
+            ((SpanArena*)(*(void**)this))->F403980(edx, ebx, a3i, *(int32_t*)(node + 0x48));
+            g_4a4564 = ebx - g_4a453c;
+            goto R2_flag;
+        }
+        goto R2_flag;
+    }
+    goto R2_flag;
+
+R1_flag:
+    if (result)
+        return;
+    goto R2;
+
+R2_flag:
+    if (result)
+        return;
+
+R3:
+    if (((SpanArena*)this)->F4065f0((int32_t)(intptr_t)node, (int32_t)(intptr_t)local2, local1, ebp, *(int32_t*)(node + 0x64)))
+        return;
+    if (g_4a4564 < g_4a4524)
+        return;
+    ((SpanArena*)this)->F4065f0((int32_t)(intptr_t)node, (int32_t)(intptr_t)local2, local1, ebp, *(int32_t*)(node + 0x64));
+    SpanSetup2990(this, local2, node, local2, g_4a4524, g_4a4564);
 }
 
 // FUNCTION: HOVER 0x00402b10

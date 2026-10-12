@@ -23,19 +23,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Fetch MSVC 5.0 (Visual C++ 97 SP3)
+      - name: Fetch MSVC 4.0 (Visual C++ 4.0)
         uses: actions/checkout@v6
         with:
-          repository: archaic-msvc/msvc500sp3
-          path: msvc500
+          repository: itsmattkc/MSVC400
+          path: msvc40
 
-      - name: Setup MSVC 5.0
+      - name: Setup MSVC 4.0
         shell: cmd
         run: |
-          echo INCLUDE=${{ github.workspace }}\msvc500\include;${{ github.workspace }}\msvc500\atl\include;${{ github.workspace }}\msvc500\mfc\include>>%GITHUB_ENV%
-          echo LIB=${{ github.workspace }}\msvc500\lib;${{ github.workspace }}\msvc500\mfc\lib>>%GITHUB_ENV%
-          echo ${{ github.workspace }}\msvc500\bin>>%GITHUB_PATH%
-          echo ${{ github.workspace }}\msvc500\redist>>%GITHUB_PATH%
+          echo INCLUDE=${{ github.workspace }}\msvc40\INCLUDE;${{ github.workspace }}\msvc40\MFC\INCLUDE>>%GITHUB_ENV%
+          echo LIB=${{ github.workspace }}\msvc40\LIB;${{ github.workspace }}\msvc40\MFC\LIB>>%GITHUB_ENV%
+          echo ${{ github.workspace }}\msvc40\BIN>>%GITHUB_PATH%
 
       - name: Setup Ninja
         shell: pwsh
@@ -76,12 +75,12 @@ jobs:
       - name: CMake (configure)
         shell: sh
         run: |
-          cmake -S . -B build -GNinja -DMSVC_50_FOR_RECCMP=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
+          cmake -S . -B build -GNinja -DMSVC40_FOR_RECCMP=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
 
       - name: CMake (build)
         shell: sh
         run: |
-          # MSVC 5.0 cannot share one VC50.PDB between concurrent cl.exe
+          # MSVC 4.0 cannot share one VC40.PDB between concurrent cl.exe
           # processes (fatal error C1033), so the build must be serial.
           cmake --build build -- -j1
 

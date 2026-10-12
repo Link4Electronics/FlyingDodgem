@@ -77,9 +77,9 @@ int32_t __cdecl Atan4385f0(int32_t y, int32_t x)
     if (ax != ay)
     {
         if (ax >= ay)
-            r = ((int64_t)ay << 16) / ax;
+            r = (ay << 16) / ax;
         else
-            r = ((int64_t)0x4000 << 16) / ay;
+            r = (ax << 16) / ay;
         lo = 0;
         hi = 0x3fff;
         for (;;)
