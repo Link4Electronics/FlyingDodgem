@@ -54,7 +54,7 @@ requires uninstalling first.
 
 - SDL3
 - 32-bit x86 compiler:
-  - MSVC 4.2 compiler for matching build, or
+  - MSVC 4.0 compiler for matching build (4.2 works as fallback), or
   - a modern MinGW or MSVC toolchain
 
 ### Linux

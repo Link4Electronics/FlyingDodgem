@@ -19,6 +19,9 @@
 
 struct HoverTc
 {
+    void F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1);
+    void F401c00(void* a1, void* a2);
+    void F402630(void* a1, void* a2, void* a3);
     int32_t F404030(void* a1, void* a2, void* a3);
     int32_t M402e00(void* a1);
     int32_t M4053a0(void* a1, void* a2);
@@ -74,6 +77,9 @@ public:
 /* __thiscall, `this` in ECX only (spelled __fastcall on a free function). */
 extern "C" void __fastcall F4010c0(void* self);
 extern "C" void __fastcall F4030f0(void* self);
+
+/* Span-tree insert (retail 0x406a80, __cdecl, single node argument). */
+extern "C" void __cdecl F406a80(void* arg);
 
 /* Integer atan2(y,x) -> 25-bit angle (retail 0x4385f0, __cdecl, caller pops). */
 extern "C" int32_t __cdecl Atan4385f0(int32_t y, int32_t x);

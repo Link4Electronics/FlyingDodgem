@@ -40,6 +40,7 @@ extern "C" int32_t g_4a4a18;
 extern "C" int32_t g_4a4a20;
 extern "C" int32_t g_4a1d70;
 extern "C" void* g_4c52dc;
+extern "C" char g_4c55f4[];
 extern "C" void* g_4a4714;
 extern "C" void* g_4a4718;
 extern "C" void* g_4a471c;
@@ -130,6 +131,8 @@ extern "C" HOVER_IMPORT void* __stdcall SelectObject(void* hdc, void* obj);
 extern "C" HOVER_IMPORT int32_t __stdcall PatBlt(void* hdc, int32_t x, int32_t y, int32_t w, int32_t h, uint32_t rop);
 
 extern "C" HOVER_IMPORT void __stdcall GdiFlush(void);
+
+extern "C" HOVER_IMPORT void __stdcall OutputDebugStringA(char* psz);
 
 extern "C" HOVER_IMPORT void __stdcall EnterCriticalSection(void* cs);
 
@@ -273,6 +276,139 @@ int32_t HostObj::F403850(int32_t arg)
             return base + 0x3f00;
         return base + v * 4;
     }
+}
+
+/* Bump-arena span records (retail 0x403980/0x4065f0): the arena object is
+ * reached in ECX without touching EDX, so both are __thiscall-shaped
+ * members of a throw-away class (free __fastcall would burn EDX). */
+struct SpanArena
+{
+    void F403980(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
+    int32_t F4065f0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
+};
+
+// FUNCTION: HOVER 0x00403980
+void SpanArena::F403980(int32_t a1, int32_t a2, int32_t a3, int32_t a4)
+{
+    uint8_t* rec = *(uint8_t**)((uint8_t*)this + 0xc);
+    int32_t key = (a1 << 18) + a2;
+
+    if (rec != 0)
+    {
+        do
+        {
+            if (*(int32_t*)(rec + 0x20) == key)
+                break;
+            rec = *(uint8_t**)(rec + 0x28);
+        } while (rec != 0);
+    }
+    if (rec == 0)
+    {
+        uint8_t* last = *(uint8_t**)((uint8_t*)this + 0x10);
+        uint8_t* bump;
+        if (last != 0)
+        {
+            bump = *(uint8_t**)((uint8_t*)this + 0x1c);
+            *(uint8_t**)(last + 0x28) = bump;
+        }
+        else
+        {
+            bump = *(uint8_t**)((uint8_t*)this + 0x1c);
+            *(uint8_t**)((uint8_t*)this + 0xc) = bump;
+        }
+        rec = *(uint8_t**)((uint8_t*)this + 0x1c);
+        *(uint8_t**)((uint8_t*)this + 0x10) = rec;
+        bump = rec + 0x2c;
+        *(uint8_t**)((uint8_t*)this + 0x1c) = bump;
+        *(uint8_t**)rec = bump;
+        bump += 0xa0;
+        {
+            int32_t cap = *(int32_t*)this;
+            uint8_t* end;
+            *(uint8_t**)((uint8_t*)this + 0x1c) = bump;
+            *(uint8_t**)(rec + 0x4) = bump;
+            end = bump + cap * 2 + 0xa0;
+            bump += 0xa0;
+            *(uint8_t**)((uint8_t*)this + 0x1c) = bump;
+            *(uint8_t**)(rec + 0x10) = bump;
+            *(uint8_t**)((uint8_t*)this + 0x1c) = end;
+            *(int32_t*)(rec + 0x28) = 0;
+            *(int32_t*)(rec + 0x14) = 0;
+            *(int32_t*)(rec + 0x18) = 0;
+            *(uint8_t**)(rec + 0x8) = rec;
+            *(int32_t*)(rec + 0x1c) = a1;
+            *(uint8_t**)(rec + 0xc) = rec + 4;
+            *(int32_t*)(rec + 0x24) = a2;
+            {
+                uint32_t lim = *(uint32_t*)((uint8_t*)this + 0x18);
+                *(int32_t*)(rec + 0x20) = key;
+                lim += 0x16b48;
+                (*(int32_t*)((uint8_t*)this + 0x14))++;
+                if ((uint8_t*)(intptr_t)lim < end)
+                    OutputDebugStringA(g_4c55f4);
+            }
+        }
+    }
+    {
+        int32_t n = *(int32_t*)(rec + 0x14);
+        if (n < 0x28)
+        {
+            uint8_t* arr = *(uint8_t**)(rec + 0xc);
+            n++;
+            *(int32_t*)(rec + 0x14) = n;
+            {
+                uint8_t* base = *(uint8_t**)arr;
+                int16_t* slot = (int16_t*)(base + n * 4 - 4);
+                slot[0] = (int16_t)a3;
+                slot[1] = (int16_t)a4;
+            }
+        }
+    }
+}
+
+// FUNCTION: HOVER 0x004065f0
+int32_t SpanArena::F4065f0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
+{
+    int32_t lim = g_4a4564;
+    uint8_t* node = (uint8_t*)(intptr_t)a2;
+    uint8_t* tp = *(uint8_t**)(node + 0x88);
+    int32_t si = a5;
+    int32_t t0 = *(int32_t*)tp;
+    (void)a1;
+    (void)a3;
+    (void)a4;
+    if (si < t0)
+    {
+        if (si < lim)
+        {
+            if (si <= g_4a4524)
+            {
+                ((SpanArena*)(*(uint8_t**)this))->F403980(a5, *(int32_t*)(node + 0x54), g_4a4524, lim);
+                return 1;
+            }
+            else
+            {
+                ((SpanArena*)(*(uint8_t**)this))->F403980(a5, *(int32_t*)(node + 0x54), si, lim);
+                si -= g_4a453c;
+                g_4a4564 = si;
+            }
+        }
+    }
+    else if (lim > t0)
+    {
+        if (g_4a4524 >= t0)
+        {
+            ((SpanArena*)(*(uint8_t**)this))->F403980(a5, *(int32_t*)(node + 0x54), g_4a4524, lim);
+            return 1;
+        }
+        else
+        {
+            ((SpanArena*)(*(uint8_t**)this))->F403980(a5, *(int32_t*)(node + 0x54), t0, lim);
+            t0 -= g_4a453c;
+            g_4a4564 = t0;
+        }
+    }
+    return 0;
 }
 
 typedef struct

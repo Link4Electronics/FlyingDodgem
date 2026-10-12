@@ -818,6 +818,12 @@ int32_t g_4a4a18;
 int32_t g_4a4a1c;
 // GLOBAL: HOVER 0x004a4a20
 int32_t g_4a4a20;
+// GLOBAL: HOVER 0x004a4a24
+int32_t g_4a4a24;
+// GLOBAL: HOVER 0x004a4a28
+int32_t g_4a4a28;
+// GLOBAL: HOVER 0x004a4a2c
+int32_t g_4a4a2c;
 // GLOBAL: HOVER 0x004a4a30
 int32_t g_4a4a30;
 // GLOBAL: HOVER 0x004a4a34
@@ -830,6 +836,8 @@ int32_t g_4a4a3c;
 int32_t g_4a4a40;
 // GLOBAL: HOVER 0x004a4a44
 int32_t g_4a4a44;
+// GLOBAL: HOVER 0x004a4a48
+int32_t g_4a4a48;
 // GLOBAL: HOVER 0x004a4a4c
 int32_t g_4a4a4c;
 // GLOBAL: HOVER 0x004a4a50
@@ -838,6 +846,8 @@ int32_t g_4a4a50;
 void* g_4a1d68;
 // GLOBAL: HOVER 0x004a1d70
 int32_t g_4a1d70;
+// GLOBAL: HOVER 0x004a1d74
+int32_t g_4a1d74;
 // GLOBAL: HOVER 0x004a1d78
 int32_t g_4a1d78;
 // GLOBAL: HOVER 0x00461cfc
@@ -903,5 +913,11 @@ void* g_4a1d60;
 void* g_4a4720;
 // GLOBAL: HOVER 0x004c520c
 char g_4c520c[] = "Trashing Heap";
+// GLOBAL: HOVER 0x004c55f4
+char g_4c55f4[] = "Blowing floor heap";
 // GLOBAL: HOVER 0x004a4a58
 uint16_t g_4a4a58[16384];
+// GLOBAL: HOVER 0x004a4490
+void* g_4a4490;
+// GLOBAL: HOVER 0x004c5208
+uint8_t g_4c5208[4];

@@ -37,7 +37,7 @@ option(FLYINGDODGEM_WERROR "Treat warnings as errors")
 option(FLYINGDODGEM_FIX_BUGS "Fix FlyingDodgem bugs" ON)
 option(FLYINGDODGEM_PLATFORM_SDL3 "Support SDL 3 platform driver" ON)
 
-option(MSVC_50_FOR_RECCMP "Build with MSVC 5.0 to match assembly" OFF)
+option(MSVC_50_FOR_RECCMP "Build with legacy MSVC (4.0 preferred, 4.2 fallback; 5.0 on CI) to match assembly" OFF)
 
 if(MSVC_50_FOR_RECCMP)
     set(FLYINGDODGEM_FIX_BUGS OFF)
@@ -46,9 +46,9 @@ if(MSVC_50_FOR_RECCMP)
 
     set(CMAKE_MSVC_RUNTIME_LIBRARY "")
 
-    # HOVER.EXE was shipped with MSVC 5.0 at /O2 optimization. We compile the
-    # matching (reccmp) build with the same optimization but retain /Zi debug
-    # info so reccmp can resolve function symbols from the PDB.
+    # HOVER.EXE was shipped by the MSVC 4.0-era toolchain at /O2 optimization.
+    # We compile the matching (reccmp) build with the same optimization but
+    # retain /Zi debug info so reccmp can resolve function symbols from the PDB.
     set(CMAKE_C_FLAGS_DEBUG "/O2 /Oi /G5 /Zi /ML")
     set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /G5 /DNDEBUG /ML")
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "/O2 /Ob2 /G5 /DNDEBUG /Zi /ML")

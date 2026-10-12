@@ -488,3 +488,131 @@ extern "C" void __stdcall F4066b0(void* a1, void* a2, int32_t a3, int32_t a4)
     g_4a4a3c = ((struct HostObj*)g_4a1d68)->F403850(shade);
     ((struct HostObj*)g_4a1d68)->fn0();
 }
+
+// FUNCTION: HOVER 0x00406a80
+extern "C" void __cdecl F406a80(void* arg)
+{
+    uint8_t* node = (uint8_t*)arg;
+    uint8_t* p;
+    int32_t key;
+    int32_t zero;
+
+    key = *(int32_t*)(node + 0x40);
+    if (key != 0)
+    {
+        p = node;
+        if (key == -1)
+            key = 0;
+        if (*(int32_t*)(node + 0x3c) != key)
+        {
+            zero = 0;
+            do
+            {
+                p = *(uint8_t**)(p + 0x3c);
+                if (p == 0)
+                    break;
+                if (*(int32_t*)(node + 0x6c) > zero)
+                {
+                    if (*(int32_t*)(p + 0x8c) != zero)
+                        F406a80(p);
+                    if (*(int32_t*)(node + 0x60) >= *(int32_t*)(p + 0x60))
+                    {
+                        uint8_t* a = *(uint8_t**)(p + 0x3c);
+                        uint8_t* c = *(uint8_t**)(p + 0x38);
+                        uint8_t* d = *(uint8_t**)(node + 0x38);
+                        if (a != 0)
+                            *(uint8_t**)(a + 0x38) = c;
+                        if (c != 0)
+                            *(uint8_t**)(c + 0x3c) = a;
+                        *(uint8_t**)(node + 0x38) = p;
+                        if (d != 0)
+                            *(uint8_t**)(d + 0x3c) = p;
+                        *(uint8_t**)(p + 0x3c) = node;
+                        *(uint8_t**)(p + 0x38) = d;
+                        p = c;
+                    }
+                }
+                else
+                {
+                    if (*(int32_t*)(p + 0x8c) != zero)
+                        F406a80(p);
+                    if (*(int32_t*)(node + 0x60) <= *(int32_t*)(p + 0x64))
+                    {
+                        uint8_t* c = *(uint8_t**)(p + 0x3c);
+                        uint8_t* d = *(uint8_t**)(p + 0x38);
+                        uint8_t* a = *(uint8_t**)(node + 0x38);
+                        if (c != 0)
+                            *(uint8_t**)(c + 0x38) = d;
+                        if (d != 0)
+                            *(uint8_t**)(d + 0x3c) = c;
+                        *(uint8_t**)(node + 0x38) = p;
+                        if (a != 0)
+                            *(uint8_t**)(a + 0x3c) = p;
+                        *(uint8_t**)(p + 0x3c) = node;
+                        *(uint8_t**)(p + 0x38) = a;
+                        p = d;
+                    }
+                }
+            } while (*(int32_t*)(p + 0x3c) != key);
+        }
+    }
+    key = *(int32_t*)(node + 0x4c);
+    if (key != 0)
+    {
+        p = node;
+        if (key == -1)
+            key = 0;
+        if (*(int32_t*)(node + 0x3c) != key)
+        {
+            zero = 0;
+            do
+            {
+                p = *(uint8_t**)(p + 0x3c);
+                if (p == 0)
+                    break;
+                if (*(int32_t*)(node + 0x70) > zero)
+                {
+                    if (*(int32_t*)(p + 0x8c) != zero)
+                        F406a80(p);
+                    if (*(int32_t*)(p + 0x60) <= *(int32_t*)(node + 0x64))
+                    {
+                        uint8_t* a = *(uint8_t**)(p + 0x3c);
+                        uint8_t* c = *(uint8_t**)(p + 0x38);
+                        uint8_t* d = *(uint8_t**)(node + 0x38);
+                        if (a != 0)
+                            *(uint8_t**)(a + 0x38) = c;
+                        if (c != 0)
+                            *(uint8_t**)(c + 0x3c) = a;
+                        *(uint8_t**)(node + 0x38) = p;
+                        if (d != 0)
+                            *(uint8_t**)(d + 0x3c) = p;
+                        *(uint8_t**)(p + 0x3c) = node;
+                        *(uint8_t**)(p + 0x38) = d;
+                        p = c;
+                    }
+                }
+                else
+                {
+                    if (*(int32_t*)(p + 0x8c) != zero)
+                        F406a80(p);
+                    if (*(int32_t*)(p + 0x64) >= *(int32_t*)(node + 0x64))
+                    {
+                        uint8_t* a = *(uint8_t**)(p + 0x3c);
+                        uint8_t* c = *(uint8_t**)(p + 0x38);
+                        uint8_t* d = *(uint8_t**)(node + 0x38);
+                        if (a != 0)
+                            *(uint8_t**)(a + 0x38) = c;
+                        if (c != 0)
+                            *(uint8_t**)(c + 0x3c) = a;
+                        *(uint8_t**)(node + 0x38) = p;
+                        if (d != 0)
+                            *(uint8_t**)(d + 0x3c) = p;
+                        *(uint8_t**)(p + 0x3c) = node;
+                        *(uint8_t**)(p + 0x38) = d;
+                        p = c;
+                    }
+                }
+            } while (*(int32_t*)(p + 0x3c) != key);
+        }
+    }
+}
