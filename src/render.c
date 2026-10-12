@@ -743,7 +743,14 @@ extern "C" void __fastcall Setup6c90(void* self)
 void SpanChain::AddPair6d00(int32_t a1, int32_t a2)
 {
     uint8_t* q = (uint8_t*)(uintptr_t)*(uint32_t*)((uint8_t*)this + 8);
-    int32_t n = *(int32_t*)(q + 0x14);
+    int32_t n;
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    /* Empty-span harness: F403a60's list swap can NULL the bucket head;
+     * retail always has live spans here. Safe no-op, matching untouched. */
+    if (q == NULL)
+        return;
+#endif
+    n = *(int32_t*)(q + 0x14);
     if (n < 0x28)
     {
         uint32_t* base = (uint32_t*)(uintptr_t)*(uint32_t*)(q + 0xc);
@@ -758,11 +765,7 @@ void SpanChain::AddPair6d00(int32_t a1, int32_t a2)
     }
 }
 
-// FUNCTION: HOVER 0x00403a60
-void SpanChain::F403a60(void* a1)
-{
-    (void)a1;
-}
+
 
 /* Segment-intersection projector (retail 0x401260): intersects the line
  * through self (pos + t*dir at +0x14/+0x18, dir at +0x38/+0x3c) with the

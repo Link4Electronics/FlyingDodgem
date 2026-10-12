@@ -1,6 +1,26 @@
 #include "flyingdodgem_types.h"
 #include "callees.h"
 #include "scene.h"
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+#include <stdio.h>
+#endif
+
+#if defined(_MSC_VER)
+#define HOVER_IMPORT __declspec(dllimport)
+#else
+#define HOVER_IMPORT
+#endif
+extern "C" HOVER_IMPORT void __stdcall OutputDebugStringA(char* psz);
+
+/* 4-byte packed address fields (see render.c HOVER_LPTR): matching sees the
+ * exact original tokens. */
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+#define HOVER_LPTR(b, o) ((uint8_t*)(uintptr_t)*(uint32_t*)((uint8_t*)(b) + (o)))
+#define HOVER_SPTR(b, o, v) (*(uint32_t*)((uint8_t*)(b) + (o)) = (uint32_t)(uintptr_t)(v))
+#else
+#define HOVER_LPTR(b, o) (*(uint8_t**)((uint8_t*)(b) + (o)))
+#define HOVER_SPTR(b, o, v) (*(void**)((uint8_t*)(b) + (o)) = (void*)(v))
+#endif
 
 extern "C" MerlinPlane g_4a4498;
 extern "C" MerlinPlane g_4a44e0;
@@ -19,6 +39,8 @@ extern "C" int32_t g_4a1d78;
 extern "C" void* g_4a471c;
 extern "C" int32_t g_4a4544;
 extern "C" int32_t g_4a1d6c;
+extern "C" char g_4c520c[];
+extern "C" int32_t g_4a4534;
 
 /* Stubs for the functions the four unimplemented scene/display entries call.
  * They are compiled out of line (separate TU from their callers) so the
@@ -51,6 +73,7 @@ void __fastcall F4030f0(void* self)
 {
     (void)self;
 }
+
 // STUB: HOVER 0x00404030
 int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
 {
@@ -59,6 +82,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
     (void)a3;
     return 0;
 }
+
 // FUNCTION: HOVER 0x00402e00
 int32_t HoverTc::M402e00(void* a1)
 {
@@ -66,6 +90,11 @@ int32_t HoverTc::M402e00(void* a1)
     int32_t scale;
     int32_t negN;
     int32_t cnt;
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    static int s_hits = 0;
+    if ((++s_hits == 1 || s_hits % 600 == 0))
+        fprintf(stderr, "M402e00 hit #%d\n", s_hits);
+#endif
 
     (void)a1;
     g_4a1d60 = (void*)0x4a1d80;
@@ -220,7 +249,105 @@ int32_t HoverTc::M402e00(void* a1)
     }
     this->F404030(g_4a4720, (void*)g_4a1d64, (void*)g_4a456c);
     ((SpanChain*)*(void**)this)->F403a60(this);
+    if (g_4a1d60 > (void*)0x4a40a8)
+        OutputDebugStringA(g_4c520c);
     return 0;
+}
+
+// FUNCTION: HOVER 0x00403a60
+void SpanChain::F403a60(void* a1)
+{
+    uint8_t* ctx = (uint8_t*)this;
+    uint8_t* hover = (uint8_t*)a1;
+    uint8_t* src;
+    uint8_t* dst;
+    int32_t r0;
+    int32_t r1;
+    int32_t c0;
+    int32_t c1;
+    int32_t n;
+
+    (void)hover;
+    src = HOVER_LPTR(ctx, 8);
+    dst = HOVER_LPTR(ctx, 4);
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    if (src == NULL || dst == NULL)
+        return;
+#endif
+    n = *(int32_t*)(src + 0x14);
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    if (n < 0 || n > 0x28)
+        return;
+    /* Native scratch-bounds TBD (dst underflows base-4 on first frame);
+     * skip pair copies natively (X-tables stay zeroed → fills park at x=0,
+     * wrong-but-safe) until base tracking lands. Matching executes fully. */
+    n = 0;
+#endif
+    while (n > 0)
+    {
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+        uint8_t* tp = HOVER_LPTR(src, 0);
+        int16_t v0;
+        int16_t v1;
+        if (tp == NULL)
+            break;
+        v0 = *(int16_t*)tp;
+        v1 = *(int16_t*)(tp + 2);
+#else
+        int16_t v0 = *(int16_t*)(*(uint8_t**)src + 0);
+        int16_t v1 = *(int16_t*)(*(uint8_t**)src + 2);
+#endif
+        dst -= 4;
+        *(int16_t*)(dst + 0) = v0;
+        *(int16_t*)(dst + 2) = v1;
+        src += 4;
+        n--;
+    }
+    r0 = 0;
+    c0 = 0;
+    src = HOVER_LPTR(HOVER_LPTR(ctx, 8), 0);
+    while (r0 < *(int32_t*)(src + 0x18))
+    {
+        if (c0 >= *(int32_t*)(src + 0x14))
+            break;
+        {
+            int16_t x0 = *(int16_t*)dst;
+            int16_t x1 = *(int16_t*)(*(uint8_t**)src);
+            if (x0 > x1)
+            {
+                int16_t y0 = *(int16_t*)(*(uint8_t**)src + 2);
+                if (x0 <= y0)
+                {
+                    if (x0 >= y0)
+                        F406740(this, NULL, *(int16_t*)(*(uint8_t**)(src + 0x10) + x0 * 2), x0);
+                    else
+                        F406740(this, NULL, *(int16_t*)(*(uint8_t**)(src + 0x10) + x0 * 2), x0);
+                }
+                else
+                    F406740(this, NULL, *(int16_t*)(*(uint8_t**)(src + 0x10) + x0 * 2), x0);
+            }
+        }
+        c0++;
+    }
+    {
+        uint8_t* nd = HOVER_LPTR(ctx, 0xc);
+        while (nd != NULL)
+        {
+            int32_t y = *(int32_t*)(nd + 0x1c);
+            int32_t z = *(int32_t*)(nd + 0x24);
+            ((SpanChain*)ctx)->F402b10(nd, y, 0, z);
+            nd = *(uint8_t**)(nd + 0x28);
+        }
+    }
+    {
+        uint8_t* q0 = HOVER_LPTR(ctx, 0xc);
+        uint8_t* q1 = HOVER_LPTR(ctx, 8);
+        n = *(int32_t*)(ctx + 0x14);
+        HOVER_SPTR(ctx, 0xc, q1);
+        HOVER_SPTR(ctx, 8, q0);
+        *(int32_t*)(ctx + 0x18) = n;
+        *(int32_t*)(ctx + 0x14) = 0;
+    }
 }
 // STUB: HOVER 0x004053a0
 int32_t HoverTc::M4053a0(void* a1, void* a2)
@@ -238,15 +365,7 @@ int32_t HoverTc::M405a10(void* a1, void* a2)
     return 0;
 }
 
-// STUB: HOVER 0x00405ce0
-int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
-{
-    (void)a1;
-    (void)a2;
-    (void)a3;
-    (void)a4;
-    return 0;
-}
+
 
 // STUB: HOVER 0x00407430
 void __fastcall Ext407430(void* self)

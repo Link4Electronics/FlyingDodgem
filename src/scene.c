@@ -13,6 +13,25 @@ extern "C" char* __stdcall CharUpperA(char* psz);
 extern "C" void* g_460970;
 extern "C" MerlinPlane g_4a4498;
 extern "C" MerlinPlane g_4a44e0;
+extern "C" int32_t g_4a453c;
+extern "C" int32_t g_4a4544;
+extern "C" int32_t g_4a1d70;
+extern "C" int32_t g_4a452c;
+extern "C" int32_t g_4a4548;
+extern "C" int32_t g_4a61cfc;
+extern "C" int32_t g_4a1d68;
+extern "C" int32_t g_4a4a44;
+extern "C" int32_t g_4a1d74;
+extern "C" int32_t g_4a4a4c;
+extern "C" int32_t g_4a4a14;
+extern "C" int32_t g_4a4a50;
+extern "C" int32_t g_4a4a24;
+extern "C" int32_t g_4a4a28;
+extern "C" int32_t g_4a4a2c;
+extern "C" int32_t g_4a4a3c;
+extern "C" int32_t g_4a4a20;
+extern "C" int32_t g_4a4a38;
+extern "C" int32_t g_4a4a48;
 extern "C" int16_t g_4a4528;
 extern "C" int32_t g_4a4768;
 extern "C" int32_t g_4a4774;
@@ -140,4 +159,13 @@ void HoverTc::M405fa0(int16_t a1)
             idx = *(int16_t*)(wall + 0x48);
         }
     }
+}
+
+// STUB: HOVER 0x00402b10
+void SpanChain::F402b10(void* a1, int32_t a2, int32_t a3, int32_t a4)
+{
+    (void)a1;
+    (void)a2;
+    (void)a3;
+    (void)a4;
 }

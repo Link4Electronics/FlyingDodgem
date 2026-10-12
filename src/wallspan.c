@@ -1,9 +1,23 @@
 #include "flyingdodgem_types.h"
 #include <string.h>
 #include "callees.h"
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+#include <stdio.h>
+#endif
+
+/* 4-byte packed address fields (see render.c HOVER_LPTR): matching sees the
+ * exact original tokens. */
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+#define HOVER_LPTR(b, o) ((uint8_t*)(uintptr_t)*(uint32_t*)((uint8_t*)(b) + (o)))
+#define HOVER_SPTR(b, o, v) (*(uint32_t*)((uint8_t*)(b) + (o)) = (uint32_t)(uintptr_t)(v))
+#else
+#define HOVER_LPTR(b, o) (*(uint8_t**)((uint8_t*)(b) + (o)))
+#define HOVER_SPTR(b, o, v) (*(void**)((uint8_t*)(b) + (o)) = (void*)(v))
+#endif
 
 extern "C" MerlinPlane g_4a4498;
 extern "C" MerlinPlane g_4a44e0;
+extern "C" int32_t g_4a4550;
 
 extern "C" int32_t g_4a453c;
 extern "C" void* g_4a1d68;
@@ -252,6 +266,12 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
 int32_t HoverTc::M405b90(void* a1)
 {
     uint8_t* node = (uint8_t*)a1;
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    static int s_calls = 0;
+    static int s_ones = 0;
+    if (++s_calls % 60 == 0)
+        fprintf(stderr, "M405b90 calls=%d ones=%d\n", s_calls, s_ones);
+#endif
     int32_t ax = *(int32_t*)(node + 0x14);
     int32_t ay = *(int32_t*)(node + 0x18);
     int32_t bx = *(int32_t*)(node + 0x1c);
@@ -264,23 +284,186 @@ int32_t HoverTc::M405b90(void* a1)
 
     (void)this;
     if (!s1 && s2)
+    {
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+        s_ones++;
+#endif
         return 1;
+    }
     s3 = ((g_4a4498.m_p18 - by) * g_4a4498.m_p38 + (bx - g_4a4498.m_p14) * g_4a4498.m_p3c) >= 0;
     s4 = ((bx - g_4a44e0.m_p14) * g_4a44e0.m_p3c + (g_4a44e0.m_p18 - by) * g_4a44e0.m_p38) >= 0;
     if (!s3 && s4)
+    {
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+        s_ones++;
+#endif
         return 1;
+    }
     s5 = ((ay - g_4a4498.m_p18) * *(int32_t*)(node + 0x38) + (g_4a4498.m_p14 - ax) * *(int32_t*)(node + 0x3c)) >= 0;
     if (s5)
     {
         if (!s1 && !s2 && s3 && s4)
+        {
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+            s_ones++;
+#endif
             return 1;
+        }
     }
     else
     {
         if (s1 && s2 && !s3 && !s4)
+        {
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+            s_ones++;
+#endif
             return 1;
+        }
     }
     return 0;
+}
+
+// FUNCTION: HOVER 0x00405ce0
+int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
+{
+    uint8_t* node = (uint8_t*)a2;
+    int32_t angA;
+    int32_t angB;
+    int32_t lo;
+    int32_t hi;
+    int32_t colLo;
+    int32_t colHi;
+    uint8_t* rec0;
+    uint8_t* rec1;
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    static int s_calls = 0;
+    static int s_oks = 0;
+    if (++s_calls % 60 == 0)
+        fprintf(stderr, "M405ce0 calls=%d oks=%d\n", s_calls, s_oks);
+#endif
+
+    (void)a1;
+    (void)a3;
+    (void)a4;
+    /* Native Y-flip (world +Y south vs math +Y north) so angles agree with
+     * the flipped dirTable; matching sees the original retail operands. */
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    angA = Atan4385f0(*(int32_t*)((uint8_t*)g_4a1d68 + 0x4c) - *(int32_t*)(node + 0x18),
+                      *(int32_t*)(node + 0x14) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x48));
+    angB = Atan4385f0(*(int32_t*)((uint8_t*)g_4a1d68 + 0x4c) - *(int32_t*)(node + 0x20),
+                      *(int32_t*)(node + 0x1c) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x48));
+#else
+    angA = Atan4385f0(*(int32_t*)(node + 0x18) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c),
+                      *(int32_t*)(node + 0x14) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x48));
+    angB = Atan4385f0(*(int32_t*)(node + 0x20) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c),
+                      *(int32_t*)(node + 0x1c) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x48));
+#endif
+    /* Unwrap/order, no early returns: retail routes all adjust-skip cases
+     * forward to shared centering (landing preserves (angA,angB), unified
+     * swaps to (angB,angA)). Combined short-circuit condition reproduces the
+     * nested forward jumps. */
+    {
+        int32_t m = angA & 0x1ffffff;
+        if ((angB > m && angB - 0x1000000 < m) ||
+            (angB <= m && angB + 0x2000000 > m && angB + 0x1000000 < m))
+        {
+            hi = angA;
+            lo = angB;
+        }
+        else
+        {
+            hi = angB;
+            lo = angA;
+        }
+    }
+    {
+        int32_t va = *(int32_t*)((uint8_t*)this + 0x34);
+        hi -= va;
+        hi &= 0x1ffffff;
+        if (hi > 0x1000000)
+            hi -= 0x2000000;
+        lo -= va;
+        lo &= 0x1ffffff;
+        if (lo > 0x1000000)
+            lo -= 0x2000000;
+        if (lo < hi)
+            lo += 0x2000000;
+    }
+    {
+        int32_t sc = *(int32_t*)((uint8_t*)this + 0x30);
+        colLo = (int32_t)((int64_t)hi * sc >> 32);
+        colHi = (int32_t)((int64_t)lo * sc >> 32);
+        colLo -= 3;
+        colHi += 3;
+        if (colLo < 0)
+            colLo = 0;
+        if (colHi < 0)
+            colHi = 0;
+        if (colLo > g_4a454c - 1)
+        {
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+            fprintf(stderr, "M405ce0 empty clip lo=%d hi=%d\n", colLo, colHi);
+#endif
+            return 0;
+        }
+        if (colHi > g_4a454c - 1)
+            colHi = g_4a454c - 1;
+        if (colLo < 0)
+            colLo = 0;
+        if (colLo > colHi)
+            colLo = colHi;
+        if (colLo == colHi)
+        {
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+            fprintf(stderr, "M405ce0 empty equal lo=%d hi=%d\n", colLo, colHi);
+#endif
+            return 0;
+        }
+    }
+    {
+        uint8_t* base = (uint8_t*)g_4a4550;
+        rec0 = base;
+        g_4a4550 = (int32_t)(uintptr_t)*(void**)(base + 0x50);
+        *(int16_t*)(rec0 + 0) = a4;
+        *(int32_t*)(rec0 + 4) = 1;
+        *(void**)(rec0 + 8) = a1;
+        *(void**)(rec0 + 0xc) = node;
+        *(void**)(rec0 + 0x10) = node;
+        base = (uint8_t*)g_4a4550;
+        rec1 = base;
+        g_4a4550 = (int32_t)(uintptr_t)*(void**)(base + 0x50);
+        *(int16_t*)(rec1 + 0) = a4;
+        *(int32_t*)(rec1 + 4) = 0;
+        *(void**)(rec1 + 8) = node;
+        *(void**)(rec1 + 0xc) = node;
+        *(void**)(rec1 + 0x10) = node;
+        {
+            /* 4-byte bucket slots (retail array stride col*4 голосов): an 8-byte
+             * pointer store would overlap neighbours and walk off the
+             * width*4 table on 64-bit. Records come from the MAP_32BIT bump
+             * arena so truncation is exact. */
+            uint8_t* hover = (uint8_t*)this;
+            uint8_t* bbase = *(uint8_t**)(hover + 0x40);
+            *(uint32_t*)(bbase + colLo * 4) = (uint32_t)(uintptr_t)rec0;
+            *(uint32_t*)(bbase + colHi * 4) = (uint32_t)(uintptr_t)rec1;
+        }
+        {
+            uint8_t* p = node;
+            while (p != NULL)
+            {
+                p = *(uint8_t**)(p + 0x38);
+                if (p == NULL)
+                    break;
+            }
+        }
+    }
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    fprintf(stderr, "M405ce0 ok lo=%d hi=%d\n", colLo, colHi);
+#endif
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    s_oks++;
+#endif
+    return 1;
 }
 
 // FUNCTION: HOVER 0x004066b0

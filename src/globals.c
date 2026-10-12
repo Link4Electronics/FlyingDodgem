@@ -901,3 +901,7 @@ int32_t g_4a1d6c;
 void* g_4a1d60;
 // GLOBAL: HOVER 0x004a4720
 void* g_4a4720;
+// GLOBAL: HOVER 0x004c520c
+char g_4c520c[] = "Trashing Heap";
+// GLOBAL: HOVER 0x004a4a58
+uint16_t g_4a4a58[16384];

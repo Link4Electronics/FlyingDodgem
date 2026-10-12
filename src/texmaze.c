@@ -299,10 +299,10 @@ static int tex_frame(Cur *c, TexFrame *f, u16 frame_idx)
     if (hh == 0 || d != (u16)(hh - 1))
         return 0;
     lg = 0;
-    t = hh;
+    t = (a < hh) ? a : hh;      /* smaller side */
     while (t > 1) {
         if (t & 1)
-            return 0;               /* height must be a power of two */
+            return 0;               /* smaller side must be a power of two */
         t >>= 1;
         lg++;
     }
@@ -370,25 +370,25 @@ static int tex_frame(Cur *c, TexFrame *f, u16 frame_idx)
     if (k != K || sum != L)
         return 0;
 
-    blob = cur_u16(c);              /* per-frame extra blob (t bytes) */
-    if (!c->ok || !cur_skip(c, blob))
+    /* NEXTBLOCK: 2 bytes per spec (1, 128) — read but don't enforce values
+     * (actual files show 0,0; spec may describe a different variant) */
+    if (!cur_skip(c, 2))
         return 0;
     return c->ok;
 }
 
 static int tex_body(Cur *c, TexTexture *t)
 {
-    u16 blob, nframes, i;
+    u16 reserved, isdecal, nframes, i;
 
     if (!cur_str(c, t->name, sizeof(t->name)))
         return 0;
-    blob = cur_u16(c);
-    if (!cur_skip(c, blob))
-        return 0;
-    t->field_1c = cur_u16(c);
+    reserved = cur_u16(c);       /* always 0 */
+    isdecal = cur_u16(c);
     nframes = cur_u16(c);
     if (!c->ok)
         return 0;
+    t->isdecal = isdecal;
     t->frame_count = nframes;
     t->frames = (TexFrame *)calloc(nframes ? nframes : 1, sizeof(TexFrame));
     if (t->frames == NULL) {

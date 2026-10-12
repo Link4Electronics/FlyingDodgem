@@ -67,12 +67,19 @@ class SpanChain
 {
 public:
     void AddPair6d00(int32_t a1, int32_t a2);
+    void F402b10(void* a1, int32_t a2, int32_t a3, int32_t a4);
     void F403a60(void* a1);
 };
 
 /* __thiscall, `this` in ECX only (spelled __fastcall on a free function). */
 extern "C" void __fastcall F4010c0(void* self);
 extern "C" void __fastcall F4030f0(void* self);
+
+/* Integer atan2(y,x) -> 25-bit angle (retail 0x4385f0, __cdecl, caller pops). */
+extern "C" int32_t __cdecl Atan4385f0(int32_t y, int32_t x);
+
+/* Solid span-row filler (retail 0x406740, __fastcall self+unused+2 stack). */
+extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t a1);
 
 /* __thiscall, `this` in ECX only (spelled __fastcall on a free function). */
 extern "C" void __fastcall Ext407430(void* self);

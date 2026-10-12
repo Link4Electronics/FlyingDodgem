@@ -994,3 +994,8 @@ s32 __cdecl DispatchMessageA(GdiWindow *hwnd, u32 msg, uintptr_t wParam,
      * procedure (exactly what Win32 does with unhandled messages). */
     return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
+
+void __stdcall OutputDebugStringA(char* psz)
+{
+    (void)psz;
+}

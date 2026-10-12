@@ -243,4 +243,8 @@ s32 __cdecl SendMessageA(GdiWindow *hwnd, u32 msg, uintptr_t wParam,
                          intptr_t lParam);
 void *__cdecl GetProcAddress(HINSTANCE inst, const char *procName);
 
+/* KERNEL32 debug log for the span-bump overflow in M402e00 (0x4030d9 pushes
+ * "Trashing Heap"). Native no-op: no debugger sink, must only not crash. */
+void __stdcall OutputDebugStringA(char* psz);
+
 #endif

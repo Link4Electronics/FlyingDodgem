@@ -4,6 +4,7 @@
 
 #include <SDL3/SDL.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,6 +26,7 @@
  * ------------------------------------------------------------------------- */
 
 extern "C" void* g_460970;
+extern "C" uint16_t g_4a4a58[16384];
 
 /* Span-host globals written by M406090 / read by F406740. */
 extern "C" int32_t g_4a4a34;   /* pitch */
@@ -333,6 +335,15 @@ static void build_walls(void)
     }
 }
 
+/* Atan ratio table for M405ce0/Atan4385f0 (retail BSS, filled at startup).
+ * Maps ratio r=(min<<16)/max in [0,0x10000] to mid in [0,0x3fff] ~= atan(r)/45 deg. */
+static void rebuild_tan_table(void)
+{
+    int i;
+    for (i = 0; i < 16384; i++)
+        g_4a4a58[i] = (u16)(tan(((double)i + 0.5) / 16384.0 * 0.7853981633974483) * 65536.0);
+}
+
 /* Rebuild the per-column direction table (host+0x64) from the current yaw.
  * Retail precomputes sin/cos of the FOV sweep; the harness recomputes from
  * atan2-free fixed angles.  host+0x54 is the 9-bit view angle. */
@@ -354,7 +365,15 @@ static void rebuild_dir_table(int32_t angle9)
         double a = (double)(rel & 0x1ffffff) * (2.0 * 3.14159265358979 /
                                                 (double)0x2000000);
         tbl[i * 2]     = (int32_t)(cos(a) * 4096.0);
-        tbl[i * 2 + 1] = (int32_t)(sin(a) * 4096.0);
+        tbl[i * 2 + 1] = (int32_t)(-sin(a) * 4096.0);
+        /* Second half continues the sweep another full FOV so plane B
+         * (entry+width*8) separates from plane A by the wedge width;
+         * duplicating would collapse the frustum to a line. */
+        {
+            double a2 = (double)((rel + 2 * halfFov) & 0x1ffffff) * (2.0 * 3.14159265358979 / (double)0x2000000);
+            tbl[(width + i) * 2]     = (int32_t)(cos(a2) * 4096.0);
+            tbl[(width + i) * 2 + 1] = (int32_t)(-sin(a2) * 4096.0);
+        }
     }
 }
 
@@ -387,7 +406,10 @@ void __cdecl DisplayDriver_Init(HDC screen)
      * layout); truncated values must zero-extend to the real mapping. */
     g_spanArena = (uint8_t*)alloc_low(0x40);
     g_spanScratch = (uint8_t*)alloc_low(0x2000);
-    g_dirTable = (uint8_t*)alloc_low((size_t)width * 2 * sizeof(int32_t));
+    /* Two width-sized ray halves: M406090 builds plane A from entry and
+     * plane B from entry+width*8, so a single width table overruns on the
+     * second plane. Second half duplicates the first (mono harness). */
+    g_dirTable = (uint8_t*)alloc_low((size_t)width * 2 * 2 * sizeof(int32_t));
     g_scaleTable = (uint8_t*)alloc_low((size_t)width * sizeof(int32_t));
     g_topTable = (uint8_t*)alloc_low((size_t)width * sizeof(int32_t));
     g_botTable = (uint8_t*)alloc_low((size_t)width * sizeof(int32_t));
@@ -426,7 +448,7 @@ void __cdecl DisplayDriver_Init(HDC screen)
     *(int32_t*)(g_host + 0x6c) = (int32_t)(uintptr_t)g_rowColour;
     *(int32_t*)(g_host + 0x74) = 1;              /* solid fill mode */
     *(int32_t*)(g_host + 0x50) = width / 2;      /* centre column → g_4a4544 */
-    *(int32_t*)(g_host + 0x54) = 0x0a4;          /* angle9 */
+    *(int32_t*)(g_host + 0x54) = 0x140;          /* angle9 */
     *(int32_t*)(g_host + 0x7c) = 0;              /* shade */
     /* plane-table scale: 0 keeps M406090's entry calc (scale*angle*6/512*8)
      * at the dir-table base so the first F4010c0 reads stay in bounds. The
@@ -443,6 +465,12 @@ void __cdecl DisplayDriver_Init(HDC screen)
         ((int32_t*)g_botTable)[i] = 479;
         ((int32_t*)g_rowHeight)[i < 256 ? i : 255] = 1;
     }
+    /* Atan ratio table for M405ce0/Atan4385f0 (retail BSS, filled at startup
+     * by an init we haven't matched; the binary search maps ratio
+     * r=(min<<16)/max in [0,0x10000] to mid in [0,0x3fff] ≈ atan(r)/45°).
+     * Correct arctan curve (not a ramp) so wall angles — and therefore span
+     * columns — land where retail puts them. */
+    rebuild_tan_table();
     /* Sky/floor row gradient. */
     for (i = 0; i < 240; i++)
         ((uint32_t*)g_rowColour)[i] = 1;          /* sky: dark */
@@ -451,7 +479,13 @@ void __cdecl DisplayDriver_Init(HDC screen)
 
     build_walls();
     apply_camera();
-    rebuild_dir_table(0x0a4);
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    fprintf(stderr, "wall0 (%d,%d)-(%d,%d) cam (%d,%d)\n",
+            *(int32_t*)(g_wallNodes + 0x14), *(int32_t*)(g_wallNodes + 0x18),
+            *(int32_t*)(g_wallNodes + 0x1c), *(int32_t*)(g_wallNodes + 0x20),
+            g_viewX, g_viewY);
+#endif
+    rebuild_dir_table(0x140);
 
     /* Hover object: 64-bit-safe layout matching render_pipeline.c HoverObj. */
     *(void**)(g_hover + 0x00) = g_view;          /* view */
@@ -472,6 +506,11 @@ void __cdecl DisplayDriver_Init(HDC screen)
     *(void**)(g_ctx + 0x00) = g_spanArena;       /* SpanChain arena */
     *(void**)(g_ctx + 0x40) = g_buckets;         /* column buckets (zeroed) */
     *(int32_t*)(g_ctx + 0x2c) = (int32_t)pitch;  /* pitch snapshot */
+    /* M405ce0/F4044a0 bump arenas (real M405ce0 pushes bucket records from
+     * +0x3c and F4044a0 links nodes from +0x44; M406090 restores both bases
+     * each frame so the fixed 64KB arenas never overflow in harness). */
+    *(void**)(g_ctx + 0x3c) = g_recordArena;
+    *(void**)(g_ctx + 0x44) = g_nodeArena;
 
     /* View object: 64-bit-safe layout matching render_pipeline.c ViewObj.
      * groups is an array of edge-descriptor pointers indexed by the
@@ -539,7 +578,7 @@ void __cdecl DisplayDriver_Init(HDC screen)
         *(int32_t*)(world + 0x83cc) = 512;
         *(int16_t*)(world + 0x83c4) = 0;
         *(int16_t*)(world + 0x8330) = 0;
-        *(int32_t*)(world + 0x8214) = 0x0a4;
+        *(int32_t*)(world + 0x8214) = 0x140;
         *(int32_t*)(world + 0x8218) = 0;
         *(int32_t*)(world + 0x81e0) = g_viewX;
         *(int32_t*)(world + 0x81e4) = g_viewY;
@@ -592,7 +631,7 @@ void __cdecl DisplayDriver_Sync(HDC screen)
     if (g_460970 != NULL)
     {
         uint8_t* world = (uint8_t*)g_460970;
-        *(int32_t*)(world + 0x8214) = 0x0a4;
+        *(int32_t*)(world + 0x8214) = 0x140;
         /* Menu showcase camera: park the world player node (CopyPos6c40
          * reads world+0x818c+0x54) at the maze centre so DrawEntry's
          * CopyPos→Set6c00 chain feeds the pipeline the real position. */
@@ -600,8 +639,8 @@ void __cdecl DisplayDriver_Sync(HDC screen)
         *(int32_t*)(world + 0x81e4) = g_viewY;
         /* Keep the pipeline's projection angle coherent with the
          * direction table (M406090 derives hover->angle from host+0x54). */
-        *(int32_t*)(g_host + 0x54) = 0x0a4;
-        rebuild_dir_table(0x0a4);
+        *(int32_t*)(g_host + 0x54) = 0x140;
+        rebuild_dir_table(0x140);
     }
 
     DrawEntry402250(g_disp, NULL);

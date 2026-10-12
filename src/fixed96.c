@@ -49,3 +49,65 @@ void __cdecl Add96(uint32_t dst[3], const uint32_t src[3])
     AddCarry96(dst[0], src[0], dst);
 }
 #pragma optimize("", on)
+
+extern uint16_t g_4a4a58[16384];
+
+// FUNCTION: HOVER 0x004385f0
+int32_t __cdecl Atan4385f0(int32_t y, int32_t x)
+{
+    int32_t ay = y;
+    int32_t ax = x;
+    int32_t flags = 0;
+    int32_t r;
+    int32_t lo;
+    int32_t hi;
+    int32_t mid;
+
+    if (ay < 0)
+    {
+        flags = 1;
+        ay = -ay;
+    }
+    if (ax < 0)
+    {
+        ax = -ax;
+        flags |= 2;
+    }
+    mid = 0x4000;
+    if (ax != ay)
+    {
+        if (ax >= ay)
+            r = ((int64_t)ay << 16) / ax;
+        else
+            r = ((int64_t)0x4000 << 16) / ay;
+        lo = 0;
+        hi = 0x3fff;
+        for (;;)
+        {
+            mid = (lo + hi) / 2;
+            if (g_4a4a58[mid] < r)
+            {
+                lo = mid + 1;
+                if (lo >= hi)
+                    break;
+            }
+            else if (g_4a4a58[mid] > r)
+            {
+                hi = mid - 1;
+                if (lo >= hi)
+                    break;
+            }
+            else
+                break;
+        }
+        if (ax < ay)
+            mid = 0x8000 - mid;
+    }
+    if (flags == 1)
+        mid = 0x10000 - mid;
+    else if (flags == 2)
+        mid = 0x20000 - mid;
+    else if (flags == 3)
+        mid = mid + 0x10000;
+    return mid << 8;
+}

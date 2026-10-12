@@ -35,9 +35,9 @@ typedef struct TexFrame {
 } TexFrame;
 
 typedef struct TexTexture {
-    char name[32];          /* grandbase string                     */
-    u16 field_1c;           /* raw Serialize field (obj + 0x1c)     */
-    u16 frame_count;        /* N (mip chain: full size down to 4)   */
+    char name[32];          /* texture name (e.g. "BRYAN")              */
+    u16 isdecal;            /* 1 if decal (transparency), 0 otherwise */
+    u16 frame_count;        /* N (mip chain: full size down to 4)       */
     TexFrame *frames;
 } TexTexture;
 
