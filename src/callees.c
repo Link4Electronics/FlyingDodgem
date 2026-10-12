@@ -26,6 +26,7 @@ extern "C" MerlinPlane g_4a4498;
 extern "C" MerlinPlane g_4a44e0;
 extern "C" int16_t g_4a4528;
 extern "C" void* g_4a1d60;
+extern "C" uint8_t g_4a1d80[];
 extern "C" int32_t g_4a453c;
 extern "C" int32_t g_4a1d70;
 extern "C" void* g_4a4548;
@@ -620,8 +621,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
             node = *(uint8_t**)(node + 0x38);
             if (node == 0)
             {
-                ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                return hi;
+                break;
             }
             continue;
         }
@@ -635,8 +635,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                 node = *(uint8_t**)(node + 0x38);
                 if (node == 0)
                 {
-                    ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                    return hi;
+                    break;
                 }
                 continue;
             }
@@ -645,8 +644,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                 node = *(uint8_t**)(node + 0x38);
                 if (node == 0)
                 {
-                    ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                    return hi;
+                    break;
                 }
                 continue;
             }
@@ -677,8 +675,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                     node = *(uint8_t**)(node + 0x38);
                     if (node == 0)
                     {
-                        ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                        return hi;
+                        break;
                     }
                     continue;
                 }
@@ -700,8 +697,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                 node = *(uint8_t**)(node + 0x38);
                 if (node == 0)
                 {
-                    ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                    return hi;
+                    break;
                 }
             }
             continue;
@@ -718,8 +714,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                 node = *(uint8_t**)(node + 0x38);
                 if (node == 0)
                 {
-                    ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                    return hi;
+                    break;
                 }
                 continue;
             }
@@ -728,8 +723,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                 node = *(uint8_t**)(node + 0x38);
                 if (node == 0)
                 {
-                    ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                    return hi;
+                    break;
                 }
                 continue;
             }
@@ -759,8 +753,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                     node = *(uint8_t**)(node + 0x38);
                     if (node == 0)
                     {
-                        ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                        return hi;
+                        break;
                     }
                     continue;
                 }
@@ -782,8 +775,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                 node = *(uint8_t**)(node + 0x38);
                 if (node == 0)
                 {
-                    ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                    return hi;
+                    break;
                 }
             }
             continue;
@@ -804,8 +796,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                 node = *(uint8_t**)(node + 0x38);
                 if (node == 0)
                 {
-                    ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                    return hi;
+                    break;
                 }
                 continue;
             }
@@ -814,8 +805,7 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                 node = *(uint8_t**)(node + 0x38);
                 if (node == 0)
                 {
-                    ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                    return hi;
+                    break;
                 }
                 continue;
             }
@@ -912,13 +902,14 @@ int32_t HoverTc::F404030(void* a1, void* a2, void* a3)
                 node = *(uint8_t**)(node + 0x38);
                 if (node == 0)
                 {
-                    ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
-                    return hi;
+                    break;
                 }
                 continue;
             }
         }
     }
+    ((SpanChain*)(*(uint8_t**)this))->AddPair6d00((int32_t)(intptr_t)a3, hi);
+    return hi;
 }
 
 // FUNCTION: HOVER 0x00402e00
@@ -935,32 +926,22 @@ int32_t HoverTc::M402e00(void* a1)
 #endif
 
     (void)a1;
-    g_4a1d60 = (void*)0x4a1d80;
+    g_4a1d60 = (void*)g_4a1d80;
     if (*(int32_t*)((uint8_t*)this + 0x28) != 0)
         F4030f0(this);
     node = (uint8_t*)g_4a471c;
     while (node != NULL)
     {
         int32_t depth = *(int16_t*)(node + 8);
-        if (*(int32_t*)(node + 0x18) != 0)
+        if (*(int32_t*)(node + 0x18) != 0 && depth != 0)
         {
-            if (depth != 0)
-            {
-                *(int32_t*)(node + 0x58) = 0;
-                node = *(uint8_t**)(node + 0x34);
-                continue;
-            }
+            *(int32_t*)(node + 0x58) = 0;
         }
-        else if (depth <= 0)
+        else if (depth < 0)
         {
-            if (depth != 0)
-            {
-                *(int32_t*)(node + 0x58) = 0;
-                node = *(uint8_t**)(node + 0x34);
-                continue;
-            }
+            *(int32_t*)(node + 0x58) = 0;
         }
-        else
+        else if (depth > 0)
         {
             uint8_t* st = node + 0xac;
             int32_t row;
@@ -1011,15 +992,22 @@ int32_t HoverTc::M402e00(void* a1)
                 mask = (int16_t)(tex >> sh) & *rp;
                 tbl = *(int32_t*)((uint8_t*)rp + 0x1c);
                 rec = *(int32_t*)(uintptr_t)(uint32_t)(tbl + mask * 8 + 4);
-                span = *(int32_t*)(uintptr_t)(uint32_t)(rec + 4);
-                den = span - row;
+                den = col - row;
                 if (den != 0)
+                {
+                    den <<= sh;
                     *(int32_t*)(node + 0x98) = *(int32_t*)(node + 0x68) / den;
+                }
                 else
                     *(int32_t*)(node + 0x98) = 0;
                 {
                     int16_t n = *(int16_t*)(uintptr_t)(uint32_t)(rec + 0);
                     uint8_t* bump = (uint8_t*)g_4a1d60;
+                    span = *(int32_t*)((uint8_t*)rp + 4) << 16;
+                    *(void**)(node + 0xa8) = bump;
+                    span += 0xffff;
+                    *(int32_t*)(node + 0x90) = n;
+                    *(int32_t*)(node + 0x94) = span;
                     g_4a1d60 = (void*)(bump + n * 20);
                     if (n != 0)
                     {
@@ -1028,55 +1016,61 @@ int32_t HoverTc::M402e00(void* a1)
                         while (cnt > 0)
                         {
                             int32_t vx = *(int16_t*)(arr + 0) << sh;
-                            int32_t vy = *(int16_t*)(arr + 1) << sh;
+                            int32_t vy = *(int16_t*)((uint8_t*)arr + 2) << sh;
                             vx -= *(int32_t*)(node + 0x60);
                             vy -= *(int32_t*)(node + 0x60);
                             *(int32_t*)bump = vx;
                             *(int32_t*)(bump + 4) = vy;
-                            if (vx > *(int32_t*)(node + 0x64))
-                                *(int32_t*)(node + 0x64) = vx;
-                            vx = *(int32_t*)(arr + 1);
+                            if (*(int32_t*)(node + 0x64) > vy)
+                                *(int32_t*)(bump + 4) = *(int32_t*)(node + 0x64);
+                            col = *(int32_t*)(arr + 1);
                             arr = (int32_t*)((uint8_t*)arr + 8);
-                            *(int32_t*)(bump + 0x10) = vx;
+                            *(int32_t*)(bump + 0x10) = col;
+                            row = ((g_4a4544 - vx) * scale >> 10) + g_4a1d70;
+                            row &= negN;
+                            *(int32_t*)(bump + 8) = row;
+                            col = ((g_4a4544 - *(int32_t*)(bump + 4)) * scale >> 10) + g_4a1d70;
+                            col &= negN;
+                            *(int32_t*)(bump + 12) = col;
                             bump += 0x14;
                             cnt--;
                         }
                     }
                 }
-                node = *(uint8_t**)(node + 0x34);
-                continue;
             }
-            *(int32_t*)(node + 0xa4) = 0;
-            if (*(int32_t*)(node + 0x8c) != 0)
+            else
             {
+                *(int32_t*)(node + 0xa4) = 0;
+                if (*(int32_t*)(node + 0x8c) != 0)
+                {
                 int32_t a = *(int32_t*)(*(uint8_t**)(node + 0x84));
                 int32_t b = *(int32_t*)(*(uint8_t**)(node + 0x88));
                 int32_t mn = a;
                 int32_t mx;
-                int32_t r0 = row;
-                int32_t r1 = col;
+                int32_t r0;
+                int32_t r1;
                 if (b < a)
                     mn = b;
                 mx = mn;
-                if (r0 <= mx)
-                    mx = r0;
+                if (row <= mx)
+                    mx = row;
                 else
-                    mn = r0;
+                    mn = row;
                 *(int32_t*)(node + 0x74) = mx;
-                if (b != 0xfff0000 && b > r1)
+                if (b != 0xfff0000 && b > col)
                     mn = b;
                 else
-                    mn = r1;
-                if (a == 0xfff0000 || r1 <= a)
-                    mx = r1;
+                    mn = col;
+                if (a == 0xfff0000 || col <= a)
+                    mx = col;
                 else
                     mx = a;
                 *(int32_t*)(node + 0x78) = mx;
                 mn = mn;
+                }
             }
-            node = *(uint8_t**)(node + 0x34);
-            continue;
         }
+        else
         {
             uint8_t* st = node + 0xac;
             *(int32_t*)(st + 8) = *(int32_t*)(node + 0x6c) > 0 ? g_4a4530 : g_4a4568;
@@ -1120,6 +1114,9 @@ void SpanChain::F403a60(void* a1)
      * skip pair copies natively (X-tables stay zeroed → fills park at x=0,
      * wrong-but-safe) until base tracking lands. Matching executes fully. */
     n = 0;
+#else
+    hover = HOVER_LPTR(src, 0xc);
+    hover = HOVER_LPTR(hover, 0);
 #endif
     while (n > 0)
     {
@@ -1132,39 +1129,42 @@ void SpanChain::F403a60(void* a1)
         v0 = *(int16_t*)tp;
         v1 = *(int16_t*)(tp + 2);
 #else
-        int16_t v0 = *(int16_t*)(*(uint8_t**)src + 0);
-        int16_t v1 = *(int16_t*)(*(uint8_t**)src + 2);
+        int16_t v0 = *(int16_t*)(hover + 0);
+        int16_t v1 = *(int16_t*)(hover + 2);
 #endif
-        dst -= 4;
         *(int16_t*)(dst + 0) = v0;
         *(int16_t*)(dst + 2) = v1;
-        src += 4;
+        dst += 4;
+        hover += 4;
         n--;
     }
     r0 = 0;
     c0 = 0;
-    src = HOVER_LPTR(HOVER_LPTR(ctx, 8), 0);
-    while (r0 < *(int32_t*)(src + 0x18))
+    hover = HOVER_LPTR(ctx, 8);
+    src = HOVER_LPTR(hover, 0);
+    while (r0 < *(int32_t*)(hover + 0x18))
     {
-        if (c0 >= *(int32_t*)(src + 0x14))
+        if (c0 >= *(int32_t*)(hover + 0x14))
             break;
         {
             int16_t x0 = *(int16_t*)dst;
-            int16_t x1 = *(int16_t*)(*(uint8_t**)src);
+            int16_t x1 = *(int16_t*)src;
             if (x0 > x1)
             {
-                int16_t y0 = *(int16_t*)(*(uint8_t**)src + 2);
+                int16_t y0 = *(int16_t*)(src + 2);
                 if (x0 <= y0)
                 {
                     if (x0 >= y0)
-                        F406740(this, NULL, *(int16_t*)(*(uint8_t**)(src + 0x10) + x0 * 2), x0);
+                        F406740(this, NULL, *(int16_t*)(*(uint8_t**)(hover + 0x10) + x0 * 2), x0);
                     else
-                        F406740(this, NULL, *(int16_t*)(*(uint8_t**)(src + 0x10) + x0 * 2), x0);
+                        F406740(this, NULL, *(int16_t*)(*(uint8_t**)(hover + 0x10) + x0 * 2), x0);
                 }
                 else
-                    F406740(this, NULL, *(int16_t*)(*(uint8_t**)(src + 0x10) + x0 * 2), x0);
+                    F406740(this, NULL, *(int16_t*)(*(uint8_t**)(hover + 0x10) + x0 * 2), x0);
             }
         }
+        src += 4;
+        r0++;
         c0++;
     }
     {

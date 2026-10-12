@@ -925,6 +925,8 @@ int32_t g_4a1d64;
 int32_t g_4a1d6c;
 // GLOBAL: HOVER 0x004a1d60
 void* g_4a1d60;
+// GLOBAL: HOVER 0x004a1d80
+uint8_t g_4a1d80[0x2328];
 // GLOBAL: HOVER 0x004a4720
 void* g_4a4720;
 // GLOBAL: HOVER 0x004c520c

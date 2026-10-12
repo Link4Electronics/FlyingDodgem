@@ -32,9 +32,9 @@ if(DEFINED _vc_cl)
     foreach(_f IN LISTS FLYINGDODGEM_RECCMP_VC40_SOURCES)
         set(_obj "${CMAKE_CURRENT_BINARY_DIR}/vc40/${_f}.obj")
         if(_f STREQUAL "winmain.c" OR _f STREQUAL "pump.c" OR _f STREQUAL "render.c" OR _f STREQUAL "wallspan.c" OR _f STREQUAL "scene.c" OR _f STREQUAL "callees.c" OR _f STREQUAL "display.c" OR _f STREQUAL "app.c")
-            set(_lang /TP)
+            set(_lang /Tp)
         else()
-            set(_lang /TC)
+            set(_lang /Tc)
         endif()
         # The retail pump frame-omits (sub esp,4 + reg saves, no frame) while
         # WinMain keeps its frame: same MSVC 4 toolchain, /Oy only on pump.
@@ -70,10 +70,13 @@ if(DEFINED _vc_cl)
                 "INCLUDE=${_vc_inc}"
                 "LIB=${_vc_lib}"
                 ${_vc_cl} /nologo /c
-                /DWIN32 /D_WINDOWS /Zm1000 /O2 /Ow /Oi /G5 /Zi /ML
+                /DWIN32 /D_WINDOWS /O2 /Ow /Oi /G5 /Zi /ML
                 ${_extra_flags}
-                /I${CMAKE_CURRENT_SOURCE_DIR} ${_lang}
-                /Fo${_obj}
+                # MSVC 4 knows only the lowercase /Tc//Tp forms (uppercase is
+                # ignored), and the flag applies to the source that follows
+                # it, so it must sit immediately before the file.
+                /I${CMAKE_CURRENT_SOURCE_DIR}
+                /Fo${_obj} ${_lang}
                 ${CMAKE_CURRENT_SOURCE_DIR}/${_f}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_f}
             COMMENT "Compiling ${_f} with ${_vc_tag} (retail match)"
