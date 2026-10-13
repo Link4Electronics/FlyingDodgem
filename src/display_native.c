@@ -59,6 +59,7 @@ static uint8_t* g_sube8;  /* t+0xe8 M405a10 this */
 static uint8_t* g_hover;
 static uint8_t* g_view;
 static uint8_t* g_wallPtrs; /* view->walls / view->wallByIndex array */
+static uint8_t* g_wallIdx; /* view+0x2c: 4-byte wall-node address array (M406090 node loop) */
 static uint8_t* g_groupPtrs; /* view->groups edge-desc pointer array */
 static uint8_t* g_wallNodes;
 static uint8_t* g_wallEdges;   /* group descs, one per wall */
@@ -221,11 +222,18 @@ static void fill_view_tables(void)
     {
         wallPtrs[i] = g_wallNodes + i * WALL_NODE_SIZE;
         groupPtrs[i] = g_wallEdges + i * WALL_NODE_SIZE;
+        /* 4-byte packed entry for M406090's `base + idx' node loop (retail
+         * x86 layout; MAP_32BIT so the truncation is exact). */
+        ((int32_t*)g_wallIdx)[i] = (int32_t)(uintptr_t)(g_wallNodes + i * WALL_NODE_SIZE);
     }
     *(void***)(g_view + 0x00) = groupPtrs;     /* groups */
     *(void***)(g_view + 0x08) = wallPtrs;      /* walls */
     *(int32_t*)(g_view + 0x10) = g_wallCount;
     *(void***)(g_view + 0x18) = wallPtrs;      /* wallByIndex */
+    /* Retail-packed 4-byte pointer slot: an 8-byte native store here would
+     * overlap the +0x30 count below it. MAP_32BIT so truncation is exact. */
+    *(uint32_t*)(g_view + 0x2c) = (uint32_t)(uintptr_t)g_wallIdx; /* M406090 node-loop array */
+    *(int32_t*)(g_view + 0x30) = g_wallCount;  /* M406090 node-loop count */
     *(void**)(g_view + 0x54) = wallPtrs;       /* M405fa0 wall table (idx) */
 }
 
@@ -504,21 +512,24 @@ void __cdecl DisplayDriver_Init(HDC screen)
     *(int32_t*)g_spanArena = 0;                  /* size words (Setup6c90) */
     *(int32_t*)(g_spanArena + 0x18) = (int32_t)(uintptr_t)g_spanScratch;
     *(void**)(g_ctx + 0x00) = g_spanArena;       /* SpanChain arena */
-    *(void**)(g_ctx + 0x40) = g_buckets;         /* column buckets (zeroed) */
+    /* Retail-packed 4-byte pointer slots (an 8-byte native store at +0x40
+     * would overlap +0x44 and vice versa; MAP_32BIT keeps it exact). */
+    *(uint32_t*)(g_ctx + 0x40) = (uint32_t)(uintptr_t)g_buckets; /* column buckets (zeroed) */
     *(int32_t*)(g_ctx + 0x2c) = (int32_t)pitch;  /* pitch snapshot */
     /* M405ce0/F4044a0 bump arenas (real M405ce0 pushes bucket records from
      * +0x3c and F4044a0 links nodes from +0x44; M406090 restores both bases
      * each frame so the fixed 64KB arenas never overflow in harness). */
-    *(void**)(g_ctx + 0x3c) = g_recordArena;
-    *(void**)(g_ctx + 0x44) = g_nodeArena;
+    *(uint32_t*)(g_ctx + 0x3c) = (uint32_t)(uintptr_t)g_recordArena;
+    *(uint32_t*)(g_ctx + 0x44) = (uint32_t)(uintptr_t)g_nodeArena;
 
     /* View object: 64-bit-safe layout matching render_pipeline.c ViewObj.
      * groups is an array of edge-descriptor pointers indexed by the
      * wall+0x44 group id (retail a1+0x18[gid]); walls/wallByIndex share
      * the wall-node pointer array. */
     g_wallPtrs = (uint8_t*)alloc_low((size_t)WALL_MAX * sizeof(void*));
+    g_wallIdx = (uint8_t*)alloc_low((size_t)WALL_MAX * sizeof(int32_t));
     g_groupPtrs = (uint8_t*)alloc_low((size_t)WALL_MAX * sizeof(void*));
-    if (g_wallPtrs == NULL || g_groupPtrs == NULL)
+    if (g_wallPtrs == NULL || g_groupPtrs == NULL || g_wallIdx == NULL)
         return;
     fill_view_tables();
 
@@ -604,7 +615,9 @@ void __cdecl DisplayDriver_Sync(HDC screen)
         *(void**)(g_ctx + 0x00) = g_spanArena;
     }
     if (g_buckets != NULL)
-        *(void**)(g_ctx + 0x40) = g_buckets;
+        *(uint32_t*)(g_ctx + 0x40) = (uint32_t)(uintptr_t)g_buckets;
+    if (g_nodeArena != NULL)
+        *(uint32_t*)(g_ctx + 0x44) = (uint32_t)(uintptr_t)g_nodeArena;
     if (g_wallPtrs != NULL)
         *(void**)(g_view + 0x54) = g_wallPtrs;
     if (g_nativePlanes.ctx == NULL)
@@ -672,6 +685,8 @@ void __cdecl DisplayDriver_Shutdown(void)
     free_low(g_view, VIEW_SIZE);
     if (g_wallPtrs != NULL)
         free_low(g_wallPtrs, WALL_MAX * sizeof(void*));
+    if (g_wallIdx != NULL)
+        free_low(g_wallIdx, WALL_MAX * sizeof(int32_t));
     if (g_groupPtrs != NULL)
         free_low(g_groupPtrs, WALL_MAX * sizeof(void*));
     free_low(g_wallNodes, WALL_NODE_SIZE * WALL_MAX);
@@ -694,6 +709,7 @@ void __cdecl DisplayDriver_Shutdown(void)
     g_host = NULL;
     g_hover = NULL;
     g_view = NULL;
+    g_wallIdx = NULL;
     g_spanArena = NULL;
     g_spanScratch = NULL;
     g_4a1d68 = NULL;

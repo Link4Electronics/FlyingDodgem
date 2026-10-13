@@ -1,9 +1,6 @@
 #include "flyingdodgem_types.h"
 #include <string.h>
 #include "callees.h"
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-#include <stdio.h>
-#endif
 
 /* 4-byte packed address fields (see render.c HOVER_LPTR): matching sees the
  * exact original tokens. */
@@ -157,8 +154,8 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
         w = 640 / scale;
         g_4a4a50 = (int32_t)(((uint32_t)w << 16) / (uint32_t)g_4a454c);
         six = w * 6;
-        tbl = *(uint8_t**)(host + 0x70);
-        tbl = *(uint8_t**)(tbl + 0x28) + g_461cfc * 32;
+        tbl = HOVER_LPTR(host, 0x70);
+        tbl = HOVER_LPTR(tbl, 0x28) + g_461cfc * 32;
         g_4a4a20 = *(int32_t*)(tbl + 4);
         top = 240 / scale;
         field = (int32_t)(((uint32_t)top << 16) / (uint32_t)g_4a1d70);
@@ -278,11 +275,25 @@ int32_t HoverTc::M405b90(void* a1)
     int32_t node_18 = *(int32_t*)(node + 0x18);
     int32_t first = (g_4a44b0 - node_18) * g_4a44d0 + (node_14 - g_4a44ac) * g_4a44d4;
     int32_t second = (node_14 - g_4a44f4) * g_4a451c + (g_4a44f8 - node_18) * g_4a4518;
-    if (first >= 0)
-        return 0;
-    if (second < 0)
-        return 0;
-    return 1;
+    if (first < 0 && second >= 0)
+        return 1;
+    node_14 = (first >= 0);
+    node_18 = (second >= 0);
+    first = (g_4a44b0 - *(int32_t*)(node + 0x20)) * g_4a44d0 + (*(int32_t*)(node + 0x1c) - g_4a44ac) * g_4a44d4;
+    second = (*(int32_t*)(node + 0x1c) - g_4a44f4) * g_4a451c + (g_4a44f8 - *(int32_t*)(node + 0x20)) * g_4a4518;
+    if (first < 0 && second >= 0)
+        return 1;
+    if ((*(int32_t*)(node + 0x18) - g_4a44b0) * *(int32_t*)(node + 0x38) + (g_4a44ac - *(int32_t*)(node + 0x14)) * *(int32_t*)(node + 0x3c) >= 0)
+    {
+        if (node_14 == 0 && node_18 == 0 && first >= 0 && second >= 0)
+            return 1;
+    }
+    else
+    {
+        if (node_14 != 0 && node_18 != 0 && first < 0 && second < 0)
+            return 1;
+    }
+    return 0;
 }
 
 // FUNCTION: HOVER 0x00405ce0
@@ -297,12 +308,6 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
     int32_t colHi;
     uint8_t* rec0;
     uint8_t* rec1;
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-    static int s_calls = 0;
-    static int s_oks = 0;
-    if (++s_calls % 60 == 0)
-        fprintf(stderr, "M405ce0 calls=%d oks=%d\n", s_calls, s_oks);
-#endif
 
     (void)a1;
     (void)a3;
@@ -310,9 +315,9 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
     /* Native Y-flip (world +Y south vs math +Y north) so angles agree with
      * the flipped dirTable; matching sees the original retail operands. */
 #if defined(FLYINGDODGEM_GDI_COMPAT)
-    angA = Atan4385f0(*(int32_t*)((uint8_t*)g_4a1d68 + 0x4c) - *(int32_t*)(node + 0x18),
+    angA = Atan4385f0(*(int32_t*)(node + 0x18) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c),
                       *(int32_t*)(node + 0x14) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x48));
-    angB = Atan4385f0(*(int32_t*)((uint8_t*)g_4a1d68 + 0x4c) - *(int32_t*)(node + 0x20),
+    angB = Atan4385f0(*(int32_t*)(node + 0x20) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c),
                       *(int32_t*)(node + 0x1c) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x48));
 #else
     angA = Atan4385f0(*(int32_t*)(node + 0x18) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c),
@@ -353,8 +358,10 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
     }
     {
         int32_t sc = *(int32_t*)((uint8_t*)this + 0x30);
-        colLo = (int32_t)((int64_t)hi * sc >> 32);
-        colHi = (int32_t)((int64_t)lo * sc >> 32);
+        angA = (int32_t)(((int64_t)hi * sc) >> 16);
+        angB = (int32_t)(((int64_t)lo * sc) >> 16);
+        colLo = angA / 65536;
+        colHi = angB / 65536;
         colLo -= 3;
         colHi += 3;
         if (colLo < 0)
@@ -362,9 +369,6 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
             colLo = 0;
             if (colHi < 0)
             {
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-                fprintf(stderr, "M405ce0 empty clip lo=%d hi=%d\n", colLo, colHi);
-#endif
                 return 0;
             }
         }
@@ -372,9 +376,6 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
             int32_t maxCol = g_4a454c - 1;
             if (maxCol < colLo)
             {
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-                fprintf(stderr, "M405ce0 empty clip lo=%d hi=%d\n", colLo, colHi);
-#endif
                 return 0;
             }
             if (colHi < 0)
@@ -383,9 +384,6 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
                 colHi = maxCol;
             if (colLo == colHi)
             {
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-                fprintf(stderr, "M405ce0 empty equal lo=%d hi=%d\n", colLo, colHi);
-#endif
                 return 0;
             }
         }
@@ -393,7 +391,7 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
     {
         uint8_t* bump = (uint8_t*)(uintptr_t)(uint32_t)g_4a4550;
         uint8_t* hover = (uint8_t*)this;
-        uint8_t* bbase = *(uint8_t**)(hover + 0x40);
+        uint8_t* bbase = HOVER_LPTR(hover, 0x40);
         uint8_t* slot;
         uint8_t* old;
         /* Retail records are 0x18 bytes with 4-byte pointer fields (+8/+0xc/
@@ -489,12 +487,6 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
             }
         }
     }
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-    fprintf(stderr, "M405ce0 ok lo=%d hi=%d\n", colLo, colHi);
-#endif
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-    s_oks++;
-#endif
     return 1;
 }
 
@@ -540,7 +532,7 @@ extern "C" void __cdecl F406a80(void* arg)
             zero = 0;
             do
             {
-                p = *(uint8_t**)(p + 0x3c);
+                p = HOVER_LPTR(p, 0x3c);
                 if (p == 0)
                     break;
                 if (*(int32_t*)(node + 0x6c) > zero)
@@ -549,18 +541,18 @@ extern "C" void __cdecl F406a80(void* arg)
                         F406a80(p);
                     if (*(int32_t*)(node + 0x60) >= *(int32_t*)(p + 0x60))
                     {
-                        uint8_t* a = *(uint8_t**)(p + 0x3c);
-                        uint8_t* c = *(uint8_t**)(p + 0x38);
-                        uint8_t* d = *(uint8_t**)(node + 0x38);
+                        uint8_t* a = HOVER_LPTR(p, 0x3c);
+                        uint8_t* c = HOVER_LPTR(p, 0x38);
+                        uint8_t* d = HOVER_LPTR(node, 0x38);
                         if (a != 0)
-                            *(uint8_t**)(a + 0x38) = c;
+                            HOVER_SPTR(a, 0x38, c);
                         if (c != 0)
-                            *(uint8_t**)(c + 0x3c) = a;
-                        *(uint8_t**)(node + 0x38) = p;
+                            HOVER_SPTR(c, 0x3c, a);
+                        HOVER_SPTR(node, 0x38, p);
                         if (d != 0)
-                            *(uint8_t**)(d + 0x3c) = p;
-                        *(uint8_t**)(p + 0x3c) = node;
-                        *(uint8_t**)(p + 0x38) = d;
+                            HOVER_SPTR(d, 0x3c, p);
+                        HOVER_SPTR(p, 0x3c, node);
+                        HOVER_SPTR(p, 0x38, d);
                         p = c;
                     }
                 }
@@ -570,18 +562,18 @@ extern "C" void __cdecl F406a80(void* arg)
                         F406a80(p);
                     if (*(int32_t*)(node + 0x60) <= *(int32_t*)(p + 0x64))
                     {
-                        uint8_t* c = *(uint8_t**)(p + 0x3c);
-                        uint8_t* d = *(uint8_t**)(p + 0x38);
-                        uint8_t* a = *(uint8_t**)(node + 0x38);
+                        uint8_t* c = HOVER_LPTR(p, 0x3c);
+                        uint8_t* d = HOVER_LPTR(p, 0x38);
+                        uint8_t* a = HOVER_LPTR(node, 0x38);
                         if (c != 0)
-                            *(uint8_t**)(c + 0x38) = d;
+                            HOVER_SPTR(c, 0x38, d);
                         if (d != 0)
-                            *(uint8_t**)(d + 0x3c) = c;
-                        *(uint8_t**)(node + 0x38) = p;
+                            HOVER_SPTR(d, 0x3c, c);
+                        HOVER_SPTR(node, 0x38, p);
                         if (a != 0)
-                            *(uint8_t**)(a + 0x3c) = p;
-                        *(uint8_t**)(p + 0x3c) = node;
-                        *(uint8_t**)(p + 0x38) = a;
+                            HOVER_SPTR(a, 0x3c, p);
+                        HOVER_SPTR(p, 0x3c, node);
+                        HOVER_SPTR(p, 0x38, a);
                         p = d;
                     }
                 }
@@ -599,7 +591,7 @@ extern "C" void __cdecl F406a80(void* arg)
             zero = 0;
             do
             {
-                p = *(uint8_t**)(p + 0x3c);
+                p = HOVER_LPTR(p, 0x3c);
                 if (p == 0)
                     break;
                 if (*(int32_t*)(node + 0x70) > zero)
@@ -608,18 +600,18 @@ extern "C" void __cdecl F406a80(void* arg)
                         F406a80(p);
                     if (*(int32_t*)(p + 0x60) <= *(int32_t*)(node + 0x64))
                     {
-                        uint8_t* a = *(uint8_t**)(p + 0x3c);
-                        uint8_t* c = *(uint8_t**)(p + 0x38);
-                        uint8_t* d = *(uint8_t**)(node + 0x38);
+                        uint8_t* a = HOVER_LPTR(p, 0x3c);
+                        uint8_t* c = HOVER_LPTR(p, 0x38);
+                        uint8_t* d = HOVER_LPTR(node, 0x38);
                         if (a != 0)
-                            *(uint8_t**)(a + 0x38) = c;
+                            HOVER_SPTR(a, 0x38, c);
                         if (c != 0)
-                            *(uint8_t**)(c + 0x3c) = a;
-                        *(uint8_t**)(node + 0x38) = p;
+                            HOVER_SPTR(c, 0x3c, a);
+                        HOVER_SPTR(node, 0x38, p);
                         if (d != 0)
-                            *(uint8_t**)(d + 0x3c) = p;
-                        *(uint8_t**)(p + 0x3c) = node;
-                        *(uint8_t**)(p + 0x38) = d;
+                            HOVER_SPTR(d, 0x3c, p);
+                        HOVER_SPTR(p, 0x3c, node);
+                        HOVER_SPTR(p, 0x38, d);
                         p = c;
                     }
                 }
@@ -629,18 +621,18 @@ extern "C" void __cdecl F406a80(void* arg)
                         F406a80(p);
                     if (*(int32_t*)(p + 0x64) >= *(int32_t*)(node + 0x64))
                     {
-                        uint8_t* a = *(uint8_t**)(p + 0x3c);
-                        uint8_t* c = *(uint8_t**)(p + 0x38);
-                        uint8_t* d = *(uint8_t**)(node + 0x38);
+                        uint8_t* a = HOVER_LPTR(p, 0x3c);
+                        uint8_t* c = HOVER_LPTR(p, 0x38);
+                        uint8_t* d = HOVER_LPTR(node, 0x38);
                         if (a != 0)
-                            *(uint8_t**)(a + 0x38) = c;
+                            HOVER_SPTR(a, 0x38, c);
                         if (c != 0)
-                            *(uint8_t**)(c + 0x3c) = a;
-                        *(uint8_t**)(node + 0x38) = p;
+                            HOVER_SPTR(c, 0x3c, a);
+                        HOVER_SPTR(node, 0x38, p);
                         if (d != 0)
-                            *(uint8_t**)(d + 0x3c) = p;
-                        *(uint8_t**)(p + 0x3c) = node;
-                        *(uint8_t**)(p + 0x38) = d;
+                            HOVER_SPTR(d, 0x3c, p);
+                        HOVER_SPTR(p, 0x3c, node);
+                        HOVER_SPTR(p, 0x38, d);
                         p = c;
                     }
                 }

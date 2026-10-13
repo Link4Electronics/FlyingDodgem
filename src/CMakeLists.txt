@@ -128,6 +128,13 @@ if(FLYINGDODGEM_PLATFORM_SDL3 AND NOT MSVC40_FOR_RECCMP)
     set_source_files_properties(display_native.c PROPERTIES LANGUAGE CXX)
     target_compile_definitions(FlyingDodgem PRIVATE FLYINGDODGEM_GDI_COMPAT=1)
     target_link_libraries(FlyingDodgem PRIVATE SDL3::SDL3)
+    # Native retail-layout model: wall/span records pack 4-byte addresses and
+    # the match-path macros truncate to 32 bits. Keep BSS (s_bump, g_4c5208,
+    # &g_4a4568/&g_4a4530) below 4GB so the truncation is exact, like the
+    # MAP_32BIT arenas. MSVC (incl. the reccmp toolchain) never reaches here.
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_link_options(FlyingDodgem PRIVATE -no-pie)
+    endif()
 
     # Ship the dashboard art (resource-only DLL assets, see AGENTS.md) next to
     # the binary so the GDI-compat resource loader can find it at runtime.
