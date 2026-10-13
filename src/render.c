@@ -188,6 +188,8 @@ struct HostObj
     HostFn0 fn0;
     HostFn1 fn1;
     int32_t F403850(int32_t arg);
+    uint8_t pad[0x60 - 2 * sizeof(void*)];
+    int32_t base_at_60;
 };
 
 // FUNCTION: HOVER 0x00402990
@@ -279,10 +281,10 @@ int32_t HostObj::F403850(int32_t arg)
         v = 1;
     v &= 0xffffffc0;
     {
-        int32_t base = *(int32_t*)((uint8_t*)this + 0x60);
+        int32_t base = base_at_60;
         if (v > 0xfc0)
             return base + 0x3f00;
-        return base + v * 4;
+        return base + (v << 2);
     }
 }
 
@@ -441,7 +443,7 @@ IntPair RenderNode::CopyPos()
 // FUNCTION: HOVER 0x004038a0
 PtPair* RenderNode::GetPair(PtPair* out)
 {
-    int32_t* p = (int32_t*)((uint8_t*)this + 0x44);
+    uint32_t *p = (uint32_t*)((uint8_t*)this + 0x44);
     out->x = p[0];
     out->y = p[1];
     return out;
@@ -1766,9 +1768,9 @@ int32_t HoverTc::M406090(void* a1, void* a2)
     *(int32_t*)((uint8_t*)this + 0x34) = (*(int32_t*)((uint8_t*)g_4a1d68 + 0x54) << 16) - 0x2aaaab;
     *(int32_t*)((uint8_t*)this + 0x34) &= 0x1ffffff;
     memset(HOVER_LPTR((uint8_t*)this, 0x40), 0, g_4a454c * 4);
-    entry = HOVER_LPTR(g_4a1d68, 0x64) + ((*(int32_t*)((uint8_t*)g_4a1d68 + 0x88) * (*(int32_t*)((uint8_t*)g_4a1d68 + 0x54) & 0x1ff) * 6) / 512) * 8;
     w.m_p14 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
     w.m_p18 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
+    entry = HOVER_LPTR(g_4a1d68, 0x64) + ((*(int32_t*)((uint8_t*)g_4a1d68 + 0x88) * (*(int32_t*)((uint8_t*)g_4a1d68 + 0x54) & 0x1ff) * 6) / 512) * 8;
     g_4a4498.m_p14 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
     g_4a4498.m_p18 = *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
     g_4a4498.m_p1c = *(int32_t*)entry + *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
@@ -1795,9 +1797,13 @@ int32_t HoverTc::M406090(void* a1, void* a2)
 #endif
     entry -= g_4a454c * 8;
     g_4a4550 = *(int32_t*)((uint8_t*)this + 0x3c);
-    for (idx = (*(int32_t*)(*(uint8_t**)((uint8_t*)this + 0x20) + 0x30) - 1) * 4; idx >= 0; idx -= 4)
+    idx = (*(int32_t*)(*(uint8_t**)((uint8_t*)this + 0x20) + 0x30) - 1) * 4;
+    for (;;)
     {
-        uint8_t* node = HOVER_LPTR(HOVER_LPTR(*(void**)((uint8_t*)this + 0x20), 0x2c), idx);
+        uint8_t* node;
+        if (idx < 0)
+            break;
+        node = HOVER_LPTR(HOVER_LPTR(*(void**)((uint8_t*)this + 0x20), 0x2c), idx);
         if (*(int32_t*)(node + 0x64) != 0)
         {
             px = (int32_t)*(int16_t*)(node + 0x5a) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
@@ -1818,6 +1824,7 @@ int32_t HoverTc::M406090(void* a1, void* a2)
         }
         if (this->M405b90(node) != 0)
             this->M405ce0(node, node, 1, 0);
+        idx -= 4;
     }
     g_4a4528 = 0;
     this->M405fa0(0);
@@ -1834,8 +1841,8 @@ int32_t HoverTc::M406090(void* a1, void* a2)
         {
             if ((mask & g_4a4534) == 0)
             {
-                w.m_p14 = *(int32_t*)entry + *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
-                w.m_p18 = *(int32_t*)(entry + 4) + *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
+                w.m_p1c = *(int32_t*)entry + *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
+                w.m_p20 = *(int32_t*)(entry + 4) + *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
                 entry += g_4a455c * 8;
                 F4010c0(&w);
             }
