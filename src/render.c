@@ -886,8 +886,8 @@ void SpanChain::AddPair6d00(int32_t a1, int32_t a2)
         n = n + 1;
         *(int32_t*)(q + 0x14) = n;
         slot = (int16_t*)(arr + n * 4 - 4);
-        slot[1] = (int16_t)a2;
         slot[0] = (int16_t)a1;
+        slot[1] = (int16_t)a2;
     }
 }
 
@@ -1829,12 +1829,12 @@ int32_t HoverTc::M406090(void* a1, void* a2)
     g_4a4528 = 0;
     this->M405fa0(0);
     g_4a4718 = HOVER_LPTR((uint8_t*)this, 0x44);
+    mask = g_4a455c - 1;
     g_4a4714 = 0;
     g_4a471c = 0;
-    first = 1;
+    idx = 1;
     *(int32_t*)((uint8_t*)this + 0x28) = 0;
     g_4a4534 = 0;
-    mask = g_4a455c - 1;
     if (g_4a454c > 0)
     {
         do
@@ -1861,22 +1861,22 @@ int32_t HoverTc::M406090(void* a1, void* a2)
                     }
                     if ((mask & g_4a4534) == 0)
                     {
-                        first = 0;
+                        idx = 0;
                         *(int32_t*)((uint8_t*)this + 0x28) |= F4045e0((void*)(uintptr_t)(uint32_t)g_4a4544, &w);
                     }
                     else
                     {
-                        first = 1;
+                        idx = 1;
                     }
                 }
                 else
                 {
                     if ((mask & g_4a4534) == 0)
                     {
-                        if (first)
+                        if (idx)
                         {
                             *(int32_t*)((uint8_t*)this + 0x28) |= F4045e0((void*)(uintptr_t)(uint32_t)g_4a4544, &w);
-                            first = 0;
+                            idx = 0;
                         }
                         else
                             *(int32_t*)((uint8_t*)this + 0x28) |= F406d30((void*)(uintptr_t)(uint32_t)g_4a4544, &w);

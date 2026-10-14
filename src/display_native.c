@@ -237,17 +237,19 @@ static void fill_view_tables(void)
     *(void**)(g_view + 0x54) = wallPtrs;       /* M405fa0 wall table (idx) */
 }
 
-/* Build the wall list.  With a menu maze retained, each MAZ static is one
+/* Build the wall list from the retained menu maze: each MAZ static is one
  * wall segment ((field_14,field_18)→(field_1c,field_20), height a6, face
- * texture tex[2]); otherwise a placeholder grid.  The camera goes to the
- * bbox centre of the active set. */
+ * texture tex[2]).  The camera goes to the bbox centre.  Without a maze
+ * the list stays empty (the game always loads real maze assets). */
 static void build_walls(void)
 {
     int32_t minX = 0x7fffffff, minY = 0x7fffffff;
     int32_t maxX = (int32_t)0x80000000, maxY = (int32_t)0x80000000;
     int i;
 
-    if (g_menuMaz != NULL && g_menuMaz->arrays[0].count > 0)
+    g_wallCount = 0;
+    if (g_menuMaz == NULL || g_menuMaz->arrays[0].count == 0)
+        return;
     {
         uint32_t n = g_menuMaz->arrays[0].count;
         uint32_t k = 0;
@@ -279,62 +281,6 @@ static void build_walls(void)
             k++;
         }
         g_wallCount = (int32_t)k;
-    }
-    else
-    {
-        /* Outer ring: 64x64 world units, cell size 4. */
-        const int32_t S = 4;
-        const int32_t D = 64 * S;
-        struct { int32_t x0, y0, x1, y1; } segs[] = {
-            { 0, 0, D, 0 },           /* N */
-            { D, 0, D, D },           /* E */
-            { D, D, 0, D },           /* S */
-            { 0, D, 0, 0 },           /* W */
-            /* Interior block A (rows 3..6, cols 3..6) */
-            { 3 * S, 3 * S, 6 * S, 3 * S },
-            { 6 * S, 3 * S, 6 * S, 6 * S },
-            { 6 * S, 6 * S, 3 * S, 6 * S },
-            { 3 * S, 6 * S, 3 * S, 3 * S },
-            /* Interior block B (rows 3..6, cols 10..13) */
-            { 10 * S, 3 * S, 13 * S, 3 * S },
-            { 13 * S, 3 * S, 13 * S, 6 * S },
-            { 13 * S, 6 * S, 10 * S, 6 * S },
-            { 10 * S, 6 * S, 10 * S, 3 * S },
-            /* Mid pillars (rows 7..9, cols 7..9) */
-            { 7 * S, 7 * S, 9 * S, 7 * S },
-            { 9 * S, 7 * S, 9 * S, 9 * S },
-            { 9 * S, 9 * S, 7 * S, 9 * S },
-            { 7 * S, 9 * S, 7 * S, 7 * S },
-        };
-        const int32_t nSegs = (int32_t)(sizeof(segs) / sizeof(segs[0]));
-
-        g_wallCount = nSegs;
-        for (i = 0; i < nSegs; i++)
-        {
-            int32_t x0 = segs[i].x0, y0 = segs[i].y0;
-            int32_t x1 = segs[i].x1, y1 = segs[i].y1;
-            int32_t dx = x1 - x0;
-            emit_wall(i, x0, y0, x1, y1, 160,
-                      (dx == 0) ? 113 : 80);
-            if (x0 < minX) minX = x0;
-            if (x1 < minX) minX = x1;
-            if (x0 > maxX) maxX = x0;
-            if (x1 > maxX) maxX = x1;
-            if (y0 < minY) minY = y0;
-            if (y1 < minY) minY = y1;
-            if (y0 > maxY) maxY = y0;
-            if (y1 > maxY) maxY = y1;
-        }
-        /* Link ring neighbours (N→E→S→W) as an open chain — retail wall
-         * neighbours form a tree (portal splits), not a closed cycle; a
-         * cycle makes F405fa0 recurse forever. */
-        if (nSegs >= 4)
-        {
-            int16_t* n0 = (int16_t*)(g_wallNodes + 0 * WALL_NODE_SIZE + 0x48);
-            int16_t* n1 = (int16_t*)(g_wallNodes + 1 * WALL_NODE_SIZE + 0x48);
-            int16_t* n2 = (int16_t*)(g_wallNodes + 2 * WALL_NODE_SIZE + 0x48);
-            *n0 = 1; *n1 = 2; *n2 = 3;
-        }
     }
     if (g_wallCount > 0 && minX <= maxX && minY <= maxY)
     {
