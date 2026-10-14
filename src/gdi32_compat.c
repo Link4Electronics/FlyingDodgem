@@ -972,6 +972,66 @@ static void draw_glyph(GdiSurface *s, s32 x, s32 y, int gi,
     }
 }
 
+u8 __cdecl TextOut2xA(HDC hdc, s32 x, s32 y, const char *str, s32 count)
+{
+    /* Double-size (16x16) glyph blit for HUD labels: each font bit becomes
+     * a 2x2 pixel block. Native seam only. */
+    GdiSurface *s = hdc;
+    s32 cx = x;
+    s32 i;
+    int r, c, dy, dx;
+
+    if (s == NULL || str == NULL)
+        return 0;
+    if (s->sdl == NULL || s->sdl->pixels == NULL)
+        return 0;
+    if (count < 0)
+        count = (s32)strlen(str);
+    {
+        int w = s->sdl->w;
+        int h = s->sdl->h;
+        int pitch = s->sdl->pitch;
+        u8 *base = (u8 *)s->sdl->pixels;
+        u32 color = s->state.textColor;
+
+        for (i = 0; i < count; i++)
+        {
+            int gi = glyph_index(str[i]);
+            if (gi >= 0)
+            {
+                const Glyph8 *g = &g_font[gi];
+                for (r = 0; r < 8; r++)
+                {
+                    u8 bits = g->rows[r];
+                    for (c = 0; c < 8; c++)
+                    {
+                        if (bits & (0x80u >> c))
+                        {
+                            for (dy = 0; dy < 2; dy++)
+                            {
+                                s32 py = y + r * 2 + dy;
+                                u8 *row;
+                                if (py < 0 || py >= h)
+                                    continue;
+                                row = base + (u32)py * (u32)pitch;
+                                for (dx = 0; dx < 2; dx++)
+                                {
+                                    s32 px = cx + c * 2 + dx;
+                                    if (px < 0 || px >= w)
+                                        continue;
+                                    row[px] = (u8)color;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            cx += 16;
+        }
+    }
+    return 1;
+}
+
 u8 __cdecl TextOutA(HDC hdc, s32 x, s32 y, const char *str, s32 count)
 {
     GdiSurface *s = hdc;

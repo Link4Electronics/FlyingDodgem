@@ -317,6 +317,11 @@ static void update_game_state(void)
         printf("FlyingDodgem: engine band %u -> %s\n", band, name[band]);
         g_engineBand = (int)band;
     }
+    /* Native seam: thrust gauge (0x2e0, 25 segs, gauge 0) follows the
+     * throttle like the engine band above. Retail feeds it from car state
+     * (0x417f60 obj+0x2fc); without matched car physics this binary
+     * approximation keeps the widget live. Other gauges stay at boot 0. */
+    DashHud_SetLevel(0, ((up & 0x8000) != 0) ? 25 : 0);
 }
 
 /* Retail IDM_STARTGAME (menu id 0x8009, F2 accelerator): enter the first

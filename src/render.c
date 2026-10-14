@@ -884,10 +884,11 @@ void SpanChain::AddPair6d00(int32_t a1, int32_t a2)
         int16_t* slot;
 
         n = n + 1;
+        q = (uint8_t*)(uintptr_t)*(uint32_t*)((uint8_t*)this + 8);
         *(int32_t*)(q + 0x14) = n;
         slot = (int16_t*)(arr + n * 4 - 4);
-        slot[0] = (int16_t)a1;
         slot[1] = (int16_t)a2;
+        slot[0] = (int16_t)a1;
     }
 }
 

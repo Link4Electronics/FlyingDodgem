@@ -289,6 +289,7 @@ u32 __cdecl GetSystemPaletteEntries(HDC hdc, u32 start, u32 count,
 /* Text: draw 8x8 bitmap-font glyphs into the DC using the current text colour
  * (a palette index). */
 u8 __cdecl TextOutA(HDC hdc, s32 x, s32 y, const char *str, s32 count);
+u8 __cdecl TextOut2xA(HDC hdc, s32 x, s32 y, const char *str, s32 count);
 u8 __cdecl ExtTextOutA(HDC hdc, s32 x, s32 y, u32 options, const GDI_RECT *clip,
                        const char *str, u32 count, const s32 *dx);
 s32 __cdecl DrawTextA(HDC hdc, const char *str, s32 count, GDI_RECT *rect, u32 format);

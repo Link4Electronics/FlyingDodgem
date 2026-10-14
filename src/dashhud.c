@@ -140,6 +140,13 @@ void __cdecl DashHud_Paint(void *screen)
 {
     HDC dc = (HDC)screen;
     u32 i;
+    /* Powerup type labels under the three small vertical gauges, left to
+     * right A S D (retail dashboard print under 0x3a0/0x400/0x3d0). Fixed
+     * 640x480 coordinates below the count boxes (boxes end y463), drawn
+     * with the 8x8 compat font like the score windows. Native seam only;
+     * the matching build never compiles this unit. */
+    static const s32 kLetterX[3] = { 57, 115, 173 };
+    static const char kLetterCh[3] = { 'A', 'S', 'D' };
 
     if (dc == NULL)
         return;
@@ -148,6 +155,19 @@ void __cdecl DashHud_Paint(void *screen)
 
     for (i = 0; i < 7; i++)
         paint_gauge(dc, i);
+
+    {
+        HPALETTE pal = (HPALETTE)GetStockObject(GDI_DEFAULT_PALETTE);
+        /* Labels sit left of the count boxes on the dark panel strip, so
+         * light text like the score windows (1x 8x8, not double-size).
+         * Native seam only; the matching build never compiles this unit. */
+        u32 textIdx = GetNearestPaletteIndex(pal, 0x00000000UL);
+
+        SetTextColor(dc, textIdx);
+        SetBkMode(dc, GDI_TRANSPARENT);
+        for (i = 0; i < 3; i++)
+            TextOutA(dc, kLetterX[i], 450, &kLetterCh[i], 1);
+    }
 }
 
 /* --------------------------------------------------------------------------
