@@ -228,6 +228,17 @@ u8 __cdecl GetWindowRect(GdiWindow *hwnd, GDI_RECT *rect)
     return 1;
 }
 
+u8 __cdecl InflateRect(GDI_RECT *rect, s32 dx, s32 dy)
+{
+    if (rect == NULL)
+        return 0;
+    rect->left -= dx;
+    rect->top -= dy;
+    rect->right += dx;
+    rect->bottom += dy;
+    return 1;
+}
+
 HDC __cdecl GetDC(GdiWindow *hwnd)
 {
     (void)hwnd;
@@ -833,12 +844,24 @@ char * __stdcall CharUpperA(char *psz)
     return psz;
 }
 
+s32 __cdecl lstrcmpA(const char *a, const char *b)
+{
+    if (a == NULL || b == NULL)
+        return (a == b) ? 0 : ((a == NULL) ? -1 : 1);
+    return (s32)strcmp(a, b);
+}
+
 void __cdecl EnterCriticalSection(void *cs)
 {
     (void)cs;
 }
 
 void __cdecl LeaveCriticalSection(void *cs)
+{
+    (void)cs;
+}
+
+void __cdecl InitializeCriticalSection(void *cs)
 {
     (void)cs;
 }

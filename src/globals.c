@@ -47,6 +47,24 @@ uint32_t g_4c844c;
 // GLOBAL: HOVER 0x004c8450
 uint32_t g_4c8450;
 
+// GLOBAL: HOVER 0x004c8434
+uint32_t g_4c8434;
+
+// GLOBAL: HOVER 0x004c8444
+int32_t g_4c8444;
+
+// GLOBAL: HOVER 0x004b7f00
+int32_t g_4b7f00;
+
+// GLOBAL: HOVER 0x004b7f04
+int32_t g_4b7f04;
+
+// GLOBAL: HOVER 0x004c7f28
+uint32_t g_4c7f28[1];
+
+// GLOBAL: HOVER 0x004c8e54
+void* g_4c8e54;
+
 // GLOBAL: HOVER 0x004ba8d0
 uint8_t g_data_a8d0[1];
 
@@ -826,6 +844,24 @@ int32_t g_4a47e4;
 void** g_4a4844;
 // GLOBAL: HOVER 0x004a4848
 int32_t g_4a4848;
+// GLOBAL: HOVER 0x004a4880
+uint8_t g_4a4880[1];
+// GLOBAL: HOVER 0x004a48a8
+uint8_t g_4a48a8[1];
+// GLOBAL: HOVER 0x004a48d0
+uint8_t g_4a48d0[1];
+// GLOBAL: HOVER 0x004a48f8
+uint8_t g_4a48f8[1];
+// GLOBAL: HOVER 0x004a4928
+uint8_t g_4a4928[1];
+// GLOBAL: HOVER 0x004a4958
+uint8_t g_4a4958[1];
+// GLOBAL: HOVER 0x004a4988
+uint8_t g_4a4988[1];
+// GLOBAL: HOVER 0x004a49b8
+uint8_t g_4a49b8[1];
+// GLOBAL: HOVER 0x004a49e8
+uint8_t g_4a49e8[1];
 // GLOBAL: HOVER 0x004a4a14
 int32_t g_4a4a14;
 // GLOBAL: HOVER 0x004a4a18
@@ -858,6 +894,8 @@ int32_t g_4a4a48;
 int32_t g_4a4a4c;
 // GLOBAL: HOVER 0x004a4a50
 int32_t g_4a4a50;
+// GLOBAL: HOVER 0x004a1d50
+void* g_4a1d50;
 // GLOBAL: HOVER 0x004a1d68
 void* g_4a1d68;
 // GLOBAL: HOVER 0x004a1d70

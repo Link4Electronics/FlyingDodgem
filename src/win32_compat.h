@@ -59,6 +59,8 @@ u8 __cdecl SetWindowPos(GdiWindow *hwnd, GdiWindow *insertAfter,
 u8 __cdecl MoveWindow(GdiWindow *hwnd, s32 x, s32 y, s32 w, s32 h, u8 repaint);
 u8 __cdecl GetClientRect(GdiWindow *hwnd, GDI_RECT *rect);
 u8 __cdecl GetWindowRect(GdiWindow *hwnd, GDI_RECT *rect);
+/* Rect inflate used by the text-slot cache (0x454bc5): expands by dx/dy. */
+u8 __cdecl InflateRect(GDI_RECT *rect, s32 dx, s32 dy);
 
 /* --- Screen DC access (present path clears/reads the screen surface) --- */
 
@@ -209,6 +211,8 @@ s16 __stdcall VkKeyScanA(u8 ch);
 
 /* In-place upper-caser used by the beacon build (0x423ea0); returns psz. */
 char * __stdcall CharUpperA(char *psz);
+/* Case-sensitive string compare used by the text-slot cache (0x454bc5). */
+s32 __cdecl lstrcmpA(const char *a, const char *b);
 
 s32 __cdecl GetSystemMetrics(s32 index);
 
@@ -222,6 +226,7 @@ HINSTANCE __cdecl LoadModule(const char *moduleName, void *paramBlock);
  * shape: enter/leave are no-ops. */
 void __cdecl EnterCriticalSection(void *cs);
 void __cdecl LeaveCriticalSection(void *cs);
+void __cdecl InitializeCriticalSection(void *cs);
 
 /* Win32 event primitives used by the display entry (0x41ece0).  The reccmp
  * build links the retail-shaped calls; the native harness drives the display

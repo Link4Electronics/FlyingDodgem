@@ -154,6 +154,9 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
         w = 640 / scale;
         g_4a4a50 = (int32_t)(((uint32_t)w << 16) / (uint32_t)g_4a454c);
         six = w * 6;
+        d = g_4a4534 - g_4a454c + 1;
+        d *= g_4a4a50;
+        u = (a0 - g_4a454c + 1) * g_4a4a50;
         tbl = HOVER_LPTR(host, 0x70);
         tbl = HOVER_LPTR(tbl, 0x28) + g_461cfc * 32;
         g_4a4a20 = *(int32_t*)(tbl + 4);
@@ -167,11 +170,8 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
         {
             b = a1 * g_4a4a34 + *(int32_t*)(host + 0x28) - g_4a4534;
             c = b + g_4a454c - 1;
-            d = g_4a4534 - g_4a454c + 1;
             field = (*(int32_t*)(host + 0x54) + 0x55) & 0x1ff;
             g_4a4a4c = c;
-            d *= g_4a4a50;
-            u = (a0 - g_4a454c + 1) * g_4a4a50;
             field *= six;
             field <<= 7;
             u += field;

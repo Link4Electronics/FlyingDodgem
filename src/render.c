@@ -30,6 +30,7 @@ extern "C" int32_t g_4a4a44;
 extern "C" int32_t g_4a4a4c;
 extern "C" int32_t g_4a4a50;
 extern "C" void* g_4a1d68;
+extern "C" void* g_4a1d50;
 extern "C" int32_t g_4a1d78;
 extern "C" int32_t g_461cfc;
 extern "C" int32_t g_4a4534;
@@ -133,6 +134,14 @@ struct NativePlanes g_nativePlanes;
 #define HOVER_SRCCOPY 0x00cc0020u
 
 extern "C" HOVER_IMPORT int32_t __stdcall Rectangle(void* hdc, int32_t left, int32_t top, int32_t right, int32_t bottom);
+
+extern "C" HOVER_IMPORT int32_t __stdcall GetClientRect(void* hwnd, void* rect);
+
+extern "C" HOVER_IMPORT int32_t __stdcall lstrcmpA(const char* a, const char* b);
+
+extern "C" HOVER_IMPORT int32_t __stdcall InflateRect(void* rect, int32_t dx, int32_t dy);
+
+extern "C" HOVER_IMPORT int32_t __stdcall InvalidateRect(void* hwnd, void* rect, int32_t erase);
 
 extern "C" HOVER_IMPORT void* __stdcall SelectObject(void* hdc, void* obj);
 
@@ -580,11 +589,253 @@ void* DashDc::SelectBrush(void* brush)
 
 extern "C" void* __cdecl Sub45128b(int flag);
 extern "C" void* __fastcall Sub44f9a3(void* self, void* unused, void* prev);
+extern "C" void __cdecl Free4406cc(void* ptr);
+extern "C" char* __cdecl Strdup44060c(const char* s);
 // FUNCTION: HOVER 0x004512ff
 static void* __stdcall PrevObject4512ff(void* prev)
 {
     void* obj = Sub45128b(1);
     return Sub44f9a3(obj, NULL, prev);
+}
+
+extern "C" int32_t g_4b7f00;
+extern "C" int32_t g_4b7f04;
+typedef struct { int32_t left; int32_t top; int32_t right; int32_t bottom; } Rect457060;
+/* Text-slot array at t+0x4c (retail 0x454a73/0x454b41/0x454b83/0x454bc5):
+ * 16-byte entries, rect calc + field setters + string cache.  Retail passes
+ * `this` in ECX with the rest on the stack (__thiscall), so these are members
+ * of a throw-away class (free __fastcall would burn EDX and force an
+ * `xor edx,edx` the retail callers do not have). */
+struct TextSlots
+{
+    void F454a73(int32_t idx, void* out);
+    void F454b41(int32_t idx, int32_t val);
+    void F454b83(int32_t idx, int32_t a1, int32_t a2, int32_t a3);
+    void F457060(void* rect, int32_t flag);
+};
+
+// FUNCTION: HOVER 0x00454a73
+#if defined(_MSC_VER)
+#pragma optimize("y", off)
+#endif
+void TextSlots::F454a73(int32_t idx, void* out)
+{
+    uint8_t* t = (uint8_t*)this;
+    Rect457060 rc;
+    int32_t k;
+    int32_t base;
+    int32_t limit;
+    int32_t room;
+    uint8_t* e;
+    int32_t i;
+    int32_t x;
+
+    GetClientRect(*(void**)(t + 0x1c), &rc);
+    F457060(&rc, 1);
+    base = *(int32_t*)(t + 0x70) != 0 ? 0 : *(int32_t*)(t + 0x6c);
+    rc.right -= base;
+    limit = rc.right;
+    if (base == 0)
+        limit = *(int32_t*)(t + 0x38) + limit + 1;
+    e = *(uint8_t**)(t + 0x4c);
+    room = *(int32_t*)(t + 0x44) + (rc.right - rc.left);
+    if (*(int32_t*)(t + 0x48) > 0)
+    {
+        k = *(int32_t*)(t + 0x48);
+        do
+        {
+            room -= *(int32_t*)(e + 8) + *(int32_t*)(t + 0x44) + 4;
+            e += 16;
+        } while (--k != 0);
+    }
+    e = *(uint8_t**)(t + 0x4c);
+    for (i = 0; i < *(int32_t*)(t + 0x48); i++, e += 16)
+    {
+        k = *(int32_t*)(e + 8);
+        if (((*(e + 5) & 8) != 0) && room > 0)
+        {
+            k += room;
+            room = 0;
+        }
+        x = rc.left + k + 4;
+        if (x > limit)
+            x = limit;
+        rc.right = x;
+        if (i == idx)
+            break;
+        x += *(int32_t*)(t + 0x44);
+        if (x > limit)
+            x = limit;
+        rc.left = x;
+    }
+    *(Rect457060*)out = rc;
+}
+#if defined(_MSC_VER)
+#pragma optimize("", on)
+#endif
+
+// FUNCTION: HOVER 0x00454b41
+void TextSlots::F454b41(int32_t idx, int32_t val)
+{
+    uint8_t* t = (uint8_t*)this;
+    uint8_t* slot = *(uint8_t**)(t + 0x4c) + idx * 16;
+    Rect457060 rc;
+
+    if (val == *(int32_t*)(slot + 4))
+        return;
+    *(int32_t*)(slot + 4) = val;
+    ((TextSlots*)t)->F454a73(idx, &rc);
+    InvalidateRect(*(void**)(t + 0x1c), &rc, 1);
+}
+
+// FUNCTION: HOVER 0x00454b83
+void TextSlots::F454b83(int32_t idx, int32_t a1, int32_t a2, int32_t a3)
+{
+    uint8_t* t = (uint8_t*)this;
+    uint8_t* base = *(uint8_t**)(t + 0x4c);
+    uint8_t* slot = base + idx * 16;
+
+    *(int32_t*)(slot + 0) = a1;
+    ((TextSlots*)t)->F454b41(idx, a2);
+    if (a3 == *(int32_t*)(slot + 8))
+        return;
+    *(int32_t*)(slot + 8) = a3;
+    InvalidateRect(*(void**)(t + 0x1c), NULL, 1);
+}
+
+// FUNCTION: HOVER 0x00454bc5
+extern "C" int32_t __fastcall TextCache454bc5(void* self, void* unused, int32_t idx, void* str, int32_t flag)
+{
+    uint8_t* t = (uint8_t*)self;
+    uint8_t* base = *(uint8_t**)(t + 0x4c);
+    uint8_t* slot = base + idx * 16;
+    char* cached = *(char**)(slot + 0xc);
+    int32_t ok = 1;
+    Rect457060 rc;
+
+    (void)unused;
+    if (cached != NULL)
+    {
+        if (str != NULL && lstrcmpA(cached, (const char*)str) == 0)
+            return 1;
+        Free4406cc(cached);
+    }
+    if (str != NULL && *(char*)str != 0)
+    {
+        char* dup = Strdup44060c((const char*)str);
+        *(char**)(slot + 0xc) = dup;
+        if (dup == NULL)
+            ok = 0;
+    }
+    else
+    {
+        *(char**)(slot + 0xc) = NULL;
+    }
+    if (flag != 0)
+    {
+        ((TextSlots*)t)->F454a73(idx, &rc);
+        if ((*(uint8_t*)(slot + 5) & 1) == 0)
+            InflateRect(&rc, -1, -1);
+        else
+            rc.top -= 1;
+        InvalidateRect(*(void**)(t + 0x1c), &rc, 1);
+    }
+    return ok;
+}
+
+// FUNCTION: HOVER 0x00427060
+extern "C" void __fastcall Thrust3Minus(void* self)
+{
+    uint8_t* t = (uint8_t*)self;
+    *(double*)(t + 0x8490) -= 0.05;
+    ((MoverSub*)((uint8_t*)t + 0x18c))->M414550(&g_4a1d50, *(double*)(t + 0x8478), 0xff, 0xff, 0xff, *(double*)(t + 0x8480), *(double*)(t + 0x8488), *(double*)(t + 0x8490));
+}
+
+// FUNCTION: HOVER 0x004270d0
+extern "C" void __fastcall Thrust3Plus(void* self)
+{
+    uint8_t* t = (uint8_t*)self;
+    *(double*)(t + 0x8490) += 0.05;
+    ((MoverSub*)((uint8_t*)t + 0x18c))->M414550(&g_4a1d50, *(double*)(t + 0x8478), 0xff, 0xff, 0xff, *(double*)(t + 0x8480), *(double*)(t + 0x8488), *(double*)(t + 0x8490));
+}
+
+// FUNCTION: HOVER 0x00427140
+extern "C" void __fastcall InertiaMinus(void* self)
+{
+    uint8_t* t = (uint8_t*)self;
+    *(double*)(t + 0x8478) -= 0.001;
+    ((MoverSub*)((uint8_t*)t + 0x18c))->M414550(&g_4a1d50, *(double*)(t + 0x8478), 0xff, 0xff, 0xff, *(double*)(t + 0x8480), *(double*)(t + 0x8488), *(double*)(t + 0x8490));
+}
+
+// FUNCTION: HOVER 0x004271b0
+extern "C" void __fastcall InertiaPlus(void* self)
+{
+    uint8_t* t = (uint8_t*)self;
+    *(double*)(t + 0x8478) += 0.001;
+    ((MoverSub*)((uint8_t*)t + 0x18c))->M414550(&g_4a1d50, *(double*)(t + 0x8478), 0xff, 0xff, 0xff, *(double*)(t + 0x8480), *(double*)(t + 0x8488), *(double*)(t + 0x8490));
+}
+
+// FUNCTION: HOVER 0x00427220
+extern "C" void __fastcall Thrust2Minus(void* self)
+{
+    uint8_t* t = (uint8_t*)self;
+    *(double*)(t + 0x8488) -= 0.05;
+    ((MoverSub*)((uint8_t*)t + 0x18c))->M414550(&g_4a1d50, *(double*)(t + 0x8478), 0xff, 0xff, 0xff, *(double*)(t + 0x8480), *(double*)(t + 0x8488), *(double*)(t + 0x8490));
+}
+
+// FUNCTION: HOVER 0x00427290
+extern "C" void __fastcall Thrust2Plus(void* self)
+{
+    uint8_t* t = (uint8_t*)self;
+    *(double*)(t + 0x8488) += 0.05;
+    ((MoverSub*)((uint8_t*)t + 0x18c))->M414550(&g_4a1d50, *(double*)(t + 0x8478), 0xff, 0xff, 0xff, *(double*)(t + 0x8480), *(double*)(t + 0x8488), *(double*)(t + 0x8490));
+}
+
+// FUNCTION: HOVER 0x00427300
+extern "C" void __fastcall Thrust1Minus(void* self)
+{
+    uint8_t* t = (uint8_t*)self;
+    *(double*)(t + 0x8480) -= 0.05;
+    ((MoverSub*)((uint8_t*)t + 0x18c))->M414550(&g_4a1d50, *(double*)(t + 0x8478), 0xff, 0xff, 0xff, *(double*)(t + 0x8480), *(double*)(t + 0x8488), *(double*)(t + 0x8490));
+}
+
+// FUNCTION: HOVER 0x00427370
+extern "C" void __fastcall Thrust1Plus(void* self)
+{
+    uint8_t* t = (uint8_t*)self;
+    *(double*)(t + 0x8480) += 0.05;
+    ((MoverSub*)((uint8_t*)t + 0x18c))->M414550(&g_4a1d50, *(double*)(t + 0x8478), 0xff, 0xff, 0xff, *(double*)(t + 0x8480), *(double*)(t + 0x8488), *(double*)(t + 0x8490));
+}
+
+// FUNCTION: HOVER 0x00457060
+void TextSlots::F457060(void* rect, int32_t flag)
+{
+    uint8_t* s = (uint8_t*)this;
+    Rect457060* rc = (Rect457060*)rect;
+    int32_t fl = *(int32_t*)(s + 0x54);
+
+    if ((fl & 0x100) != 0)
+        rc->left += g_4b7f00;
+    if ((fl & 0x200) != 0)
+        rc->top += g_4b7f04;
+    if ((fl & 0x400) != 0)
+        rc->right -= g_4b7f00;
+    if ((fl & 0x800) != 0)
+        rc->bottom -= g_4b7f04;
+    if (flag == 0)
+    {
+        rc->left += *(int32_t*)(s + 0x3c);
+        rc->top += *(int32_t*)(s + 0x34);
+        rc->right -= *(int32_t*)(s + 0x40);
+        rc->bottom -= *(int32_t*)(s + 0x38);
+    }
+    else
+    {
+        rc->left += *(int32_t*)(s + 0x34);
+        rc->top += *(int32_t*)(s + 0x3c);
+        rc->right -= *(int32_t*)(s + 0x38);
+        rc->bottom -= *(int32_t*)(s + 0x40);
+    }
 }
 /* ---------------------------------------------------------------------------
  * Scene renderer setup helpers (retail 0x406c00-0x406d30).  They run from the

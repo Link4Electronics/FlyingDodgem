@@ -194,8 +194,19 @@ extern "C" uint8_t g_data_5570[1];
 extern "C" uint8_t g_data_5340[1];
 extern "C" uint8_t g_data_5318[1];
 extern "C" uint8_t g_data_53f8[1];
+extern "C" uint8_t g_data_5270[1];
+extern "C" uint8_t g_data_5298[1];
 extern "C" uint8_t g_data_5488[1];
 extern "C" uint8_t g_data_54b8[1];
+extern "C" uint8_t g_4a4880[1];
+extern "C" uint8_t g_4a48a8[1];
+extern "C" uint8_t g_4a48d0[1];
+extern "C" uint8_t g_4a48f8[1];
+extern "C" uint8_t g_4a4928[1];
+extern "C" uint8_t g_4a4958[1];
+extern "C" uint8_t g_4a4988[1];
+extern "C" uint8_t g_4a49b8[1];
+extern "C" uint8_t g_4a49e8[1];
 extern "C" void __fastcall DrawCell3910(void* self, void* unused, int32_t x, int32_t y, int32_t ignored);
 extern "C" int32_t g_4a4524;
 extern "C" int32_t g_4a4564;
@@ -814,5 +825,166 @@ void SpanChain::F402b10(void* a1, int32_t a2, int32_t a3, int32_t a4)
     else
     {
         ((HostDrawFn)*(void**)(host + 0xc))((void*)host);
+    }
+}
+
+/* Player-kind collision gate (retail 0x40cb40/0x414470): the base test does
+ * the bounding-box overlap, and the override filters by player kind first —
+ * human objects are skipped in mode 0, robot (drone) objects in mode 1 —
+ * then falls through to the base test.  Retail passes `this` in ECX with
+ * the object on the stack (__thiscall), so these are members of a
+ * throw-away class (free __fastcall would burn EDX). */
+struct PlayerGate
+{
+    int32_t Gate40cb40(void* obj);
+    int32_t Gate414470(void* obj);
+};
+
+// FUNCTION: HOVER 0x0040cb40
+int32_t PlayerGate::Gate40cb40(void* obj)
+{
+    (void)obj;
+    return 0;
+}
+
+// FUNCTION: HOVER 0x00414470
+int32_t PlayerGate::Gate414470(void* obj)
+{
+    uint8_t* t = (uint8_t*)this;
+    if (*(int32_t*)(t + 0xcc) == 0)
+    {
+        if (((RenderNode*)obj)->IsKindOf(g_data_5488))
+            return 0;
+    }
+    if (*(int32_t*)(t + 0xcc) == 1 && ((RenderNode*)obj)->IsKindOf(g_data_54b8))
+        return 0;
+    return ((PlayerGate*)t)->Gate40cb40(obj);
+}
+
+/* Craft thrust/inertia steppers (retail 0x427060-0x427379): each nudges one
+ * motion double (accel1/2/3 by 0.05, inertia by 0.001, down/up pairs) and
+ * forwards inertia, three 0xff flags, the three accels and the 0x4a1d50
+ * target into the 0x414550 motion integrator.  Single `this`, no stack
+ * args, so free __fastcall (no EDX use) matches retail exactly. */
+// FUNCTION: HOVER 0x00414550
+void MoverSub::M414550(void* tgt, double ain, int32_t f1, int32_t f2, int32_t f3,
+                        double d1, double d2, double d3)
+{
+    (void)tgt;
+    (void)ain;
+    (void)f1;
+    (void)f2;
+    (void)f3;
+    (void)d1;
+    (void)d2;
+    (void)d3;
+}
+
+/* Drone difficulty selector (retail 0x425870): points the object's three
+ * active AI param blocks (+0x14c/+0x150/+0x154) at the beginner,
+ * intermediate or expert block triples selected by +0x1c8. */
+struct DroneAI
+{
+    void Sel425870();
+};
+
+/* Pod powerup dispatcher (retail 0x412630/0x421e20): the object in +0xd0 is
+ * tested against the TempWall, Shield (dev class CSmokeBombPod) and JumpPod
+ * classes with their per-kind armed state (fields +0xdc/+0xf8/+0x114 == 9); a match takes the
+ * bare effect path, otherwise the slot is cleared and the world notified
+ * after the pod's +0x20 effect virtual runs.  Retail passes `this` in ECX
+ * (__thiscall), so these are members of throw-away classes. */
+class PodEffect
+{
+public:
+    virtual void reserved00();
+    virtual void reserved01();
+    virtual void reserved02();
+    virtual void reserved03();
+    virtual void reserved04();
+    virtual void reserved05();
+    virtual void reserved06();
+    virtual void reserved07();
+    virtual void Fire(void* a1, void* a2);
+};
+
+struct PodWorld
+{
+    int32_t Notify412630(void* obj);
+};
+
+struct PodTrigger
+{
+    void Trigger421e20(void* a1, void* a2);
+};
+
+typedef int32_t (__fastcall *PodSlot44Fn)(void* self);
+
+struct PodLink
+{
+    int32_t Go40e710(void* arg);
+};
+
+// FUNCTION: HOVER 0x0040e710
+int32_t PodLink::Go40e710(void* arg)
+{
+    (void)arg;
+    return 1;
+}
+
+// FUNCTION: HOVER 0x00412630
+int32_t PodWorld::Notify412630(void* obj)
+{
+    uint8_t* inner = *(uint8_t**)((uint8_t*)this + 0x8388);
+    void** vt;
+    ((PodLink*)inner)->Go40e710(obj);
+    vt = *(void***)obj;
+    return ((PodSlot44Fn)vt[17])(obj);
+}
+
+// FUNCTION: HOVER 0x00421e20
+void PodTrigger::Trigger421e20(void* a1, void* a2)
+{
+    uint8_t* t = (uint8_t*)this;
+    int32_t fired;
+    if ((((RenderNode*)(*(uint8_t**)(t + 0xd0)))->IsKindOf(g_data_5340) &&
+         *(int32_t*)((uint8_t*)a1 + 0xdc) == 9) ||
+        (((RenderNode*)(*(uint8_t**)(t + 0xd0)))->IsKindOf(g_data_5270) &&
+         *(int32_t*)((uint8_t*)a1 + 0xf8) == 9) ||
+        (((RenderNode*)(*(uint8_t**)(t + 0xd0)))->IsKindOf(g_data_5298) &&
+         *(int32_t*)((uint8_t*)a1 + 0x114) == 9))
+        fired = 0;
+    else
+        fired = 1;
+    ((PodEffect*)(*(uint8_t**)(t + 0xd0)))->Fire(a1, a2);
+    if (fired != 0)
+    {
+        *(uint8_t**)(t + 0xd0) = NULL;
+        ((PodWorld*)g_460970)->Notify412630(t);
+    }
+}
+
+// FUNCTION: HOVER 0x00425870
+void DroneAI::Sel425870()
+{
+    uint8_t* t = (uint8_t*)this;
+    int32_t lvl = *(int32_t*)(t + 0x1c8);
+    switch (lvl)
+    {
+    case 0:
+        *(uint8_t**)(t + 0x14c) = g_4a48f8;
+        *(uint8_t**)(t + 0x150) = g_4a4928;
+        *(uint8_t**)(t + 0x154) = g_4a4880;
+        return;
+    case 1:
+        *(uint8_t**)(t + 0x14c) = g_4a49b8;
+        *(uint8_t**)(t + 0x150) = g_4a49e8;
+        *(uint8_t**)(t + 0x154) = g_4a48d0;
+        return;
+    case 2:
+        *(uint8_t**)(t + 0x14c) = g_4a4958;
+        *(uint8_t**)(t + 0x150) = g_4a4988;
+        *(uint8_t**)(t + 0x154) = g_4a48a8;
+        return;
     }
 }

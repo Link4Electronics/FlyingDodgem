@@ -161,6 +161,225 @@ void* __fastcall Sub89e0(void* self)
     return (uint8_t*)self + 0x180;
 }
 
+// FUNCTION: HOVER 0x00440510
+uint32_t __cdecl Strlen440510(const char* s)
+{
+    const char* p = s;
+    uint32_t v;
+
+    if (*p != 0)
+    {
+        if (((uintptr_t)p & 1) != 0)
+            p++;
+        if (((uintptr_t)p & 2) != 0)
+        {
+            if (*p != 0)
+            {
+                p++;
+                if (*p != 0)
+                    p++;
+            }
+        }
+        for (;;)
+        {
+            v = *(const uint32_t*)p;
+            if ((v & 0xffu) == 0)
+                break;
+            if ((v & 0xff00u) == 0)
+            {
+                p += 1;
+                break;
+            }
+            if ((v & 0xff0000u) == 0)
+            {
+                p += 2;
+                break;
+            }
+            if ((v & 0xff000000u) == 0)
+            {
+                p += 3;
+                break;
+            }
+            p += 4;
+        }
+    }
+    return (uint32_t)(p - s);
+}
+
+extern void* g_4c8e54;
+extern uint32_t g_4c7f28[1];
+extern void* g_4c79b0;
+extern uint32_t g_4c8434;
+extern int32_t g_4c8444;
+
+#if defined(_MSC_VER)
+__declspec(dllimport)
+#endif
+void __stdcall LeaveCriticalSection(void* cs);
+
+#if defined(_MSC_VER)
+__declspec(dllimport)
+#endif
+void __stdcall EnterCriticalSection(void* cs);
+
+#if defined(_MSC_VER)
+__declspec(dllimport)
+#endif
+void __stdcall InitializeCriticalSection(void* cs);
+
+// FUNCTION: HOVER 0x004410ac
+void* __cdecl Malloc4410ac(uint32_t size)
+{
+    (void)size;
+    return 0;
+}
+
+void __cdecl Enter442a4a(int32_t idx);
+void __cdecl Leave442ab2(int32_t idx);
+
+// FUNCTION: HOVER 0x00441061
+void* __cdecl Malloc441061(uint32_t size, void* heap)
+{
+    void* block;
+    int32_t (__cdecl *cb)(uint32_t);
+
+    Enter442a4a(9);
+    block = Malloc4410ac(size);
+    Leave442ab2(9);
+    cb = (int32_t(__cdecl*)(uint32_t))g_4c79b0;
+    while (block == NULL && heap != NULL && cb != NULL && cb(size) != 0)
+    {
+        Enter442a4a(9);
+        block = Malloc4410ac(size);
+        Leave442ab2(9);
+    }
+    return block;
+}
+
+// FUNCTION: HOVER 0x0044104e
+void* __cdecl Malloc44104e(uint32_t size)
+{
+    return Malloc441061(size, g_4c8e54);
+}
+
+// FUNCTION: HOVER 0x00445078
+char* __cdecl Strcpy445078(char* dst, const char* src)
+{
+    char* d = dst;
+    const char* s = src;
+    uint32_t v;
+
+    if (((uintptr_t)s & 1) != 0)
+    {
+        if ((*d++ = *s++) == 0)
+            return dst;
+    }
+    if (((uintptr_t)s & 2) != 0)
+    {
+        v = *(const uint16_t*)s;
+        s += 2;
+        *d++ = (char)v;
+        if ((v & 0xffu) == 0)
+            return dst;
+        *d++ = (char)(v >> 8);
+        if ((v & 0xff00u) == 0)
+            return dst;
+    }
+    for (;;)
+    {
+        v = *(const uint32_t*)s;
+        if ((v & 0xffu) == 0)
+            break;
+        if ((v & 0xff00u) == 0)
+        {
+            *d++ = (char)v;
+            break;
+        }
+        if ((v & 0xff0000u) == 0)
+        {
+            *d++ = (char)v;
+            v = (v >> 8) | (v << 24);
+            *d++ = (char)v;
+            break;
+        }
+        *(uint32_t*)d = v;
+        if ((v & 0xff000000u) == 0)
+            break;
+        s += 4;
+        d += 4;
+    }
+    return dst;
+}
+
+// FUNCTION: HOVER 0x0044060c
+#pragma optimize("y", off)
+char* __cdecl Strdup44060c(const char* s)
+{
+    uint32_t len = Strlen440510(s) + 1;
+    char* dup = (char*)Malloc44104e(len);
+    if (dup != NULL)
+        Strcpy445078(dup, s);
+    return dup;
+}
+#pragma optimize("", on)
+
+// FUNCTION: HOVER 0x00442ab2
+#pragma optimize("s", on)
+#pragma optimize("y", off)
+void __cdecl Leave442ab2(int32_t idx)
+{
+    LeaveCriticalSection((void*)(uintptr_t)g_4c7f28[idx]);
+}
+#pragma optimize("", on)
+
+// FUNCTION: HOVER 0x00443fec
+void __cdecl Fail43fec(int32_t code)
+{
+    (void)code;
+}
+
+// FUNCTION: HOVER 0x004406ed
+void __cdecl Free4406ed(void* ptr)
+{
+    (void)ptr;
+}
+
+// FUNCTION: HOVER 0x004406cc
+void __cdecl Free4406cc(void* ptr)
+{
+    Enter442a4a(9);
+    Free4406ed(ptr);
+    Leave442ab2(9);
+}
+
+// FUNCTION: HOVER 0x00442a4a
+#pragma optimize("y", off)
+void __cdecl Enter442a4a(int32_t idx)
+{
+    void** slot = (void**)(uintptr_t)&g_4c7f28[(uint32_t)idx];
+    void* mem;
+
+    if (*slot == NULL)
+    {
+        mem = Malloc44104e(0x18);
+        if (mem == NULL)
+        {
+            Fail43fec(0x11);
+            Enter442a4a(0x11);
+        }
+        if (*slot != NULL)
+            Free4406cc(mem);
+        else
+        {
+            *slot = mem;
+            InitializeCriticalSection(mem);
+        }
+    }
+    Leave442ab2(0x11);
+    EnterCriticalSection(*slot);
+}
+#pragma optimize("", on)
+
 // FUNCTION: HOVER 0x00411570
 int32_t __stdcall ZeroOut411570(void* a, void* b, void* c, uint32_t* out)
 {

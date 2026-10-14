@@ -101,6 +101,14 @@ public:
     void F403a60(void* a1);
 };
 
+/* Motion integrator sub-object at [mover+0x18c] (retail 0x414550,
+ * __thiscall: target, inertia, three flags and three accel doubles). */
+struct MoverSub
+{
+    void M414550(void* tgt, double ain, int32_t f1, int32_t f2, int32_t f3,
+                 double d1, double d2, double d3);
+};
+
 /* __thiscall, `this` in ECX only (spelled __fastcall on a free function). */
 extern "C" void __fastcall F4010c0(void* self);
 extern "C" void __fastcall F4030f0(void* self);
