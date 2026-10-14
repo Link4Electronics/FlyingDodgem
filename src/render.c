@@ -1716,7 +1716,7 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
         d14 /= 2;
         ang = *(int16_t*)((uint8_t*)item + 0x19e);
         s3c = *(int32_t*)(g_sineTable + ((ang + 0x80) & 0x1ff) * 64);
-        s3c = (int32_t)(((int64_t)s3c * d14) >> 16);
+        MulFix38e0(&s3c, NULL, d14);
         g_4a47b8 = ang;
         v68 = s3c;
         v60 = d14;
@@ -1851,8 +1851,7 @@ void RenderNode::F4055b0(void* a0, int32_t a1, int32_t a2, int32_t a3, int32_t a
         r30 = mbc;
         vc4 = r28;
         vc8 = r30;
-        vc0 = vc4;
-        vc8 += vc0;
+        vc8 += vc4;
         vc034 = vc8;
         x = ((int16_t*)&vc034)[1];
         tc8 = ((int32_t*)g_sineTable)[((a7 << 4) & 0x1fff)];
@@ -2493,10 +2492,9 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
     if (obj != NULL)
         k = *(int32_t*)((uint8_t*)obj + 0x540);
 
-    sub = (uint8_t*)a0 + 0x818c;
-    IntPair p0 = ((RenderNode*)sub)->CopyPos();
-    g_4a4790 = p0.x;
-    g_4a4794 = p0.y;
+    IntPair p0;
+    (void)p0;
+    *(IntPair*)&g_4a4790 = ((RenderNode*)((uint8_t*)a0 + 0x818c))->CopyPos();
 
     g_4a47b8 = (int32_t)*(int16_t*)((uint8_t*)a0 + 0x832a) - 0x80;
     g_4a47b0 = *(int32_t*)(*(uint8_t**)((uint8_t*)a0 + 0x188) + 0x1c);
@@ -2510,7 +2508,8 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
         int32_t d = *(int32_t*)(s + 0x80);
         int32_t v;
 
-        v = ((RenderNode*)sub)->GetPair(&p1)->x;
+        (void)sub;
+        v = ((RenderNode*)((uint8_t*)a0 + 0x818c))->GetPair(&p1)->x;
         v = (int32_t)(((int64_t)v << 16) / d);
         g_4a47e0 = (*(int32_t*)(s + 0x7c) - v) - *(int32_t*)(s + 0x78);
     }
@@ -2518,7 +2517,7 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
         int32_t d = *(int32_t*)(s + 0x80);
         int32_t v;
 
-        v = ((RenderNode*)sub)->GetPair(&p2)->y;
+        v = ((RenderNode*)((uint8_t*)a0 + 0x818c))->GetPair(&p2)->y;
         v = (int32_t)(((int64_t)v << 16) / d);
         g_4a47e4 = (*(int32_t*)(s + 0x7c) - v) - *(int32_t*)(s + 0x74);
     }
@@ -2546,30 +2545,30 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
         {
             item = *(void**)((uint8_t*)g_4a4844 + off);
 
-            q0 = ((RenderNode*)item)->CopyPos();
-            if (q0.x < g_4a47bc)
+            (void)q0;
+            (void)q1;
+            (void)q2;
+            (void)q3;
+            if (((RenderNode*)item)->CopyPos().x < g_4a47bc)
             {
                 *(int32_t*)((uint8_t*)item + 0x3c) = 0;
             }
             else
             {
-                q1 = ((RenderNode*)item)->CopyPos();
-                if (q1.x > g_4a4798)
+                if (((RenderNode*)item)->CopyPos().x > g_4a4798)
                 {
                     *(int32_t*)((uint8_t*)item + 0x3c) = 0;
                 }
                 else
                 {
-                    q2 = ((RenderNode*)item)->CopyPos();
-                    if (q2.y < g_4a47d8)
+                    if (((RenderNode*)item)->CopyPos().y < g_4a47d8)
                     {
                         *(int32_t*)((uint8_t*)item + 0x3c) = 0;
                     }
                     else
                     {
-                        q3 = ((RenderNode*)item)->CopyPos();
                         *(int32_t*)((uint8_t*)item + 0x3c) = 1;
-                        if (q3.y > g_4a479c)
+                        if (((RenderNode*)item)->CopyPos().y > g_4a479c)
                             *(int32_t*)((uint8_t*)item + 0x3c) = 0;
                     }
                 }
