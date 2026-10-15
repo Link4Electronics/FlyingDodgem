@@ -1489,9 +1489,9 @@ void SpanChain::F403a60(void* a1)
 int32_t HoverTc::M4053a0(void* a1, void* a2)
 {
     uint8_t* display = (uint8_t*)a1;
-    uint8_t* node;
-    uint8_t* next;
+    uint8_t* volatile node;
     uint8_t* zero;
+    uint8_t* volatile selfpad = (uint8_t*)this;
     (void)a2;
 
     node = *(uint8_t**)((uint8_t*)g_460970 + 0x8390);
@@ -1500,9 +1500,10 @@ int32_t HoverTc::M4053a0(void* a1, void* a2)
         zero = 0;
         do
         {
-            next = *(uint8_t**)node;
-            this->F401c00(*(void**)(node + 8), *(void**)(display + 0x540));
-            node = next;
+            void* a1;
+            a1 = *(void**)(node + 8);
+            node = *(uint8_t**)node;
+            ((HoverTc*)selfpad)->F401c00(a1, *(void**)(display + 0x540));
         } while (node != zero);
     }
     node = *(uint8_t**)((uint8_t*)g_460970 + 0x83ac);
@@ -1511,9 +1512,10 @@ int32_t HoverTc::M4053a0(void* a1, void* a2)
         zero = 0;
         do
         {
-            next = *(uint8_t**)node;
-            this->F401c00(*(void**)(node + 8), *(void**)(display + 0x540));
-            node = next;
+            void* a1;
+            a1 = *(void**)(node + 8);
+            node = *(uint8_t**)node;
+            ((HoverTc*)selfpad)->F401c00(a1, *(void**)(display + 0x540));
         } while (node != zero);
     }
     if (g_460750 != 0 && g_4a4848 > 0)
@@ -1525,40 +1527,40 @@ int32_t HoverTc::M4053a0(void* a1, void* a2)
             uint8_t* obj = *(uint8_t**)((uint8_t*)g_4a4844 + off);
             if (*(int32_t*)(obj + 0x3c) != 0)
             {
-                uint8_t* cell = obj + 0x9c;
                 uint8_t color = *(uint8_t*)(obj + 0x40);
+                *(uint8_t*)((uint8_t*)selfpad + 0x1c) = color;
                 uint16_t w = color;
-                uint16_t v = (w << 8) | w;
+                uint16_t v = (uint16_t)((w << 8) | w);
+                uint8_t* cell = obj + 0x9c;
                 uint32_t dd = v;
                 uint32_t ee = (dd << 16) | dd;
-                *(uint8_t*)((uint8_t*)this + 0x1c) = color;
-                *(int32_t*)((uint8_t*)this + 0x20) = (int32_t)ee;
-                DrawCell3910(this, NULL, *(int32_t*)cell, *(int32_t*)(cell + 4), 5);
+                *(int32_t*)((uint8_t*)selfpad + 0x20) = (int32_t)ee;
+                DrawCell3910((void*)selfpad, (void*)(intptr_t)*(int32_t*)(cell + 4), *(int32_t*)cell, *(int32_t*)(cell + 4), 5);
                 if (*(int32_t*)(obj + 0xa8) != 0)
                 {
-                    int32_t xa = *(int32_t*)cell - 0xa;
-                    int32_t xb = *(int32_t*)cell + 0xa;
-                    int32_t ya = *(int32_t*)(cell + 4) - 0xa;
-                    int32_t yb = *(int32_t*)(cell + 4) + 0xa;
-                    this->F401980(xa, ya, xb, ya);
-                    this->F401980(xa, yb, xb, yb);
+                    volatile int32_t xa = *(int32_t*)cell - 0xa;
+                    volatile int32_t xb = *(int32_t*)cell + 0xa;
+                    volatile int32_t ya = *(int32_t*)(cell + 4) - 0xa;
+                    volatile int32_t yb = *(int32_t*)(cell + 4) + 0xa;
+                    ((HoverTc*)selfpad)->F401980(xa, ya, xb, ya);
+                    ((HoverTc*)selfpad)->F401980(xa, yb, xb, yb);
                     yb += 0x14;
                     xa -= 0x14;
-                    this->F401980(xa, ya, xb, yb);
-                    this->F401980(xa, yb, xb, yb);
+                    ((HoverTc*)selfpad)->F401980(xa, ya, xb, yb);
+                    ((HoverTc*)selfpad)->F401980(xa, yb, xb, yb);
                 }
                 {
                     int32_t nn = *(int32_t*)(obj + 0x8c);
                     if (nn > 0)
                     {
                         int32_t kk = 0;
-                        uint8_t* base = *(uint8_t**)(obj + 0x88);
                         do
                         {
                             uint8_t* child;
+                            uint8_t* base = *(uint8_t**)(obj + 0x88);
                             kk += 4;
                             child = *(uint8_t**)(base + kk - 4);
-                            this->F401980(*(int32_t*)cell, *(int32_t*)(cell + 4), *(int32_t*)(child + 0x9c), *(int32_t*)(child + 0x9c + 4));
+                            ((HoverTc*)selfpad)->F401980(*(int32_t*)(obj + 0x9c), *(int32_t*)(obj + 0xa0), *(int32_t*)(child + 0x9c), *(int32_t*)(child + 0x9c + 4));
                             nn--;
                         } while (nn != 0);
                     }

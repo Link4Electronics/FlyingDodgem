@@ -45,13 +45,15 @@ if(DEFINED _vc_cl)
         # render.c likewise holds DrawEntry402250 (HOVER 0x402250), whose
         # case-local CBeaconKey objects force the same /GX prolog in retail.
         if(_f STREQUAL "scene.c")
-            set(_extra_flags /GX)
+            set(_extra_flags /GX /G4)
         elseif(_f STREQUAL "pump.c")
             set(_extra_flags /Oy)
         elseif(_f STREQUAL "render.c")
             set(_extra_flags /GX /G4 /Ow /QIfdiv)
         elseif(_f STREQUAL "wallspan.c")
             set(_extra_flags /G4 /Oa)
+        elseif(_f STREQUAL "callees.c")
+            set(_extra_flags /G4)
         elseif(_f STREQUAL "stubs.c")
             # WinHelpA is dllimported: MSVC 2.2 /G5 saves ebx around
             # the indirect call (push/pop with no use); /G4 drops the pair and

@@ -442,14 +442,6 @@ nocolor:
 // FUNCTION: HOVER 0x00401980
 void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
 {
-    int32_t dx;
-    int32_t dy;
-    int32_t pt0[2];
-    int32_t pt1[2];
-    int32_t fx0;
-    int32_t fy0;
-    int32_t fx1;
-    int32_t fy1;
     int32_t adx;
     int32_t ady;
     uint8_t* bits;
@@ -462,30 +454,24 @@ void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
     int32_t acc;
     int32_t n;
 
-    dx = x0 - x1;
-    dx = dx < 0 ? -dx : dx;
-    dy = y0 - y1;
-    dy = dy < 0 ? -dy : dy;
-    *(int32_t*)((uint8_t*)this + 0x2c) = dx;
-    *(int32_t*)((uint8_t*)this + 0x30) = dy;
-
-    pt0[0] = x0;
-    pt0[1] = y0;
-    pt1[0] = x1;
-    pt1[1] = y1;
-    if (this->F401520(pt0, pt1) == 0)
-        return;
-    if (this->F401520(pt1, pt0) == 0)
-        return;
-
-    fx0 = pt0[0];
-    fy0 = *(int32_t*)((uint8_t*)this + 0x18) - pt0[1] - 1;
-    fx1 = pt1[0];
-    fy1 = *(int32_t*)((uint8_t*)this + 0x18) - pt1[1] - 1;
-
-    adx = fx0 - fx1;
+    adx = x0 - x1;
     adx = adx < 0 ? -adx : adx;
-    ady = fy0 - fy1;
+    *(int32_t*)((uint8_t*)this + 0x2c) = adx;
+    ady = y0 - y1;
+    ady = ady < 0 ? -ady : ady;
+    *(int32_t*)((uint8_t*)this + 0x30) = ady;
+
+    if (this->F401520(&x0, &x1) == 0)
+        return;
+    if (this->F401520(&x1, &x0) == 0)
+        return;
+
+    y0 = *(int32_t*)((uint8_t*)this + 0x18) - *(int32_t*)((uint8_t*)&x0 + 4) - 1;
+    y1 = *(int32_t*)((uint8_t*)this + 0x18) - *(int32_t*)((uint8_t*)&x1 + 4) - 1;
+
+    adx = x0 - x1;
+    adx = adx < 0 ? -adx : adx;
+    ady = y0 - y1;
     ady = ady < 0 ? -ady : ady;
     *(int32_t*)((uint8_t*)this + 0x2c) = adx;
     *(int32_t*)((uint8_t*)this + 0x30) = ady;
@@ -495,17 +481,17 @@ void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
     bits = *(uint8_t**)((uint8_t*)this + 0x10);
     pitch = *(int32_t*)((uint8_t*)this + 0x24);
     color = *(uint8_t*)((uint8_t*)this + 0x1c);
+    base = bits + y0 * pitch + x0;
     if (bits == 0 || pitch == 0)
         return;
-    base = bits + fy0 * pitch + fx0;
 
     if (adx >= ady)
     {
         slope = (int32_t)(((int32_t)ady << 16) / adx);
-        if (fy1 < fy0)
+        if (y1 < y0)
             pitch = -pitch;
         xstep = -1;
-        if (fx1 >= fx0)
+        if (x1 >= x0)
             xstep = 1;
         ystep = pitch;
         acc = 0x8000;
@@ -524,9 +510,9 @@ void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
     else
     {
         slope = (int32_t)(((int32_t)adx << 16) / ady);
-        if (fx1 < fx0)
+        if (x1 < x0)
             slope = -slope;
-        if (fy1 < fy0)
+        if (y1 < y0)
             pitch = -pitch;
         ystep = pitch;
         acc = 0x8000;
@@ -561,6 +547,7 @@ void HoverTc::F402630(void* a1, void* a2, void* a3)
     uint8_t* local2 = node + 0xac;
     int32_t result = 0;
     int32_t ebx, ecx, edx, ebp;
+    uint8_t* volatile selfpad = (uint8_t*)this;
 
     g_4a4564 = a3i;
     g_4a4524 = a2i;
@@ -579,11 +566,11 @@ void HoverTc::F402630(void* a1, void* a2, void* a3)
             {
                 if (ebx >= a3i)
                 {
-                    ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
+                    ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
                     result = 1;
                     goto R1_flag;
                 }
-                ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, a2i, ebx, *(int32_t*)(node + 0x48));
+                ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, ebx, *(int32_t*)(node + 0x48));
                 g_4a4524 = g_4a453c + ebx;
                 goto R1_flag;
             }
@@ -591,11 +578,11 @@ void HoverTc::F402630(void* a1, void* a2, void* a3)
             {
                 if (a3i <= local1)
                 {
-                    ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
+                    ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
                     result = 1;
                     goto R1_flag;
                 }
-                ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, a2i, local1, *(int32_t*)(node + 0x48));
+                ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, local1, *(int32_t*)(node + 0x48));
                 g_4a4524 = g_4a453c + local1;
                 goto R1_flag;
             }
@@ -604,7 +591,7 @@ void HoverTc::F402630(void* a1, void* a2, void* a3)
         {
             if (a2i < local1 && a3i > local1)
             {
-                ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, a2i, local1, *(int32_t*)(node + 0x48));
+                ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, local1, *(int32_t*)(node + 0x48));
                 g_4a4524 = g_4a453c + local1;
                 goto R1_flag;
             }
@@ -624,11 +611,11 @@ R2:
         {
             if (a2i >= ebp)
             {
-                ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
+                ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
                 result = 1;
                 goto R2_flag;
             }
-            ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, ebp, a3i, *(int32_t*)(node + 0x48));
+            ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, ebp, a3i, *(int32_t*)(node + 0x48));
             g_4a4564 = ebp - g_4a453c;
             goto R2_flag;
         }
@@ -636,11 +623,11 @@ R2:
         {
             if (a2i >= ebx)
             {
-                ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
+                ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
                 result = 1;
                 goto R2_flag;
             }
-            ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, ebx, a3i, *(int32_t*)(node + 0x48));
+            ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, ebx, a3i, *(int32_t*)(node + 0x48));
             g_4a4564 = ebx - g_4a453c;
             goto R2_flag;
         }

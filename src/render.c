@@ -1615,32 +1615,34 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
     uint8_t* bp;
     uint8_t* ep;
 
+    *(volatile int32_t*)&m10a = -10;
+    *(volatile int32_t*)&m10b = -10;
     if (((RenderNode*)item)->IsKindOf(g_data_5570))
     {
         if (*(int32_t*)((uint8_t*)item + 0x38) != 0)
-            return;
+            goto Fdone;
         if (a2 != 0 || ((parent = *(void**)((uint8_t*)item + 0x78)) != 0 && (*(uint8_t*)((uint8_t*)parent + 0x24) & 8) != 0))
         {
             top = *(int32_t*)((uint8_t*)item + 8);
             left = *(int32_t*)((uint8_t*)item + 4);
             if (*(volatile int32_t*)&left < g_4a47bc && *(int32_t*)((uint8_t*)item + 0xc) < g_4a47bc)
-                return;
+                goto Fdone;
             if (*(volatile int32_t*)&left > g_4a4798 && *(int32_t*)((uint8_t*)item + 0xc) > g_4a4798)
-                return;
+                goto Fdone;
             if (*(volatile int32_t*)&top < g_4a47d8 && *(int32_t*)((uint8_t*)item + 0x10) < g_4a47d8)
-                return;
+                goto Fdone;
             if (*(volatile int32_t*)&top > g_4a479c && *(int32_t*)((uint8_t*)item + 0x10) > g_4a479c)
-                return;
+                goto Fdone;
             ((RenderNode*)this)->F4055b0((uint8_t*)item + 0x84, left, top, g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
             ((RenderNode*)this)->F4055b0((uint8_t*)item + 0x8c, *(int32_t*)((uint8_t*)item + 0xc), *(int32_t*)((uint8_t*)item + 0x10), g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
             *(int32_t*)((uint8_t*)item + 0x3c) = 1;
         }
         else
         {
-            *(int32_t*)((uint8_t*)item + 0x8c) = m10a;
-            *(int32_t*)((uint8_t*)item + 0x90) = m10b;
-            *(int32_t*)((uint8_t*)item + 0x84) = m10a;
-            *(int32_t*)((uint8_t*)item + 0x88) = m10b;
+            *(int32_t*)((uint8_t*)item + 0x8c) = *(volatile int32_t*)&m10a;
+            *(int32_t*)((uint8_t*)item + 0x90) = *(volatile int32_t*)&m10b;
+            *(int32_t*)((uint8_t*)item + 0x84) = *(volatile int32_t*)&m10a;
+            *(int32_t*)((uint8_t*)item + 0x88) = *(volatile int32_t*)&m10b;
         }
     }
     else if (((RenderNode*)item)->IsKindOf(g_data_5340) && *(int32_t*)((uint8_t*)item + 0x28) != 0)
@@ -1649,36 +1651,38 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
         left = *(int32_t*)(rp + 0x14);
         top = *(int32_t*)(rp + 0x18);
         if (left < g_4a47bc && *(int32_t*)(rp + 0x1c) < g_4a47bc)
-            return;
+            goto Fdone;
         if (left > g_4a4798 && *(int32_t*)(rp + 0x1c) > g_4a4798)
-            return;
+            goto Fdone;
         if (top < g_4a47d8 && *(int32_t*)(rp + 0x20) < g_4a47d8)
-            return;
+            goto Fdone;
         if (top > g_4a479c && *(int32_t*)(rp + 0x20) > g_4a479c)
-            return;
-        ((RenderNode*)this)->F4055b0((uint8_t*)item + 0xf0, left, top, g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
+            goto Fdone;
+        *(volatile int32_t*)&v40 = left;
+        *(volatile int32_t*)&v4c = top;
+        ((RenderNode*)this)->F4055b0((uint8_t*)item + 0xf0, *(volatile int32_t*)&v40, *(volatile int32_t*)&v4c, g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
         ((RenderNode*)this)->F4055b0((uint8_t*)item + 0xf8, *(int32_t*)(rp + 0x1c), *(int32_t*)(rp + 0x20), g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
         *(int32_t*)((uint8_t*)item + 0x3c) = 1;
     }
     else if (((RenderNode*)item)->IsKindOf(g_data_5318))
     {
         if (*(int32_t*)((uint8_t*)item + 0x88) != 0)
-            return;
+            goto Fdone;
         if ((a2 == 0 && ((parent = *(void**)((uint8_t*)item + 0x78)) == 0 || (*(uint8_t*)((uint8_t*)parent + 0x24) & 8) == 0)) || *(int32_t*)((uint8_t*)item + 0x38) != 0)
         {
             *(int32_t*)((uint8_t*)item + 0xc0) = m10a;
             *(int32_t*)((uint8_t*)item + 0xc4) = m10b;
-            return;
+            goto Fdone;
         }
         cp = ((RenderNode*)item)->CopyPos();
         if (((volatile IntPair*)&cp)->x < g_4a47bc)
-            return;
+            goto Fdone;
         if (((volatile IntPair*)&cp)->x > g_4a4798)
-            return;
+            goto Fdone;
         if (((volatile IntPair*)&cp)->y < g_4a47d8)
-            return;
+            goto Fdone;
         if (((volatile IntPair*)&cp)->y > g_4a479c)
-            return;
+            goto Fdone;
         ((RenderNode*)this)->F4055b0((uint8_t*)item + 0xc0, ((volatile IntPair*)&cp)->x, ((volatile IntPair*)&cp)->y, g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
         *(int32_t*)((uint8_t*)item + 0x3c) = 1;
         if (((RenderNode*)item)->IsKindOf(g_data_5418))
@@ -1708,20 +1712,18 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
         w16 = 200;
         v40 = *(int32_t*)((uint8_t*)this + 0x80);
         v4c = v40;
-        rp = (uint8_t*)&v4c;
-        *(int32_t*)rp *= w12;
+        *(uint8_t* volatile*)&rp = (uint8_t*)&v4c;
+        *(int32_t*)rp = *(volatile int16_t*)&w12 * *(int32_t*)rp;
         v48 = v4c;
-        if (v48 > 0x320000)
+        if (v48 < 0x320000 || v48 == 0x320000)
         {
-            v30 = v48;
+            *(volatile int16_t*)&w44 = 0;
+            *(volatile int16_t*)&w46 = 0x32;
+            dp = (uint8_t*)&w44;
         }
         else
-        {
-            w44 = 0;
-            w46 = 0x32;
-            rp = (uint8_t*)&w44;
-            v30 = *(int32_t*)rp;
-        }
+            dp = (uint8_t*)&v48;
+        v30 = *(int32_t*)dp;
         v18 = v40;
         w10 = 8;
         v18 = v18 * w10;
@@ -1781,6 +1783,7 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
         ((RenderNode*)this)->F4055b0(bp, *(int32_t*)bp, *(int32_t*)(bp + 4), g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
         *(int32_t*)((uint8_t*)item + 0x17c) = 1;
     }
+Fdone:;
 }
 
 extern "C" int32_t g_460744;
@@ -2539,9 +2542,8 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
     IntPair q3;
     IntPair tmp;
 
-    n = *(int32_t*)(s + 0xac) + 1;
-    *(int32_t*)(s + 0xac) = n;
-    if (n >= 8)
+    *(int32_t*)(s + 0xac) = *(int32_t*)(s + 0xac) + 1;
+    if (*(int32_t*)(s + 0xac) >= 8)
         *(int32_t*)(s + 0xac) = 0;
 
     k = 0;
@@ -2549,7 +2551,7 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
     if (obj != NULL)
         k = *(int32_t*)((uint8_t*)obj + 0x540);
 
-    IntPair p0 = ((RenderNode*)((uint8_t*)a0 + 0x818c))->CopyPos();
+    IntPair p0 = ((RenderNode*)(sub = (uint8_t*)a0 + 0x818c))->CopyPos();
     *(volatile int32_t*)&g_4a4790 = p0.x;
     *(volatile int32_t*)&g_4a4794 = p0.y;
 
@@ -2557,26 +2559,27 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
     g_4a47b0 = *(int32_t*)(*(uint8_t**)((uint8_t*)a0 + 0x188) + 0x1c);
     c = (int32_t)*(int16_t*)(s + 0x88);
     g_4a47bc = g_4a4790 - c;
-    g_4a47d8 = g_4a4794 - c;
+    g_4a47d8 = p0.y - c;
     g_4a4798 = g_4a4790 + c;
-    g_4a479c = g_4a4794 + c;
+    g_4a479c = c + p0.y;
 
     {
         int32_t d = *(int32_t*)(s + 0x80);
         int32_t v;
 
-        (void)sub;
-        v = ((RenderNode*)((uint8_t*)a0 + 0x818c))->GetPair(&p1)->x;
-        v = (v << 16) / d;
-        *(volatile int32_t*)&c = (*(int32_t*)(s + 0x7c) - v);
-        g_4a47e0 = (*(volatile int32_t*)&c) - *(int32_t*)(s + 0x78);
+        (void)d;
+        v = ((RenderNode*)sub)->GetPair(&p1)->x;
+        v = (v << 16) / *(int32_t*)(s + 0x80);
+        c = (*(int32_t*)(s + 0x7c) - v);
+        g_4a47e0 = c - *(int32_t*)(s + 0x78);
     }
     {
         int32_t d = *(int32_t*)(s + 0x80);
         int32_t v;
 
-        v = ((RenderNode*)((uint8_t*)a0 + 0x818c))->GetPair(&p2)->y;
-        v = (v << 16) / d;
+        (void)d;
+        v = ((RenderNode*)sub)->GetPair(&p2)->y;
+        v = (v << 16) / *(int32_t*)(s + 0x80);
         *(volatile int32_t*)&n = (*(int32_t*)(s + 0x7c) - v);
         g_4a47e4 = (*(volatile int32_t*)&n) - *(int32_t*)(s + 0x74);
     }
