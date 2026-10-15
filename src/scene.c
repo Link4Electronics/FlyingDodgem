@@ -232,13 +232,13 @@ int32_t HoverTc::F401520(void* a1, void* a2)
     int32_t i;
     /* Axis-aligned short-circuit (retail checks +0x2c/+0x30): no slope to
      * divide by, so only test containment and clamp the moving axis. */
-    if (dx == 0 && dy == 0)
+    if (*(int32_t*)(self + 0x2c) == 0 && *(int32_t*)(self + 0x30) == 0)
     {
         if (px < x0 || px > x1 || py < y0 || py > y1)
             return 0;
         return 1;
     }
-    if (dx == 0)
+    if (*(int32_t*)(self + 0x2c) == 0)
     {
         if (px < x0 || px > x1)
             return 0;
@@ -249,7 +249,7 @@ int32_t HoverTc::F401520(void* a1, void* a2)
         pt[1] = py;
         return 1;
     }
-    if (dy == 0)
+    if (*(int32_t*)(self + 0x30) == 0)
     {
         if (py < y0 || py > y1)
             return 0;
@@ -317,115 +317,126 @@ int32_t HoverTc::F401520(void* a1, void* a2)
 // FUNCTION: HOVER 0x00401c00
 void HoverTc::F401c00(void* a1, void* a2)
 {
-    uint8_t* obj = (uint8_t*)a1;
+    uint8_t* obj;
+    (void)obj;
     uint8_t* rend;
     uint8_t color;
     uint16_t w;
     uint32_t dw;
     int32_t hasColor;
+    (void)hasColor;
 
-    if (((RenderNode*)obj)->IsKindOf(g_data_5570) == 0)
+    if (((RenderNode*)a1)->IsKindOf(g_data_5570) != 0)
     {
-        if (((RenderNode*)obj)->IsKindOf(g_data_5340) == 0)
+        if (*(int32_t*)((uint8_t*)a1 + 0x38) != 0)
+            return;
+
+        if (a2 == 0)
         {
-            if (((RenderNode*)obj)->IsKindOf(g_data_5318) == 0)
-            {
-                if (((RenderNode*)obj)->IsKindOf(g_data_53f8) == 0)
-                    return;
-                hasColor = 0;
-                if (((RenderNode*)obj)->IsKindOf(g_data_5488) != 0)
-                {
-                    color = *(uint8_t*)((uint8_t*)this + 0x8c);
-                    hasColor = 1;
-                }
-                else if (((RenderNode*)obj)->IsKindOf(g_data_54b8) != 0)
-                {
-                    if (*(int32_t*)(obj + 0xc0) != 0)
-                        color = *(uint8_t*)((uint8_t*)this + 0x98);
-                    else if (*(int32_t*)(obj + 0x21c) != 0)
-                        color = *(uint8_t*)((uint8_t*)this + 0x94);
-                    else
-                        color = *(uint8_t*)((uint8_t*)this + 0x90);
-                    hasColor = 1;
-                }
-                if (hasColor != 0)
-                {
-                    *(uint8_t*)((uint8_t*)this + 0x1c) = color;
-                    w = color;
-                    w = (uint16_t)((w << 8) | w);
-                    dw = w;
-                    dw = (dw << 16) | dw;
-                    *(uint32_t*)((uint8_t*)this + 0x20) = dw;
-                }
-                this->F401980(*(int32_t*)(obj + 0x164), *(int32_t*)(obj + 0x168), *(int32_t*)(obj + 0x16c), *(int32_t*)(obj + 0x170));
-                this->F401980(*(int32_t*)(obj + 0x16c), *(int32_t*)(obj + 0x170), *(int32_t*)(obj + 0x174), *(int32_t*)(obj + 0x178));
-                this->F401980(*(int32_t*)(obj + 0x174), *(int32_t*)(obj + 0x178), *(int32_t*)(obj + 0x164), *(int32_t*)(obj + 0x168));
+            uint8_t* parent = *(uint8_t**)((uint8_t*)a1 + 0x78);
+            if (parent == 0)
                 return;
-            }
-            if (a2 == 0)
-            {
-                uint8_t* parent = *(uint8_t**)(obj + 0x78);
-                if (parent == 0)
-                    return;
-                if ((*(uint8_t*)(parent + 0x24) & 8) == 0)
-                    return;
-            }
-            if (*(int32_t*)(obj + 0x3c) == 0)
+            if ((*(uint8_t*)(parent + 0x24) & 8) == 0)
                 return;
-            color = *(uint8_t*)(obj + 0x40);
+        }
+
+        if (*(int32_t*)((uint8_t*)a1 + 0x3c) == 0)
+            return;
+
+        rend = *(uint8_t**)((uint8_t*)a1 + 0x78);
+        if (*(int32_t*)(rend + 0xbc) == 0)
+            color = *(uint8_t*)((uint8_t*)this + 0x98);
+        else if (*(int16_t*)(rend + 0xa4) > 0)
+            color = *(uint8_t*)((uint8_t*)this + 0xa8);
+        else
+            color = *(uint8_t*)((uint8_t*)this + 0x9c);
+
+        *(uint8_t*)((uint8_t*)this + 0x1c) = color;
+        w = color;
+        w = (uint16_t)((w << 8) | w);
+        dw = ((uint32_t)w << 16) | w;
+        *(uint32_t*)((uint8_t*)this + 0x20) = dw;
+
+        rend = (uint8_t*)a1 + 0x8c;
+        a1 = (void*)((uint8_t*)a1 + 0x84);
+        this->F401980(*(int32_t*)((uint8_t*)a1), *(int32_t*)((uint8_t*)a1 + 4), *(int32_t*)rend, *(int32_t*)(rend + 4));
+    }
+    else
+    {
+        if (((RenderNode*)a1)->IsKindOf(g_data_5340) != 0)
+        {
+            if (*(int32_t*)((uint8_t*)a1 + 0x28) == 0)
+                return;
+            color = *(uint8_t*)((uint8_t*)this + 0x9c);
             *(uint8_t*)((uint8_t*)this + 0x1c) = color;
             w = color;
             w = (uint16_t)((w << 8) | w);
             dw = w;
             dw = (dw << 16) | dw;
             *(uint32_t*)((uint8_t*)this + 0x20) = dw;
-            DrawCell3910(this, NULL, *(int32_t*)(obj + 0xc0), *(int32_t*)(obj + 0xc4), 5);
-            return;
+        rend = (uint8_t*)a1 + 0xf8;
+        a1 = (void*)((uint8_t*)a1 + 0xf0);
+        this->F401980(*(int32_t*)((uint8_t*)a1), *(int32_t*)((uint8_t*)a1 + 4), *(int32_t*)rend, *(int32_t*)(rend + 4));
+        return;
         }
-        if (*(int32_t*)(obj + 0x28) == 0)
-            return;
-        color = *(uint8_t*)((uint8_t*)this + 0x9c);
-        *(uint8_t*)((uint8_t*)this + 0x1c) = color;
-        w = color;
-        w = (uint16_t)((w << 8) | w);
-        dw = w;
-        dw = (dw << 16) | dw;
-        *(uint32_t*)((uint8_t*)this + 0x20) = dw;
-        this->F401980(*(int32_t*)(obj + 0xf0), *(int32_t*)(obj + 0xf4), *(int32_t*)(obj + 0xf8), *(int32_t*)(obj + 0xfc));
-        return;
+        else
+        {
+            if (((RenderNode*)a1)->IsKindOf(g_data_5318) != 0)
+            {
+                if (a2 == 0)
+                {
+                    uint8_t* parent = *(uint8_t**)((uint8_t*)a1 + 0x78);
+                    if (parent == 0)
+                        return;
+                    if ((*(uint8_t*)(parent + 0x24) & 8) == 0)
+                        return;
+                }
+                if (*(int32_t*)((uint8_t*)a1 + 0x3c) == 0)
+                    return;
+                color = *(uint8_t*)((uint8_t*)a1 + 0x40);
+                *(uint8_t*)((uint8_t*)this + 0x1c) = color;
+                w = color;
+                w = (uint16_t)((w << 8) | w);
+                dw = w;
+                dw = (dw << 16) | dw;
+                *(uint32_t*)((uint8_t*)this + 0x20) = dw;
+                DrawCell3910(this, NULL, *(int32_t*)((uint8_t*)a1 + 0xc0), *(int32_t*)((uint8_t*)a1 + 0xc4), 5);
+                return;
+            }
+            else
+            {
+                if (((RenderNode*)a1)->IsKindOf(g_data_53f8) == 0)
+                    return;
+                if (((RenderNode*)a1)->IsKindOf(g_data_5488) != 0)
+                {
+                    color = *(uint8_t*)((uint8_t*)this + 0x8c);
+                    goto docolor;
+                }
+                if (((RenderNode*)a1)->IsKindOf(g_data_54b8) == 0)
+                    goto nocolor;
+                if (*(int32_t*)((uint8_t*)a1 + 0xc0) != 0)
+                    color = *(uint8_t*)((uint8_t*)this + 0x98);
+                else if (*(int32_t*)((uint8_t*)a1 + 0x21c) != 0)
+                    color = *(uint8_t*)((uint8_t*)this + 0x94);
+                else
+                    color = *(uint8_t*)((uint8_t*)this + 0x90);
+docolor:
+                *(uint8_t*)((uint8_t*)this + 0x1c) = color;
+                w = color;
+                w = (uint16_t)((w << 8) | w);
+                dw = ((uint32_t)w << 16) | w;
+                *(uint32_t*)((uint8_t*)this + 0x20) = dw;
+nocolor:
+                rend = (uint8_t*)a1 + 0x164;
+                a2 = (void*)((uint8_t*)a1 + 0x16c);
+                a1 = (void*)((uint8_t*)a1 + 0x174);
+                this->F401980(*(int32_t*)rend, *(int32_t*)(rend + 4), *(int32_t*)a2, *(int32_t*)((uint8_t*)a2 + 4));
+                this->F401980(*(int32_t*)a2, *(int32_t*)((uint8_t*)a2 + 4), *(int32_t*)((uint8_t*)a1), *(int32_t*)((uint8_t*)a1 + 4));
+                this->F401980(*(int32_t*)((uint8_t*)a1), *(int32_t*)((uint8_t*)a1 + 4), *(int32_t*)rend, *(int32_t*)(rend + 4));
+                return;
+            }
+        }
     }
-
-    if (*(int32_t*)(obj + 0x38) != 0)
-        return;
-
-    if (a2 == 0)
-    {
-        uint8_t* parent = *(uint8_t**)(obj + 0x78);
-        if (parent == 0)
-            return;
-        if ((*(uint8_t*)(parent + 0x24) & 8) == 0)
-            return;
-    }
-
-    if (*(int32_t*)(obj + 0x3c) == 0)
-        return;
-
-    rend = *(uint8_t**)(obj + 0x78);
-    if (*(int32_t*)(rend + 0xbc) == 0)
-        color = *(uint8_t*)((uint8_t*)this + 0x98);
-    else if (*(int16_t*)(rend + 0xa4) > 0)
-        color = *(uint8_t*)((uint8_t*)this + 0xa8);
-    else
-        color = *(uint8_t*)((uint8_t*)this + 0x9c);
-
-    *(uint8_t*)((uint8_t*)this + 0x1c) = color;
-    w = color;
-    w = (uint16_t)((w << 8) | w);
-    dw = w;
-    dw = (dw << 16) | dw;
-    *(uint32_t*)((uint8_t*)this + 0x20) = dw;
-
-    this->F401980(*(int32_t*)(obj + 0x84), *(int32_t*)(obj + 0x88), *(int32_t*)(obj + 0x8c), *(int32_t*)(obj + 0x90));
 }
 
 // FUNCTION: HOVER 0x00401980
@@ -452,11 +463,9 @@ void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
     int32_t n;
 
     dx = x0 - x1;
-    if (dx < 0)
-        dx = -dx;
+    dx = dx < 0 ? -dx : dx;
     dy = y0 - y1;
-    if (dy < 0)
-        dy = -dy;
+    dy = dy < 0 ? -dy : dy;
     *(int32_t*)((uint8_t*)this + 0x2c) = dx;
     *(int32_t*)((uint8_t*)this + 0x30) = dy;
 
@@ -475,11 +484,9 @@ void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
     fy1 = *(int32_t*)((uint8_t*)this + 0x18) - pt1[1] - 1;
 
     adx = fx0 - fx1;
-    if (adx < 0)
-        adx = -adx;
+    adx = adx < 0 ? -adx : adx;
     ady = fy0 - fy1;
-    if (ady < 0)
-        ady = -ady;
+    ady = ady < 0 ? -ady : ady;
     *(int32_t*)((uint8_t*)this + 0x2c) = adx;
     *(int32_t*)((uint8_t*)this + 0x30) = ady;
     if (adx == 0 && ady == 0)
@@ -497,10 +504,9 @@ void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
         slope = (int32_t)(((int32_t)ady << 16) / adx);
         if (fy1 < fy0)
             pitch = -pitch;
+        xstep = -1;
         if (fx1 >= fx0)
             xstep = 1;
-        else
-            xstep = -1;
         ystep = pitch;
         acc = 0x8000;
         for (n = adx; n != 0; n--)

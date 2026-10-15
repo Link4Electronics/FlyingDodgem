@@ -423,7 +423,7 @@ void* __fastcall GetField459d94(void* self)
 extern void* g_46058c;
 void* __cdecl GetSub401140(void)
 {
-    if (g_46058c == NULL)
+    if (*(void* volatile*)&g_46058c == NULL)
         return NULL;
     return GetField459d94(g_46058c);
 }

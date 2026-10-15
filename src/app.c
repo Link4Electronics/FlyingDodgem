@@ -284,13 +284,12 @@ void App_Bootstrap(void)
     ((AppVftInitInstance*)g_appVtable)->InitInstance(app);
 }
 
-/* Static initializer: retail constructs theApp before WinMain (0x426546). */
+/* Static initializer: retail constructs theApp before WinMain (0x426546).
+ * Plain file-static form (no anonymous namespace) so MSVC 2.2 (CL 9.10,
+ * which predates the namespace keyword) compiles it identically. */
 #if defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__)
-namespace {
-struct AppStaticInit
+static struct AppStaticInit
 {
     AppStaticInit() { App_Bootstrap(); }
-};
-static AppStaticInit s_appStaticInit;
-}
+} s_appStaticInit;
 #endif

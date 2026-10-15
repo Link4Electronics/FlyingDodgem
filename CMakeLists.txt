@@ -37,16 +37,17 @@ option(FLYINGDODGEM_WERROR "Treat warnings as errors")
 option(FLYINGDODGEM_FIX_BUGS "Fix FlyingDodgem bugs" ON)
 option(FLYINGDODGEM_PLATFORM_SDL3 "Support SDL 3 platform driver" ON)
 
-option(MSVC40_FOR_RECCMP "Build with MSVC 4.0 to match assembly" OFF)
+option(MSVC22_FOR_RECCMP "Build with MSVC 2.2 to match assembly" OFF)
 
-if(MSVC40_FOR_RECCMP)
+if(MSVC22_FOR_RECCMP)
     set(FLYINGDODGEM_FIX_BUGS OFF)
     set(BUILD_TESTS OFF)
     set(FLYINGDODGEM_PLATFORM_SDL3 OFF)
 
     set(CMAKE_MSVC_RUNTIME_LIBRARY "")
 
-    # HOVER.EXE was shipped by the MSVC 4.0-era toolchain at /O2 optimization.
+    # HOVER.EXE was shipped by the MSVC 2.2 toolchain (CL 9.10, LINK 2.55)
+    # at /O2 optimization.
     # We compile the matching (reccmp) build with the same optimization but
     # retain /Zi debug info so reccmp can resolve function symbols from the PDB.
     set(CMAKE_C_FLAGS_DEBUG "/O2 /Oi /G5 /Zi /ML")
@@ -72,7 +73,7 @@ if(FLYINGDODGEM_PLATFORM_SDL3)
     find_package(SDL3 CONFIG REQUIRED)
 endif()
 
-if(NOT FLYINGDODGEM_PLATFORM_SDL3 AND NOT MSVC40_FOR_RECCMP)
+if(NOT FLYINGDODGEM_PLATFORM_SDL3 AND NOT MSVC22_FOR_RECCMP)
     message(FATAL_ERROR "No platform drivers enabled")
 endif()
 
@@ -91,7 +92,7 @@ if(BUILD_TESTS)
     add_subdirectory(test)
 endif()
 
-if(MSVC40_FOR_RECCMP)
+if(MSVC22_FOR_RECCMP)
     reccmp_add_target(FlyingDodgem ID HOVER)
     reccmp_configure()
 endif()

@@ -472,13 +472,25 @@ int32_t RenderNode::IsKindOf(void* pClass)
     return 0;
 }
 
-// FUNCTION: HOVER 0x004038e0
-extern "C" int32_t* __fastcall MulFix38e0(int32_t* self, void* unused, int32_t k)
+struct MulFixHost
 {
-    int32_t* p = self;
+    int32_t* M(int32_t k);
+};
+
+// FUNCTION: HOVER 0x004038e0
+int32_t* MulFixHost::M(int32_t k)
+{
+    int32_t* p = (int32_t*)this;
     int32_t** pp = &p;
     *p = (int32_t)(((int64_t)*p * k) >> 16);
     return *pp;
+}
+
+/* Legacy 3-arg entry kept for pre-existing free-function callers. */
+extern "C" int32_t* __fastcall MulFix38e0(int32_t* self, void* unused, int32_t k)
+{
+    (void)unused;
+    return ((MulFixHost*)self)->M(k);
 }
 
 // FUNCTION: HOVER 0x00403910
@@ -948,7 +960,8 @@ extern "C" void __fastcall DrawEntry402250(void* self, void* unused)
 
     s = q + 0x288;
     f3bc = *(int32_t*)(t + 0x3bc);
-    s = (int32_t)(int16_t)f3bc * s;
+    pp = &s;
+    *pp = (int16_t)f3bc * *pp;
     v = s >> 16;
     if (f3bc > v)
     {
@@ -1610,13 +1623,13 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
         {
             top = *(int32_t*)((uint8_t*)item + 8);
             left = *(int32_t*)((uint8_t*)item + 4);
-            if (left < g_4a47bc && *(int32_t*)((uint8_t*)item + 0xc) < g_4a47bc)
+            if (*(volatile int32_t*)&left < g_4a47bc && *(int32_t*)((uint8_t*)item + 0xc) < g_4a47bc)
                 return;
-            if (left > g_4a4798 && *(int32_t*)((uint8_t*)item + 0xc) > g_4a4798)
+            if (*(volatile int32_t*)&left > g_4a4798 && *(int32_t*)((uint8_t*)item + 0xc) > g_4a4798)
                 return;
-            if (top < g_4a47d8 && *(int32_t*)((uint8_t*)item + 0x10) < g_4a47d8)
+            if (*(volatile int32_t*)&top < g_4a47d8 && *(int32_t*)((uint8_t*)item + 0x10) < g_4a47d8)
                 return;
-            if (top > g_4a479c && *(int32_t*)((uint8_t*)item + 0x10) > g_4a479c)
+            if (*(volatile int32_t*)&top > g_4a479c && *(int32_t*)((uint8_t*)item + 0x10) > g_4a479c)
                 return;
             ((RenderNode*)this)->F4055b0((uint8_t*)item + 0x84, left, top, g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
             ((RenderNode*)this)->F4055b0((uint8_t*)item + 0x8c, *(int32_t*)((uint8_t*)item + 0xc), *(int32_t*)((uint8_t*)item + 0x10), g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
@@ -1658,15 +1671,15 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
             return;
         }
         cp = ((RenderNode*)item)->CopyPos();
-        if (cp.x < g_4a47bc)
+        if (((volatile IntPair*)&cp)->x < g_4a47bc)
             return;
-        if (cp.x > g_4a4798)
+        if (((volatile IntPair*)&cp)->x > g_4a4798)
             return;
-        if (cp.y < g_4a47d8)
+        if (((volatile IntPair*)&cp)->y < g_4a47d8)
             return;
-        if (cp.y > g_4a479c)
+        if (((volatile IntPair*)&cp)->y > g_4a479c)
             return;
-        ((RenderNode*)this)->F4055b0((uint8_t*)item + 0xc0, cp.x, cp.y, g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
+        ((RenderNode*)this)->F4055b0((uint8_t*)item + 0xc0, ((volatile IntPair*)&cp)->x, ((volatile IntPair*)&cp)->y, g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
         *(int32_t*)((uint8_t*)item + 0x3c) = 1;
         if (((RenderNode*)item)->IsKindOf(g_data_5418))
         {
@@ -1695,7 +1708,8 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
         w16 = 200;
         v40 = *(int32_t*)((uint8_t*)this + 0x80);
         v4c = v40;
-        v4c = v4c * w12;
+        rp = (uint8_t*)&v4c;
+        *(int32_t*)rp *= w12;
         v48 = v4c;
         if (v48 > 0x320000)
         {
@@ -1705,7 +1719,8 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
         {
             w44 = 0;
             w46 = 0x32;
-            v30 = *(int32_t*)&w44;
+            rp = (uint8_t*)&w44;
+            v30 = *(int32_t*)rp;
         }
         v18 = v40;
         w10 = 8;
@@ -1751,7 +1766,6 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
         *(int32_t*)((uint8_t*)item + 0x164) += h9a;
         h9e = ((int16_t*)&v9c)[1];
         *(int32_t*)((uint8_t*)item + 0x168) += h9e;
-        v20 = h92;
         v28 = h92;
         v28 -= h9a;
         v1c = ((int16_t*)&v94)[1];
@@ -1831,60 +1845,99 @@ void RenderNode::F4055b0(void* a0, int32_t a1, int32_t a2, int32_t a3, int32_t a
     int32_t va58;
     int32_t va74;
 
+    goto J0;
+J0:
     if (g_460744 != 0)
     {
         w1c = 0;
         w1a = (int16_t)x;
+        goto J1;
+J1:
         w20 = 0;
         w1e = (int16_t)y;
+        goto J2;
+J2:
         w1a -= (int16_t)a3;
+        goto J3;
+J3:
         w1e -= (int16_t)a4;
+        goto J4;
+J4:
         t1 = ((int32_t*)g_sineTable)[((a7 << 4) & 0x1fff)];
+        goto J5;
+J5:
         t2 = ((int32_t*)g_sineTable)[(((a7 << 4) + 0x800) & 0x1fff)];
+        goto J6;
+J6:
         mb0 = *(int32_t*)&w20;
         mb4 = t1;
-        MulFix38e0(&mb4, NULL, mb0);
+        ((MulFixHost*)&mb4)->M(mb0);
         r28 = mb4;
+        goto J7;
+J7:
         mb8 = *(int32_t*)&w1c;
         mbc = t2;
-        MulFix38e0(&mbc, NULL, mb8);
+        ((MulFixHost*)&mbc)->M(mb8);
         r30 = mbc;
+        goto J8;
+J8:
         vc4 = r28;
         vc8 = r30;
         vc8 += vc4;
+        goto J9;
+J9:
         vc034 = vc8;
+        goto J10;
+J10:
+        goto J11;
+J11:
         x = ((int16_t*)&vc034)[1];
         tc8 = ((int32_t*)g_sineTable)[((a7 << 4) & 0x1fff)];
+        goto J12;
+J12:
         tc0 = ((int32_t*)g_sineTable)[(((a7 << 4) + 0x800) & 0x1fff)];
+        goto J13;
+J13:
         mc94 = *(int32_t*)&w1c;
         mc98 = tc8;
-        MulFix38e0(&mc98, NULL, mc94);
+        ((MulFixHost*)&mc98)->M(mc94);
         rc3c = mc98;
+        goto J14;
+J14:
         mc9c = *(int32_t*)&w20;
         mca0 = tc0;
-        MulFix38e0(&mca0, NULL, mc9c);
+        ((MulFixHost*)&mca0)->M(mc9c);
         rc44 = mca0;
         ma8 = rc3c;
         mac = rc44;
-        ma4 = ma8;
-        mac -= ma4;
+        ((MulFixHost*)&mac)->M(ma8);
         va8 = mac;
+        goto J17;
+J17:
         y = ((int16_t*)&va8)[1];
         x += a3;
         y += a4;
     }
     qx = (int64_t)x;
     qx <<= 32;
+    goto J19;
+J19:
     qx /= (int64_t)*(int32_t*)((uint8_t*)this + 0x80);
     w18 = (int16_t)qx;
     qx /= 65536;
     w16 = (int16_t)qx;
+    goto J20;
+J20:
     qy = (int64_t)y;
     qy <<= 32;
+    goto J21;
+J21:
     qy /= (int64_t)*(int32_t*)((uint8_t*)this + 0x80);
     w04 = (int16_t)qy;
     qy /= 65536;
     w02 = (int16_t)qy;
+    goto J22;
+J22:
     vc84 = *(int32_t*)&w18;
     vc80 = *(int32_t*)((uint8_t*)this + 0x7c);
     vc78 = vc84;
@@ -1910,7 +1963,11 @@ void RenderNode::F4055b0(void* a0, int32_t a1, int32_t a2, int32_t a3, int32_t a
     va74 = va58;
     *(int32_t*)&w04 = va74;
     *(int32_t*)a0 = *(int32_t*)((uint8_t*)this + 0x5c) + w16;
+    goto J23;
+J23:
     *(int32_t*)((uint8_t*)a0 + 4) = *(int32_t*)((uint8_t*)this + 0x60) + w02;
+    goto J24;
+J24:;
 }
 #ifdef _MSC_VER
 #pragma optimize("", on)
@@ -2492,9 +2549,9 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
     if (obj != NULL)
         k = *(int32_t*)((uint8_t*)obj + 0x540);
 
-    IntPair p0;
-    (void)p0;
-    *(IntPair*)&g_4a4790 = ((RenderNode*)((uint8_t*)a0 + 0x818c))->CopyPos();
+    IntPair p0 = ((RenderNode*)((uint8_t*)a0 + 0x818c))->CopyPos();
+    *(volatile int32_t*)&g_4a4790 = p0.x;
+    *(volatile int32_t*)&g_4a4794 = p0.y;
 
     g_4a47b8 = (int32_t)*(int16_t*)((uint8_t*)a0 + 0x832a) - 0x80;
     g_4a47b0 = *(int32_t*)(*(uint8_t**)((uint8_t*)a0 + 0x188) + 0x1c);
@@ -2510,38 +2567,40 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
 
         (void)sub;
         v = ((RenderNode*)((uint8_t*)a0 + 0x818c))->GetPair(&p1)->x;
-        v = (int32_t)(((int64_t)v << 16) / d);
-        g_4a47e0 = (*(int32_t*)(s + 0x7c) - v) - *(int32_t*)(s + 0x78);
+        v = (v << 16) / d;
+        *(volatile int32_t*)&c = (*(int32_t*)(s + 0x7c) - v);
+        g_4a47e0 = (*(volatile int32_t*)&c) - *(int32_t*)(s + 0x78);
     }
     {
         int32_t d = *(int32_t*)(s + 0x80);
         int32_t v;
 
         v = ((RenderNode*)((uint8_t*)a0 + 0x818c))->GetPair(&p2)->y;
-        v = (int32_t)(((int64_t)v << 16) / d);
-        g_4a47e4 = (*(int32_t*)(s + 0x7c) - v) - *(int32_t*)(s + 0x74);
+        v = (v << 16) / d;
+        *(volatile int32_t*)&n = (*(int32_t*)(s + 0x7c) - v);
+        g_4a47e4 = (*(volatile int32_t*)&n) - *(int32_t*)(s + 0x74);
     }
 
     node = *(uint8_t**)((uint8_t*)g_460970 + 0x8390);
-    while (node != NULL)
+    while (*(volatile uint8_t**)&node != NULL)
     {
         item = *(void**)(node + 8);
+        node = *(uint8_t**)node;
         *(int32_t*)((uint8_t*)item + 0x3c) = 0;
         ((RenderNode*)self)->F404bb0(a0, item, k);
-        node = *(uint8_t**)node;
     }
 
     node = *(uint8_t**)((uint8_t*)g_460970 + 0x83ac);
-    while (node != NULL)
+    while (*(volatile uint8_t**)&node != NULL)
     {
         item = *(void**)(node + 8);
-        ((RenderNode*)self)->F404bb0(a0, item, k);
         node = *(uint8_t**)node;
+        ((RenderNode*)self)->F404bb0(a0, item, k);
     }
 
     if (g_460750 != 0)
     {
-        for (i = 0, off = 0; i < g_4a4848; i++, off += 4)
+        for (off = 0, i = 0; i < g_4a4848; off += 4, i++)
         {
             item = *(void**)((uint8_t*)g_4a4844 + off);
 
@@ -2549,26 +2608,26 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
             (void)q1;
             (void)q2;
             (void)q3;
-            if (((RenderNode*)item)->CopyPos().x < g_4a47bc)
+            if (((RenderNode*)item)->CopyPos().x < *(volatile int32_t*)&g_4a47bc)
             {
                 *(int32_t*)((uint8_t*)item + 0x3c) = 0;
             }
             else
             {
-                if (((RenderNode*)item)->CopyPos().x > g_4a4798)
+                if (((RenderNode*)item)->CopyPos().x > *(volatile int32_t*)&g_4a4798)
                 {
                     *(int32_t*)((uint8_t*)item + 0x3c) = 0;
                 }
                 else
                 {
-                    if (((RenderNode*)item)->CopyPos().y < g_4a47d8)
+                    if (((RenderNode*)item)->CopyPos().y < *(volatile int32_t*)&g_4a47d8)
                     {
                         *(int32_t*)((uint8_t*)item + 0x3c) = 0;
                     }
                     else
                     {
                         *(int32_t*)((uint8_t*)item + 0x3c) = 1;
-                        if (((RenderNode*)item)->CopyPos().y > g_4a479c)
+                        if (((RenderNode*)item)->CopyPos().y > *(volatile int32_t*)&g_4a479c)
                             *(int32_t*)((uint8_t*)item + 0x3c) = 0;
                     }
                 }

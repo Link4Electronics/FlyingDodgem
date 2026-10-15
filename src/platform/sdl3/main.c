@@ -5,6 +5,7 @@
 #include "gameframe.h"
 #include "gdi32_compat.h"
 #include "resources.h"
+#include "sine_native.h"
 #include "texmaze.h"
 
 #if defined(FLYINGDODGEM_GDI_COMPAT)
@@ -396,6 +397,12 @@ int main(int argc, char **argv)
      * native harness (retail does the same work from 0x426546 before
      * WinMain). */
     App_Bootstrap();
+
+    /* Retail generates the fixed-point sine table at startup into BSS
+     * (0x4aca58 carries no file bytes); without it every sine/cosine read
+     * is 0 and the minimap rotation collapses. Must run before any frame,
+     * display, or audio work that can touch trig. */
+    SineNative_Init();
 
     PlatAudio_Init();
 
