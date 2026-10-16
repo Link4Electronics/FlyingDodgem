@@ -2018,3 +2018,11 @@ void* __fastcall Sub44f9a3(void* self, void* unused, void* prev)
     (void)prev;
     return NULL;
 }
+
+/* Static CRT helpers linked from MSVC 2.2 LIBC.LIB. The retail binary calls
+ * these at 0x43f92c / 0x43f890; annotating them lets reccmp name the call
+ * targets on both sides. */
+// LIBRARY: HOVER 0x0043f92c
+// __allshl
+// LIBRARY: HOVER 0x0043f890
+// __alldiv

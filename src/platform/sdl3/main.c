@@ -532,7 +532,6 @@ int main(int argc, char **argv)
     load_maze_assets();
 
     bool running = true;
-    bool captured = false;
     while (running)
     {
         running = PlatDisplay_PollEvents(display);
@@ -595,29 +594,6 @@ int main(int argc, char **argv)
 
         Game_RenderFrame(screen, dash, dashCount, selected);
         GdiCompat_Present(screen, back, pitch, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-        if (getenv("FLYINGDODGEM_CAPTURE") != NULL && !captured)
-        {
-            FILE *f = fopen("flyingdodgem.ppm", "wb");
-            if (f != NULL)
-            {
-                fprintf(f, "P6\n%u %u\n255\n", VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-                u32 y;
-                for (y = 0; y < VIEWPORT_HEIGHT; y++)
-                {
-                    const u8 *row = back + (u64)y * pitch;
-                    u32 x;
-                    for (x = 0; x < VIEWPORT_WIDTH; x++)
-                    {
-                        fputc(row[x * 4 + 0], f);
-                        fputc(row[x * 4 + 1], f);
-                        fputc(row[x * 4 + 2], f);
-                    }
-                }
-                fclose(f);
-                printf("FlyingDodgem: captured flyingdodgem.ppm\n");
-            }
-            captured = true;
-        }
 #endif
 
         PlatDisplay_Present(display);

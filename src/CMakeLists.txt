@@ -155,3 +155,12 @@ else()
         platform/null/display.c
     )
 endif()
+
+if(MSVC22_FOR_RECCMP)
+    # LINK 3.00 (MSVC 4.0) resolves the default LIBC.LIB from its own
+    # directory, pulling the newer CRT (e.g. its __allshl is the fast
+    # `and cl,0x1f; shl edx,cl` form). Retail links MSVC 2.2's LIBC.LIB,
+    # whose helpers (__allshl loop form, __alldiv, ...) are byte-identical
+    # to HOVER.EXE's. Name it explicitly so the retail runtime wins.
+    target_link_libraries(FlyingDodgem PRIVATE "C:/msvc22/lib/LIBC.LIB")
+endif()

@@ -32,9 +32,12 @@ struct HoverTc
     void M405fa0(int16_t a1);
     int32_t M406090(void* a1, void* a2);
     int32_t M40cce0(void* a1, void* a2, void* a3, void* a4);
-    int32_t M413c10(void* a1);
+    void M410ec0();
+    void M410f20(int32_t a1, int32_t a2);
+    void M40fee0(void* a1, void* a2, void* a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7);
+    void M413c10(void* a1);
     int32_t M4184b0(void* a1, void* a2);
-    int32_t M427a80(void* a1);
+    void M427a80(void* a1);
     int32_t M449598(int32_t a1, int32_t a2);
     int32_t M44994f(void* a1);
     int32_t M44a003(void* a1, void* a2, void* a3);

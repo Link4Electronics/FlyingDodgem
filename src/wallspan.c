@@ -275,13 +275,13 @@ int32_t HoverTc::M405b90(void* a1)
     int32_t node_18 = *(int32_t*)(node + 0x18);
     int32_t first = (g_4a44b0 - node_18) * g_4a44d0 + (node_14 - g_4a44ac) * g_4a44d4;
     int32_t second = (node_14 - g_4a44f4) * g_4a451c + (g_4a44f8 - node_18) * g_4a4518;
-    if (first < 0 && second >= 0)
+    if ((first < 0) & (second >= 0))
         return 1;
     node_14 = (first >= 0);
     node_18 = (second >= 0);
     first = (g_4a44b0 - *(int32_t*)(node + 0x20)) * g_4a44d0 + (*(int32_t*)(node + 0x1c) - g_4a44ac) * g_4a44d4;
     second = (*(int32_t*)(node + 0x1c) - g_4a44f4) * g_4a451c + (g_4a44f8 - *(int32_t*)(node + 0x20)) * g_4a4518;
-    if (first < 0 && second >= 0)
+    if ((first < 0) & (second >= 0))
         return 1;
     if ((*(int32_t*)(node + 0x18) - g_4a44b0) * *(int32_t*)(node + 0x38) + (g_4a44ac - *(int32_t*)(node + 0x14)) * *(int32_t*)(node + 0x3c) >= 0)
     {
@@ -312,6 +312,10 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
     (void)a1;
     (void)a3;
     (void)a4;
+#ifdef _MSC_VER
+    __asm { mov eax, rec0 }
+    __asm { mov eax, rec1 }
+#endif
     /* Native Y-flip (world +Y south vs math +Y north) so angles agree with
      * the flipped dirTable; matching sees the original retail operands. */
 #if defined(FLYINGDODGEM_GDI_COMPAT)

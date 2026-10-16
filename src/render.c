@@ -481,9 +481,18 @@ struct MulFixHost
 int32_t* MulFixHost::M(int32_t k)
 {
     int32_t* p = (int32_t*)this;
-    int32_t** pp = &p;
-    *p = (int32_t)(((int64_t)*p * k) >> 16);
-    return *pp;
+#if defined(_MSC_VER) && !defined(_M_X64)
+    __asm {
+        mov ecx, p
+        mov eax, [ecx]
+        imul k
+        shrd eax, edx, 16
+        mov [ecx], eax
+    }
+#else
+    *p = (int32_t)(((int64_t)*p * (int64_t)k) >> 16);
+#endif
+    return p;
 }
 
 /* Legacy 3-arg entry kept for pre-existing free-function callers. */
@@ -496,26 +505,27 @@ extern "C" int32_t* __fastcall MulFix38e0(int32_t* self, void* unused, int32_t k
 // FUNCTION: HOVER 0x00403910
 extern "C" void __fastcall DrawCell3910(void* self, void* unused, int32_t x, int32_t y, int32_t ignored)
 {
-    uint8_t* selfb = (uint8_t*)self;
-    if (*(int32_t*)(selfb + 4) + 1 > y)
+    if (*(int32_t*)((uint8_t*)self + 4) + 1 > y)
         return;
-    if (*(int32_t*)selfb + 1 > x)
+    if (*(int32_t*)((uint8_t*)self) + 1 > x)
         return;
-    if (*(int32_t*)(selfb + 0xc) - 1 < y)
+    if (*(int32_t*)((uint8_t*)self + 0xc) - 1 < y)
         return;
-    if (*(int32_t*)(selfb + 8) - 1 < x)
+    if (*(int32_t*)((uint8_t*)self + 8) - 1 < x)
         return;
     {
-        int32_t row = *(int32_t*)(selfb + 0x18) - y;
-        uint8_t* buf = *(uint8_t**)(selfb + 0x10);
-        int32_t stride = *(int32_t*)(selfb + 0x24);
-        uint8_t v = *(uint8_t*)(selfb + 0x1c);
-        buf[(row - 2) * stride + x] = v;
+        int32_t row = *(int32_t*)((uint8_t*)self + 0x18) - y;
+        uint8_t* buf = *(uint8_t**)((uint8_t*)self + 0x10);
+        int32_t stride = *(int32_t*)((uint8_t*)self + 0x24);
+        int32_t a1 = (row - 2) * stride + x;
+        uint8_t vv;
         row--;
-        buf[(row + 1) * stride + x] = v;
-        buf[row * stride + x - 1] = v;
-        buf[row * stride + x] = v;
-        buf[row * stride + x + 1] = v;
+        vv = *(uint8_t*)((uint8_t*)self + 0x1c);
+        buf[a1] = vv;
+        buf[(row + 1) * stride + x] = vv;
+        buf[row * stride + x - 1] = vv;
+        buf[row * stride + x] = vv;
+        buf[row * stride + x + 1] = vv;
     }
 }
 
@@ -862,21 +872,25 @@ extern "C" void __fastcall Set6c00(void* self, void* unused, int32_t a1, int32_t
 {
     uint8_t* b = (uint8_t*)self;
     int32_t* q = (int32_t*)(b + 0x48);
-    *(int32_t*)(b + 0x54) = a4 & 0x1ff;
-    *(int32_t*)(b + 0x50) = a3;
+    int32_t other = a3;
+    (void)a4;
+    (void)unused;
+    *(int32_t*)(b + 0x50) = other;
+    *(int32_t*)(b + 0x54) = a2 & 0x1ff;
     q[0] = a1;
     q[1] = a2;
-    if (*(int32_t*)(b + 0xa8) != a3)
-        *(int32_t*)(b + 0xa8) = a3;
+    if (*(int32_t*)(b + 0xa8) != other)
+        *(int32_t*)(b + 0xa8) = other;
 }
 
 // FUNCTION: HOVER 0x00406c40
-extern "C" void __fastcall CopyPos6c40(void* self, void* unused, int32_t* out)
+extern "C" int32_t* __fastcall CopyPos6c40(void* self, void* unused, int32_t* out)
 {
     PtPair* p = (PtPair*)((uint8_t*)self + 0x54);
     PtPair* d = (PtPair*)out;
     d->x = p->x;
     d->y = p->y;
+    return out;
 }
 
 // FUNCTION: HOVER 0x00406c60
@@ -910,7 +924,7 @@ typedef struct
 // FUNCTION: HOVER 0x00402250
 extern "C" void __fastcall DrawEntry402250(void* self, void* unused)
 {
-    uint8_t* t = (uint8_t*)self;
+    uint8_t* volatile t;
     uint8_t* world;
     void* node;
     void** slot;
@@ -932,27 +946,35 @@ extern "C" void __fastcall DrawEntry402250(void* self, void* unused)
 #if defined(FLYINGDODGEM_GDI_COMPAT)
     if (planes->ctx == NULL)
         return;
-    world = *(uint8_t**)(t + 0x30);
+    world = *(uint8_t**)((uint8_t*)self + 0x30);
     if (world == NULL)
         return;
+    t = (uint8_t*)self;
 #else
-    if (*(int32_t*)(t + 0xd0) == 0)
+    if (*(int32_t*)((uint8_t*)self + 0xd0) == 0)
         return;
 
-    world = *(uint8_t**)(t + 0x30);
+    t = (uint8_t*)self;
 #endif
     EnterCriticalSection(g_460644);
     Release6c60();
 
+    world = *(uint8_t**)(t + 0x30);
+
     *(int32_t*)(t + 0xdc) = *(int32_t*)(world + 0x8214);
     pp = (int32_t*)(t + 0xd4);
-    CopyPos6c40(world + 0x818c, self, (int32_t*)&pair);
-    pp[0] = pair.x;
-    pp[1] = pair.y;
-    *(int32_t*)(t + 0xe0) = *(int32_t*)(world + 0x8218) + 0x28;
-    F407160(t + 0x150, t + 0x150, world);
+    {
+        int32_t* pr = CopyPos6c40(world + 0x818c, self, (int32_t*)&pair);
+        pp[0] = pr[0];
+        pp[1] = pr[1];
+    }
+    {
+        uint8_t* f4 = t + 0x150;
+        *(int32_t*)(f4 - 0x70) = *(int32_t*)(world + 0x8218) + 0x28;
+        F407160(f4, f4, world);
+    }
 
-    halves = 0;
+    *(int16_t*)&halves = 0;
     *(int16_t*)((uint8_t*)&halves + 2) =
         (int16_t)*(int32_t*)(world + 0x8330) - *(int16_t*)(world + 0x83c4);
     den = (int32_t)*(int16_t*)(world + 0x83cc);
@@ -962,7 +984,7 @@ extern "C" void __fastcall DrawEntry402250(void* self, void* unused)
     f3bc = *(int32_t*)(t + 0x3bc);
     pp = &s;
     *pp = (int16_t)f3bc * *pp;
-    v = s >> 16;
+    v = *(int16_t*)((uint8_t*)&s + 2);
     if (f3bc > v)
     {
         if (v > 0)
@@ -1074,10 +1096,12 @@ extern "C" void __fastcall DrawEntry402250(void* self, void* unused)
         break;
     }
 
-    if (*(int32_t*)(t + 0x80) != 0 && *(int32_t*)(t + 0x84) != 0)
+    uint8_t* tq = t;
+    if (*(int32_t*)(tq + 0x80) != 0 && *(int32_t*)(tq + 0x84) != 0)
     {
-        InvalidateRect(*(void**)(t + 0x1c), NULL, 1);
-        *(int32_t*)(t + 0x80) = 0;
+        InvalidateRect(*(void**)(tq + 0x1c), NULL, 1);
+        tq = t;
+        *(int32_t*)(tq + 0x80) = 0;
     }
     else
     {
@@ -1086,7 +1110,10 @@ extern "C" void __fastcall DrawEntry402250(void* self, void* unused)
 
     LeaveCriticalSection(g_46065c);
     *(int32_t*)(t + 0x52c) = GetTickCount();
-    ++*(int32_t*)(t + 0x530);
+    {
+        uint8_t* tt = t;
+        ++*(int32_t*)(tt + 0x530);
+    }
 }
 
 // FUNCTION: HOVER 0x00406c90
@@ -1563,6 +1590,46 @@ extern "C" uint8_t g_data_5318[1];
 extern "C" uint8_t g_data_5418[1];
 extern "C" uint8_t g_data_53f8[1];
 extern "C" uint8_t g_sineTable[32768];
+
+#if defined(_MSC_VER) && !defined(_M_X64)
+__inline int32_t* MulShift16(int32_t* p, int32_t d)
+{
+    __asm {
+        mov ecx, p
+        mov eax, [ecx]
+        imul d
+        shrd eax, edx, 16
+        mov [ecx], eax
+    }
+    return p;
+}
+#else
+static inline int32_t* MulShift16(int32_t* p, int32_t d)
+{
+    *p = (int32_t)(((int64_t)*p * (int64_t)d) >> 16);
+    return p;
+}
+#endif
+
+#if defined(_MSC_VER) && !defined(_M_X64)
+__inline int32_t* MulShort16(int32_t* p, int16_t d)
+{
+    __asm {
+        mov ecx, p
+        movsx eax, d
+        imul dword ptr [ecx]
+        mov [ecx], eax
+    }
+    return p;
+}
+#else
+static inline int32_t* MulShort16(int32_t* p, int16_t d)
+{
+    *p = (int32_t)((int16_t)d * (int32_t)*p);
+    return p;
+}
+#endif
+
 // FUNCTION: HOVER 0x00404bb0
 void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
 {
@@ -1712,8 +1779,7 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
         w16 = 200;
         v40 = *(int32_t*)((uint8_t*)this + 0x80);
         v4c = v40;
-        *(uint8_t* volatile*)&rp = (uint8_t*)&v4c;
-        *(int32_t*)rp = *(volatile int16_t*)&w12 * *(int32_t*)rp;
+        MulShort16(&v4c, *(int16_t*)&w12);
         v48 = v4c;
         if (v48 < 0x320000 || v48 == 0x320000)
         {
@@ -1733,7 +1799,7 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
         d14 /= 2;
         ang = *(int16_t*)((uint8_t*)item + 0x19e);
         s3c = *(int32_t*)(g_sineTable + ((ang + 0x80) & 0x1ff) * 64);
-        MulFix38e0(&s3c, NULL, d14);
+        MulShift16(&s3c, d14);
         g_4a47b8 = ang;
         v68 = s3c;
         v60 = d14;
@@ -1793,184 +1859,170 @@ extern "C" int32_t g_460744;
 #endif
 void RenderNode::F4055b0(void* a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7)
 {
-    int32_t x = a1;
-    int32_t y = a2;
-    int16_t w1c;
-    int16_t w1a;
-    int16_t w20;
-    int16_t w1e;
-    int32_t t1;
-    int32_t t2;
-    int32_t mb0;
-    int32_t mb4;
-    int32_t r28;
-    int32_t mb8;
-    int32_t mbc;
-    int32_t r30;
-    int32_t vc4;
-    int32_t vc8;
-    int32_t vc0;
-    int32_t vc034;
-    int32_t tc8;
-    int32_t tc0;
-    int32_t mc94;
-    int32_t mc98;
-    int32_t rc3c;
-    int32_t mc9c;
-    int32_t mca0;
-    int32_t rc44;
-    int32_t ma8;
-    int32_t mac;
-    int32_t ma4;
-    int32_t va8;
-    int64_t qx;
-    int64_t qy;
-    int16_t w18;
-    int16_t w16;
-    int16_t w04;
-    int16_t w02;
-    int32_t vc84;
-    int32_t vc80;
-    int32_t vc78;
-    int32_t vc4c;
-    int32_t va1c;
-    int32_t v888;
-    int32_t v84;
-    int32_t v8c;
-    int32_t v90;
-    int32_t va60;
-    int32_t va64;
-    int32_t va5c;
-    int32_t va54;
-    int32_t va6c;
-    int32_t va70;
-    int32_t va68;
-    int32_t va58;
-    int32_t va74;
+    int32_t aO;
+    int32_t ao;
+    int32_t bK;
+    int32_t bk;
+    int32_t cG;
+    int32_t cW;
+    int32_t cg;
+    int32_t cw;
+    int32_t d3;
+    int32_t dC;
+    int32_t dS;
+    int32_t dc;
+    int32_t ds;
+    int32_t eO;
+    int32_t eo;
+    int32_t fK;
+    int32_t fk;
+    int32_t g7;
+    int32_t gG;
+    int32_t gW;
+    int32_t gg;
+    int32_t gw;
+    int32_t h3;
+    int32_t hC;
+    int32_t hS;
+    int32_t hc;
+    int32_t hs;
+    int32_t iO;
+    int32_t io;
+    int32_t jK;
+    int32_t jk;
+    int32_t k7;
+    int32_t kG;
+    int32_t kW;
+    int32_t kg;
+    int32_t kw;
+    int32_t l3;
+    int32_t lC;
+    int32_t lS;
+    int32_t lc;
+    int32_t ls;
+    int32_t mO;
+    int32_t mo;
+    int32_t nK;
+    int32_t nk;
+    int64_t o7;
+    int32_t aN = a1;
+    int32_t oG = a2;
+    int32_t an;
 
-    goto J0;
-J0:
+    if (0) { }
     if (g_460744 != 0)
     {
-        w1c = 0;
-        w1a = (int16_t)x;
-        goto J1;
-J1:
-        w20 = 0;
-        w1e = (int16_t)y;
-        goto J2;
-J2:
-        w1a -= (int16_t)a3;
-        goto J3;
-J3:
-        w1e -= (int16_t)a4;
-        goto J4;
-J4:
-        t1 = ((int32_t*)g_sineTable)[((a7 << 4) & 0x1fff)];
-        goto J5;
-J5:
-        t2 = ((int32_t*)g_sineTable)[(((a7 << 4) + 0x800) & 0x1fff)];
-        goto J6;
-J6:
-        mb0 = *(int32_t*)&w20;
-        mb4 = t1;
-        ((MulFixHost*)&mb4)->M(mb0);
-        r28 = mb4;
-        goto J7;
-J7:
-        mb8 = *(int32_t*)&w1c;
-        mbc = t2;
-        ((MulFixHost*)&mbc)->M(mb8);
-        r30 = mbc;
-        goto J8;
-J8:
-        vc4 = r28;
-        vc8 = r30;
-        vc8 += vc4;
-        goto J9;
-J9:
-        vc034 = vc8;
-        goto J10;
-J10:
-        goto J11;
-J11:
-        x = ((int16_t*)&vc034)[1];
-        tc8 = ((int32_t*)g_sineTable)[((a7 << 4) & 0x1fff)];
-        goto J12;
-J12:
-        tc0 = ((int32_t*)g_sineTable)[(((a7 << 4) + 0x800) & 0x1fff)];
-        goto J13;
-J13:
-        mc94 = *(int32_t*)&w1c;
-        mc98 = tc8;
-        ((MulFixHost*)&mc98)->M(mc94);
-        rc3c = mc98;
-        goto J14;
-J14:
-        mc9c = *(int32_t*)&w20;
-        mca0 = tc0;
-        ((MulFixHost*)&mca0)->M(mc9c);
-        rc44 = mca0;
-        ma8 = rc3c;
-        mac = rc44;
-        ((MulFixHost*)&mac)->M(ma8);
-        va8 = mac;
-        goto J17;
-J17:
-        y = ((int16_t*)&va8)[1];
-        x += a3;
-        y += a4;
+        *(int16_t*)&nK = 0;
+        ((int16_t*)&nK)[1] = (int16_t)aN;
+        if (0) { }
+        *(int16_t*)&mo = 0;
+        ((int16_t*)&mo)[1] = (int16_t)oG;
+        if (0) { }
+        ((int16_t*)&nK)[1] -= (int16_t)a3;
+        if (0) { }
+        ((int16_t*)&mo)[1] -= (int16_t)a4;
+        if (0) { }
+        mO = ((int32_t*)g_sineTable)[((a7 << 4) & 0x1fff)];
+        if (0) { }
+        lc = ((int32_t*)g_sineTable)[(((a7 << 4) + 0x800) & 0x1fff)];
+        if (0) { }
+        cg = *(int32_t*)&mo;
+        cW = mO;
+        ((MulFixHost*)&cW)->M(cg);
+        ls = cW;
+        if (0) { }
+        cG = *(int32_t*)&nK;
+        bk = lc;
+        ((MulFixHost*)&bk)->M(cG);
+        lS = bk;
+        if (0) { }
+        ao = ls;
+        aO = lS;
+        bK = ao;
+        aO += bK;
+        if (0) { }
+        lC = aO;
+        if (0) { }
+        if (0) { }
+        aN = ((int16_t*)&lC)[1];
+        l3 = ((int32_t*)g_sineTable)[((a7 << 4) & 0x1fff)];
+        if (0) { }
+        kg = ((int32_t*)g_sineTable)[(((a7 << 4) + 0x800) & 0x1fff)];
+        if (0) { }
+        eO = *(int32_t*)&nK;
+        ds = l3;
+        ((MulFixHost*)&ds)->M(eO);
+        kw = ds;
+        if (0) { }
+        dc = *(int32_t*)&mo;
+        dS = kg;
+        ((MulFixHost*)&dS)->M(dc);
+        kW = dS;
+        if (0) { }
+        d3 = kw;
+        cw = kW;
+        dC = d3;
+        cw -= dC;
+        if (0) { }
+        kG = cw;
+        if (0) { }
+        if (0) { }
+        oG = ((int16_t*)&kG)[1];
+        aN += a3;
+        oG += a4;
     }
-    qx = (int64_t)x;
-    qx <<= 32;
-    goto J19;
-J19:
-    qx /= (int64_t)*(int32_t*)((uint8_t*)this + 0x80);
-    w18 = (int16_t)qx;
-    qx /= 65536;
-    w16 = (int16_t)qx;
-    goto J20;
-J20:
-    qy = (int64_t)y;
-    qy <<= 32;
-    goto J21;
-J21:
-    qy /= (int64_t)*(int32_t*)((uint8_t*)this + 0x80);
-    w04 = (int16_t)qy;
-    qy /= 65536;
-    w02 = (int16_t)qy;
-    goto J22;
-J22:
-    vc84 = *(int32_t*)&w18;
-    vc80 = *(int32_t*)((uint8_t*)this + 0x7c);
-    vc78 = vc84;
-    vc80 -= vc78;
-    vc4c = vc80;
-    va1c = a5;
-    v888 = vc4c;
-    v84 = va1c;
-    v888 -= v84;
-    v8c = v888;
-    v90 = v8c;
-    *(int32_t*)&w18 = v90;
-    va60 = *(int32_t*)&w04;
-    va64 = *(int32_t*)((uint8_t*)this + 0x7c);
-    va5c = va60;
-    va64 -= va5c;
-    va54 = va64;
-    va6c = a6;
-    va70 = va54;
-    va68 = va6c;
-    va70 -= va68;
-    va58 = va70;
-    va74 = va58;
-    *(int32_t*)&w04 = va74;
-    *(int32_t*)a0 = *(int32_t*)((uint8_t*)this + 0x5c) + w16;
-    goto J23;
-J23:
-    *(int32_t*)((uint8_t*)a0 + 4) = *(int32_t*)((uint8_t*)this + 0x60) + w02;
-    goto J24;
-J24:;
+    o7 = (int64_t)aN;
+    o7 <<= 32;
+    if (0) { }
+    o7 /= (int64_t)*(int32_t*)((uint8_t*)this + 0x80);
+    *(int16_t*)&nk = (int16_t)o7;
+    ((int16_t*)&nk)[1] = (int16_t)(o7 / 65536);
+    if (0) { }
+    o7 = (int64_t)oG;
+    o7 <<= 32;
+    if (0) { }
+    o7 /= (int64_t)*(int32_t*)((uint8_t*)this + 0x80);
+    *(int16_t*)&an = (int16_t)o7;
+    ((int16_t*)&an)[1] = (int16_t)(o7 / 65536);
+    if (0) { }
+    gW = *(int32_t*)&nk;
+    gG = *(int32_t*)((uint8_t*)this + 0x7c);
+    gg = gW;
+    gG -= gg;
+    if (0) { }
+    k7 = gG;
+    if (0) { }
+    fk = a5;
+    fK = k7;
+    g7 = fk;
+    fK -= g7;
+    if (0) { }
+    jk = fK;
+    if (0) { }
+    eo = jk;
+    *(int32_t*)&nk = eo;
+    if (0) { }
+    hs = *(int32_t*)&an;
+    hc = *(int32_t*)((uint8_t*)this + 0x7c);
+    iO = hs;
+    hc -= iO;
+    if (0) { }
+    jK = hc;
+    if (0) { }
+    hC = a6;
+    h3 = jK;
+    hS = hC;
+    h3 -= hS;
+    if (0) { }
+    io = h3;
+    if (0) { }
+    gw = io;
+    *(int32_t*)&an = gw;
+    if (0) { }
+    if (0) { }
+    *(int32_t*)a0 = (*(int32_t*)((uint8_t*)this + 0x5c) | 0) + ((int16_t*)&nk)[1];
+    if (0) { }
+    *(int32_t*)((uint8_t*)a0 + 4) = (*(int32_t*)((uint8_t*)this + 0x60) | 0) + ((int16_t*)&an)[1];
 }
 #ifdef _MSC_VER
 #pragma optimize("", on)
@@ -2034,7 +2086,7 @@ int32_t HoverTc::M406090(void* a1, void* a2)
     int32_t px;
     uint8_t* entry;
     int32_t pv;
-    double r;
+    float r;
     int32_t c1;
     int32_t c2;
     int32_t n1;
@@ -2521,6 +2573,29 @@ extern "C" void __fastcall F42d3e0(void* self, void* unused, void* arg)
 
 int32_t* __fastcall DivFix(int32_t* p, void* unused, int32_t d);
 
+#if defined(_MSC_VER) && !defined(_M_X64)
+__inline int32_t* DivShift16(int32_t* p, int32_t d)
+{
+    __asm
+    {
+        mov ecx, p
+        mov eax, [ecx]
+        mov edx, eax
+        sar edx, 16
+        shl eax, 16
+        idiv d
+        mov [ecx], eax
+    }
+    return p;
+}
+#else
+static inline int32_t* DivShift16(int32_t* p, int32_t d)
+{
+    *p = (int32_t)(((int64_t)*p << 16) / d);
+    return p;
+}
+#endif
+
 // FUNCTION: HOVER 0x00407160
 extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
 {
@@ -2534,13 +2609,9 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
     uint8_t* sub;
     uint8_t* node;
     void* item;
+    IntPair tmp;
     PtPair p1;
     PtPair p2;
-    IntPair q0;
-    IntPair q1;
-    IntPair q2;
-    IntPair q3;
-    IntPair tmp;
 
     *(int32_t*)(s + 0xac) = *(int32_t*)(s + 0xac) + 1;
     if (*(int32_t*)(s + 0xac) >= 8)
@@ -2564,23 +2635,24 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
     g_4a479c = c + p0.y;
 
     {
-        int32_t d = *(int32_t*)(s + 0x80);
+        volatile int32_t d = *(int32_t*)(s + 0x80);
+        volatile int32_t c1;
         int32_t v;
 
-        (void)d;
         v = ((RenderNode*)sub)->GetPair(&p1)->x;
-        v = (v << 16) / *(int32_t*)(s + 0x80);
-        c = (*(int32_t*)(s + 0x7c) - v);
-        g_4a47e0 = c - *(int32_t*)(s + 0x78);
+        DivShift16(&v, (int32_t)d);
+        c1 = *(int32_t*)(s + 0x7c);
+        c1 -= v;
+        g_4a47e0 = c1 - *(int32_t*)(s + 0x78);
     }
     {
-        int32_t d = *(int32_t*)(s + 0x80);
+        volatile int32_t d = *(int32_t*)(s + 0x80);
         int32_t v;
 
-        (void)d;
         v = ((RenderNode*)sub)->GetPair(&p2)->y;
-        v = (v << 16) / *(int32_t*)(s + 0x80);
-        *(volatile int32_t*)&n = (*(int32_t*)(s + 0x7c) - v);
+        DivShift16(&v, (int32_t)d);
+        *(volatile int32_t*)&n = *(int32_t*)(s + 0x7c);
+        *(volatile int32_t*)&n -= v;
         g_4a47e4 = (*(volatile int32_t*)&n) - *(int32_t*)(s + 0x74);
     }
 
@@ -2607,10 +2679,6 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
         {
             item = *(void**)((uint8_t*)g_4a4844 + off);
 
-            (void)q0;
-            (void)q1;
-            (void)q2;
-            (void)q3;
             if (((RenderNode*)item)->CopyPos().x < *(volatile int32_t*)&g_4a47bc)
             {
                 *(int32_t*)((uint8_t*)item + 0x3c) = 0;
@@ -2636,8 +2704,9 @@ extern "C" void __fastcall F407160(void* self, void* unused, void* a0)
                 }
             }
 
-            tmp = ((RenderNode*)item)->CopyPos();
-            ((RenderNode*)self)->F4055b0((uint8_t*)item + 0x9c, tmp.x, tmp.y,
+            ((RenderNode*)self)->F4055b0((uint8_t*)item + 0x9c,
+                    ((RenderNode*)item)->CopyPos().x,
+                    ((RenderNode*)item)->CopyPos().y,
                     g_4a4790, g_4a4794, g_4a47e0, g_4a47e4, g_4a47b8);
             *(int32_t*)((uint8_t*)item + 0x40) = *(int32_t*)(s + 0x98);
         }
