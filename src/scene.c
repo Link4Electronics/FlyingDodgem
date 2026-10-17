@@ -13,6 +13,8 @@ extern "C" char* __stdcall CharUpperA(char* psz);
 extern "C" void* g_460970;
 extern "C" MerlinPlane g_4a4498;
 extern "C" MerlinPlane g_4a44e0;
+extern "C" int32_t g_4a44ac;
+extern "C" int32_t g_4a44f8;
 extern "C" int32_t g_4a453c;
 extern "C" int32_t g_4a4544;
 extern "C" int32_t g_4a1d70;
@@ -145,10 +147,10 @@ void HoverTc::M405fa0(int16_t a1)
     {
         uint8_t* wall = *(uint8_t**)((uint8_t*)*(void**)((uint8_t*)this + 0x20) + 0x54);
         int32_t back;
-
-        wall = *(uint8_t**)(wall + idx * 4);
-        back = (g_4a4498.m_p14 - *(int32_t*)(wall + 0x14)) * *(int32_t*)(wall + 0x3c)
-             + (*(int32_t*)(wall + 0x18) - g_4a44e0.m_p18) * *(int32_t*)(wall + 0x38);
+        uint8_t* node = *(uint8_t**)(wall + idx * 4);
+        back = (g_4a44ac - *(int32_t*)(node + 0x14)) * *(int32_t*)(node + 0x3c)
+             + (*(int32_t*)(node + 0x18) - g_4a44f8) * *(int32_t*)(node + 0x38);
+        wall = node;
         if (back < 0)
         {
             this->M405fa0(*(int16_t*)(wall + 0x48));
@@ -353,13 +355,14 @@ void HoverTc::F401c00(void* a1, void* a2)
 
         *(uint8_t*)((uint8_t*)this + 0x1c) = color;
         w = color;
-        w = (uint16_t)((w << 8) | w);
+        w = (uint16_t)((w << 8) | color);
         dw = ((uint32_t)w << 16) | w;
         *(uint32_t*)((uint8_t*)this + 0x20) = dw;
 
+        int32_t v4 = *(int32_t*)((uint8_t*)a1 + 0x90);
         rend = (uint8_t*)a1 + 0x8c;
         a1 = (void*)((uint8_t*)a1 + 0x84);
-        this->F401980(*(int32_t*)((uint8_t*)a1), *(int32_t*)((uint8_t*)a1 + 4), *(int32_t*)rend, *(int32_t*)(rend + 4));
+        this->F401980(*(int32_t*)((uint8_t*)a1), *(int32_t*)((uint8_t*)a1 + 4), *(int32_t*)rend, v4);
     }
     else
     {
@@ -370,13 +373,12 @@ void HoverTc::F401c00(void* a1, void* a2)
             color = *(uint8_t*)((uint8_t*)this + 0x9c);
             *(uint8_t*)((uint8_t*)this + 0x1c) = color;
             w = color;
-            w = (uint16_t)((w << 8) | w);
-            dw = w;
-            dw = (dw << 16) | dw;
+            w = (uint16_t)((w << 8) | color);
+            dw = ((uint32_t)w << 16) | w;
             *(uint32_t*)((uint8_t*)this + 0x20) = dw;
         rend = (uint8_t*)a1 + 0xf8;
-        a1 = (void*)((uint8_t*)a1 + 0xf0);
-        this->F401980(*(int32_t*)((uint8_t*)a1), *(int32_t*)((uint8_t*)a1 + 4), *(int32_t*)rend, *(int32_t*)(rend + 4));
+        obj = (uint8_t*)a1 + 0xf0;
+        this->F401980(*(int32_t*)obj, *(int32_t*)(obj + 4), *(int32_t*)rend, *(int32_t*)(rend + 4));
         return;
         }
         else
@@ -396,11 +398,11 @@ void HoverTc::F401c00(void* a1, void* a2)
                 color = *(uint8_t*)((uint8_t*)a1 + 0x40);
                 *(uint8_t*)((uint8_t*)this + 0x1c) = color;
                 w = color;
-                w = (uint16_t)((w << 8) | w);
-                dw = w;
-                dw = (dw << 16) | dw;
+                w = (uint16_t)((w << 8) | color);
+                dw = ((uint32_t)w << 16) | w;
                 *(uint32_t*)((uint8_t*)this + 0x20) = dw;
-                DrawCell3910(this, NULL, *(int32_t*)((uint8_t*)a1 + 0xc0), *(int32_t*)((uint8_t*)a1 + 0xc4), 5);
+                obj = (uint8_t*)a1 + 0xc0;
+                DrawCell3910(this, *(void**)obj, *(int32_t*)obj, *(int32_t*)(obj + 4), 5);
                 return;
             }
             else
@@ -423,7 +425,7 @@ void HoverTc::F401c00(void* a1, void* a2)
 docolor:
                 *(uint8_t*)((uint8_t*)this + 0x1c) = color;
                 w = color;
-                w = (uint16_t)((w << 8) | w);
+                w = (uint16_t)((w << 8) | color);
                 dw = ((uint32_t)w << 16) | w;
                 *(uint32_t*)((uint8_t*)this + 0x20) = dw;
 nocolor:
@@ -442,16 +444,16 @@ nocolor:
 // FUNCTION: HOVER 0x00401980
 void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
 {
-    int32_t adx;
     int32_t ady;
-    uint8_t* bits;
     int32_t pitch;
+    int32_t adx;
+    uint8_t* bits;
     uint8_t color;
     uint8_t* base;
-    int32_t xstep;
+    int32_t acc;
     int32_t ystep;
     int32_t slope;
-    int32_t acc;
+    int32_t xstep;
     int32_t n;
 
     adx = x0 - x1;
@@ -471,22 +473,20 @@ void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
 
     adx = x0 - x1;
     adx = adx < 0 ? -adx : adx;
+    *(int32_t*)((uint8_t*)this + 0x2c) = adx;
     ady = y0 - y1;
     ady = ady < 0 ? -ady : ady;
-    *(int32_t*)((uint8_t*)this + 0x2c) = adx;
     *(int32_t*)((uint8_t*)this + 0x30) = ady;
     if (adx == 0 && ady == 0)
         return;
 
     bits = *(uint8_t**)((uint8_t*)this + 0x10);
     pitch = *(int32_t*)((uint8_t*)this + 0x24);
-    color = *(uint8_t*)((uint8_t*)this + 0x1c);
     base = bits + y0 * pitch + x0;
-    if (bits == 0 || pitch == 0)
-        return;
 
-    if (adx >= ady)
+    if (adx > ady)
     {
+        color = *(uint8_t*)((uint8_t*)this + 0x1c);
         slope = (int32_t)(((int32_t)ady << 16) / adx);
         if (y1 < y0)
             pitch = -pitch;
@@ -495,7 +495,7 @@ void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
             xstep = 1;
         ystep = pitch;
         acc = 0x8000;
-        for (n = adx; n != 0; n--)
+        for (n = adx; n > 0; n--)
         {
             *base = color;
             acc += slope;
@@ -516,10 +516,10 @@ void HoverTc::F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
             pitch = -pitch;
         ystep = pitch;
         acc = 0x8000;
-        for (n = ady; n != 0; n--)
+        for (n = ady; n > 0; n--)
         {
             int32_t off = acc >> 16;
-            base[off] = color;
+            base[off] = *(uint8_t*)((uint8_t*)this + 0x1c);
             acc += slope;
             base += ystep;
         }

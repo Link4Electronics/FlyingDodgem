@@ -165,6 +165,8 @@ extern "C" HOVER_IMPORT int32_t __stdcall StretchBlt(void* hdcDest, int32_t xDes
 
 typedef void (__fastcall *CdcVSlot)(void* self);
 typedef void (__fastcall *CdcVSlotN)(void* self, void* unused, int32_t n);
+typedef void (__fastcall *CdcVSlotI)(void* self, int32_t n);
+
 
 /* Layout view of the retail dashboard DC: only the members F401ad0 reaches are
  * named, padded to their retail vtable slots (ResetDC +0x24, Finish +0x28).
@@ -185,7 +187,16 @@ public:
     virtual void Finish(int32_t n);
     void* SelectPen(void* pen);
     void* SelectBrush(void* brush);
+    void FinishSlot(int32_t n);
 };
+/* Slot 10 is a __thiscall member (this in ecx, arg on the stack).  MSVC 2.2
+ * predates the __thiscall keyword, so the retail shape is reproduced with a
+ * non-virtual member pointer: `mov vt,eax; mov ecx,dc; push -1; call [eax+0x28]`.
+ * The native x64 build keeps the plain __fastcall form (member pointers are
+ * not 4 bytes there). */
+typedef void (DashDc::*DashSlotI)(int32_t);
+struct DashDcVt { uint8_t pad[0x28]; DashSlotI slot10; };
+
 
 static void* __stdcall PrevObject4512ff(void* prev);
 
@@ -575,12 +586,16 @@ extern "C" void __fastcall F401ad0(void* self, void* unused, void* dc, int32_t a
             Rectangle(*(void**)((uint8_t*)dc + 4), l * 2, t * 2, r * 2, b * 2);
         else
             Rectangle(*(void**)((uint8_t*)dc + 4), l, t, r, b);
-        if (*(int32_t*)((uint8_t*)self + 0x20) == 0)
-            b = t;
-        else
+        if (*(int32_t*)((uint8_t*)self + 0x20) != 0)
             l = r;
+        else
+            b = t;
     }
-    ((CdcVSlotN)vt[10])(dc, vt, -1);
+#if defined(FLYINGDODGEM_GDI_COMPAT)
+    ((CdcVSlotI)vt[10])(dc, -1);
+#else
+    (((DashDc*)dc)->*((DashDcVt*)vt)->slot10)(-1);
+#endif
 }
 
 // FUNCTION: HOVER 0x00450a09
