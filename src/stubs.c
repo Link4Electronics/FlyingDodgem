@@ -206,61 +206,86 @@ uint32_t __cdecl Strlen440510(const char* s)
     return (uint32_t)(p - s);
 }
 
-extern void* g_4c8e54;
-extern uint32_t g_4c7f28[1];
-extern void* g_4c79b0;
-extern uint32_t g_4c8434;
-extern int32_t g_4c8444;
-
 #if defined(_MSC_VER)
-__declspec(dllimport)
+/* Resolves to LIBCMT's __pnhHeap, defined by the linked malloc.obj. */
+extern void* _pnhHeap;
+void* __cdecl malloc(uint32_t size);
+#else
+/* Native harness: no retail CRT linked, keep the slot local. */
+void* _pnhHeap;
+#include <stdlib.h>
 #endif
-void __stdcall LeaveCriticalSection(void* cs);
 
-#if defined(_MSC_VER)
-__declspec(dllimport)
-#endif
-void __stdcall EnterCriticalSection(void* cs);
-
-#if defined(_MSC_VER)
-__declspec(dllimport)
-#endif
-void __stdcall InitializeCriticalSection(void* cs);
-
-// FUNCTION: HOVER 0x004410ac
-void* __cdecl Malloc4410ac(uint32_t size)
-{
-    (void)size;
-    return 0;
-}
-
-void __cdecl Enter442a4a(int32_t idx);
-void __cdecl Leave442ab2(int32_t idx);
-
-// FUNCTION: HOVER 0x00441061
-void* __cdecl Malloc441061(uint32_t size, void* heap)
-{
-    void* block;
-    int32_t (__cdecl *cb)(uint32_t);
-
-    Enter442a4a(9);
-    block = Malloc4410ac(size);
-    Leave442ab2(9);
-    cb = (int32_t(__cdecl*)(uint32_t))g_4c79b0;
-    while (block == NULL && heap != NULL && cb != NULL && cb(size) != 0)
-    {
-        Enter442a4a(9);
-        block = Malloc4410ac(size);
-        Leave442ab2(9);
-    }
-    return block;
-}
-
-// FUNCTION: HOVER 0x0044104e
-void* __cdecl Malloc44104e(uint32_t size)
-{
-    return Malloc441061(size, g_4c8e54);
-}
+/* HOVER's malloc/heap cluster is MSVC 2.2 LIBCMT.LIB's heap objects, linked
+ * verbatim by src/CMakeLists.txt (reccmp/extract-libcmt.py unpacks the
+ * archive members). The annotations map the retail addresses to the
+ * symbols those objects define. __heap_grow_emptylist and __heap_new_region
+ * are static in the archive and never surface in the PDB, so the two call
+ * sites into them inside __heap_grow/___getempty stay unmatched. */
+// LIBRARY: HOVER 0x004406cc
+// _free
+// LIBRARY: HOVER 0x004406ed
+// __free_lk
+// LIBRARY: HOVER 0x0044104e
+// _malloc
+// LIBRARY: HOVER 0x00441061
+// __nh_malloc
+// LIBRARY: HOVER 0x004410ac
+// __malloc_lk
+// LIBRARY: HOVER 0x00441144
+// __heap_split_block
+// LIBRARY: HOVER 0x00441189
+// _calloc
+// LIBRARY: HOVER 0x00442a4a
+// __lock
+// LIBRARY: HOVER 0x00442ab2
+// __unlock
+// LIBRARY: HOVER 0x00442ac8
+// __heap_init
+// LIBRARY: HOVER 0x00442b45
+// ___getempty
+// LIBRARY: HOVER 0x00442b6a
+// __heap_abort
+// LIBRARY: HOVER 0x00442b75
+// __heap_findaddr
+// LIBRARY: HOVER 0x00442bdf
+// __heap_search
+// LIBRARY: HOVER 0x00442ccf
+// __heap_grow
+// LIBRARY: HOVER 0x00442db9
+// __heap_grow_region
+// LIBRARY: HOVER 0x00442e66
+// __heap_free_region
+// LIBRARY: HOVER 0x00445d39
+// __heap_addblock
+// LIBRARY: HOVER 0x0043fcec
+// __amsg_exit
+// GLOBAL: HOVER 0x004c79b0
+// _pnhHeap
+// GLOBAL: HOVER 0x004c8e54
+// __newmode
+// GLOBAL: HOVER 0x004c7f28
+// __locktable
+// GLOBAL: HOVER 0x004c8430
+// __heap_desc
+// GLOBAL: HOVER 0x004c8444
+// __heap_resetsize
+// GLOBAL: HOVER 0x004c8448
+// __amblksiz
+// GLOBAL: HOVER 0x004c844c
+// __heap_regionsize
+// GLOBAL: HOVER 0x004c8450
+// __heap_maxregsize
+// GLOBAL: HOVER 0x004b91a0
+// __heap_descpages
+// GLOBAL: HOVER 0x004b91b0
+// __heap_regions
+// GLOBAL: HOVER 0x004c7c64
+// __osver
+// GLOBAL: HOVER 0x004c7c6c
+// __winmajor
+// GLOBAL: HOVER 0x004c7614
+// __aexit_rtn
 
 // FUNCTION: HOVER 0x00445078
 char* __cdecl Strcpy445078(char* dst, const char* src)
@@ -316,67 +341,10 @@ char* __cdecl Strcpy445078(char* dst, const char* src)
 char* __cdecl Strdup44060c(const char* s)
 {
     uint32_t len = Strlen440510(s) + 1;
-    char* dup = (char*)Malloc44104e(len);
+    char* dup = (char*)malloc(len);
     if (dup != NULL)
         Strcpy445078(dup, s);
     return dup;
-}
-#pragma optimize("", on)
-
-// FUNCTION: HOVER 0x00442ab2
-#pragma optimize("s", on)
-#pragma optimize("y", off)
-void __cdecl Leave442ab2(int32_t idx)
-{
-    LeaveCriticalSection((void*)(uintptr_t)g_4c7f28[idx]);
-}
-#pragma optimize("", on)
-
-// FUNCTION: HOVER 0x00443fec
-void __cdecl Fail43fec(int32_t code)
-{
-    (void)code;
-}
-
-// FUNCTION: HOVER 0x004406ed
-void __cdecl Free4406ed(void* ptr)
-{
-    (void)ptr;
-}
-
-// FUNCTION: HOVER 0x004406cc
-void __cdecl Free4406cc(void* ptr)
-{
-    Enter442a4a(9);
-    Free4406ed(ptr);
-    Leave442ab2(9);
-}
-
-// FUNCTION: HOVER 0x00442a4a
-#pragma optimize("y", off)
-void __cdecl Enter442a4a(int32_t idx)
-{
-    void** slot = (void**)(uintptr_t)&g_4c7f28[(uint32_t)idx];
-    void* mem;
-
-    if (*slot == NULL)
-    {
-        mem = Malloc44104e(0x18);
-        if (mem == NULL)
-        {
-            Fail43fec(0x11);
-            Enter442a4a(0x11);
-        }
-        if (*slot != NULL)
-            Free4406cc(mem);
-        else
-        {
-            *slot = mem;
-            InitializeCriticalSection(mem);
-        }
-    }
-    Leave442ab2(0x11);
-    EnterCriticalSection(*slot);
 }
 #pragma optimize("", on)
 
@@ -832,22 +800,12 @@ void* __cdecl Get45b206(void)
 }
 
 // FUNCTION: HOVER 0x00440221
-extern void* g_4c79b0;
 void* __cdecl Xchg440221(void* v)
 {
     void* old;
-    old = g_4c79b0;
-    g_4c79b0 = v;
+    old = _pnhHeap;
+    _pnhHeap = v;
     return old;
-}
-
-// FUNCTION: HOVER 0x00442ada
-extern uint32_t g_4c844c;
-extern uint32_t g_4c8450;
-void __cdecl Init442ada(void)
-{
-    g_4c844c = 0x4000;
-    g_4c8450 = 0x1000000;
 }
 
 // FUNCTION: HOVER 0x00456e9a

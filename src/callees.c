@@ -1597,7 +1597,6 @@ static inline int32_t* MulShift16(int32_t* p, int32_t d)
     return p;
 }
 #endif
-
 // FUNCTION: HOVER 0x00405a10
 int32_t HoverTc::M405a10(void* a1, void* a2)
 {
@@ -1683,13 +1682,184 @@ void* __fastcall Ext410510(void* self)
 void HoverTc::M410ec0()
 {
 }
+// probe
+// probe
+// FUNCTION: HOVER 0x0040fbb0
+void HoverTc::M40fbb0(Four rc)
+{
+    uint8_t* p = (uint8_t*)this;
+    int32_t h;
+    int32_t lf;
+    int32_t base;
+    *(Four*)(p + 0x00) = rc;
+    (*(int32_t*)(p + 0x08))--;
+    (*(int32_t*)(p + 0x0c))--;
+    h = *(int32_t*)(p + 0x18) - rc.b - 1;
+    *(int32_t*)(p + 0x48) = h;
+    *(int32_t*)(p + 0x44) = rc.b - rc.d + h;
+    lf = (rc.a % 4) == 0;
+    *(int32_t*)(p + 0x34) = lf;
+    *(int32_t*)(p + 0x38) = ((rc.c + 1) % 4) == 0;
+    base = *(int32_t*)(p + 0x10);
+    if (lf)
+        *(int32_t*)(p + 0x54) = (rc.a & ~3) + base;
+    else
+        *(int32_t*)(p + 0x54) = (rc.a & ~3) + base + 4;
+    rc.a += base;
+    *(int32_t*)(p + 0x4c) = rc.a;
+    *(int32_t*)(p + 0x58) = (rc.c & ~3) + base;
+    *(int32_t*)(p + 0x50) = rc.c + base - 4;
+    *(int32_t*)(p + 0x40) = *(int32_t*)(p + 0x24) * h;
+    *(int32_t*)(p + 0x3c) = *(int32_t*)(p + 0x28) * h;
+}
 // STUB: HOVER 0x00410f20
 void HoverTc::M410f20(int32_t a1, int32_t a2)
 {
 }
-// STUB: HOVER 0x0040fee0
-void HoverTc::M40fee0(void* a1, void* a2, void* a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7)
+extern "C" HOVER_IMPORT uint32_t __stdcall GetNearestPaletteIndex(void* hpal, uint32_t color);
+extern "C" void* g_4a1d54;
+#if defined(_MSC_VER) && !defined(_M_X64)
+__inline int32_t* DivShift16(int32_t* p, int32_t d)
 {
+    __asm {
+        mov ecx, p
+        mov eax, [ecx]
+        mov edx, eax
+        sar edx, 16
+        shl eax, 16
+        idiv d
+        mov [ecx], eax
+    }
+    return p;
+}
+#else
+static inline int32_t* DivShift16(int32_t* p, int32_t d)
+{
+    *p = (int32_t)(((int64_t)*p << 16) / d);
+    return p;
+}
+#endif
+struct Two
+{
+    int32_t a;
+    int32_t b;
+};
+
+union I32
+{
+    int32_t d;
+};
+
+union IP
+{
+    uint8_t* p;
+};
+
+union V16
+{
+    int32_t d;
+    int16_t w[2];
+};
+
+// FUNCTION: HOVER 0x0040fb00
+void HoverTc::Sub40fb00(int32_t a, int32_t b, int32_t c)
+{
+    uint8_t* p = (uint8_t*)this;
+    int32_t q;
+    *(int32_t*)(p + 0x10) = a;
+#if defined(_MSC_VER) && !defined(_M_X64)
+    *(Two*)(p + 0x14) = *(Two*)&b;
+#else
+    *(int32_t*)(p + 0x14) = b;
+    *(int32_t*)(p + 0x18) = c;
+#endif
+    q = ((Two*)(p + 0x14))->a;
+    *(int32_t*)(p + 0x24) = q;
+    if (q % 4)
+        q += q % 4;
+    *(int32_t*)(p + 0x28) = q >> 2;
+}
+
+// FUNCTION: HOVER 0x0040fee0
+void HoverTc::M40fee0(void* a1, void* a2, void* a3, Four rc)
+{
+    volatile int32_t pads[5];
+    IP node;
+    V16 v;
+    v.w[0] = 0;
+    v.w[1] = 0x5a00;
+    uint8_t* p = (uint8_t*)this;
+    void* ctx;
+    I32 w;
+    I32 k;
+    int32_t t1;
+    int32_t t2;
+    int32_t t3;
+    int32_t t4;
+    int32_t a;
+    int32_t b;
+
+    *(Four*)(p + 0x5c) = rc;
+
+    *(int16_t*)(p + 0x70) = 0;
+    *(int16_t*)(p + 0x72) = (int16_t)(rc.c - rc.a);
+    w.d = *(int32_t*)(p + 0x70);
+    *(int32_t*)(p + 0x78) = w.d;
+    *(int32_t*)(p + 0x78) = w.d / 2;
+
+    *(int16_t*)(p + 0x6c) = 0;
+    *(int16_t*)(p + 0x6e) = (int16_t)(rc.d - rc.b);
+    *(int32_t*)(p + 0x74) = *(int32_t*)(p + 0x6c);
+    *(int32_t*)(p + 0x74) /= 2;
+
+    *(int32_t*)(p + 0x7c) = w.d;
+    MulShift16((int32_t*)(p + 0x7c), *(int32_t*)(p + 0xc8));
+
+    *(int32_t*)(p + 0x80) = v.d;
+    DivShift16((int32_t*)(p + 0x80), *(int32_t*)(p + 0x7c));
+
+    *(int32_t*)(p + 0x7c) = v.d;
+    DivShift16((int32_t*)(p + 0x7c), *(int32_t*)(p + 0x80));
+
+    k.d = *(int32_t*)(p + 0x80);
+    t1 = *(int32_t*)(p + 0x78);
+    MulShift16(&t1, k.d);
+    t2 = t1;
+    MulShift16(&t2, 0x16b85);
+    a = (int32_t)*(int16_t*)((uint8_t*)&t2 + 2);
+    t3 = *(int32_t*)(p + 0x74);
+    MulShift16(&t3, k.d);
+    t4 = t3;
+    MulShift16(&t4, 0x16b85);
+    b = (int32_t)*(int16_t*)((uint8_t*)&t4 + 2);
+    *(int16_t*)(p + 0x88) = (int16_t)((b > a) ? b : a);
+
+    *(int32_t*)(p + 0x84) = (int32_t)(intptr_t)a1;
+
+    ctx = *(void**)((uint8_t*)a2 + 0xd0);
+    ((HoverTc*)this)->Sub40fb00(*(int32_t*)((uint8_t*)ctx + 0x4), *(int32_t*)((uint8_t*)ctx + 0x14), *(int32_t*)((uint8_t*)ctx + 0x18));
+    ((HoverTc*)this)->M40fbb0(rc);
+
+    node.p = *(uint8_t**)((uint8_t*)g_460970 + 0x8390);
+    while (node.p != 0)
+    {
+        *(int32_t*)(*(uint8_t**)(node.p + 0x8) + 0x3c) = 0;
+        node.p = *(uint8_t**)(node.p + 0x0);
+    }
+
+    *(int32_t*)(p + 0x8c) = GetNearestPaletteIndex(g_4a1d54, 0xff);
+    *(int32_t*)(p + 0x90) = GetNearestPaletteIndex(g_4a1d54, 0xff0000);
+    *(int32_t*)(p + 0x94) = GetNearestPaletteIndex(g_4a1d54, 0x9200);
+    *(int32_t*)(p + 0x98) = GetNearestPaletteIndex(g_4a1d54, 0xffff);
+    *(int32_t*)(p + 0x9c) = GetNearestPaletteIndex(g_4a1d54, 0xffffff);
+    *(int32_t*)(p + 0xa0) = GetNearestPaletteIndex(g_4a1d54, 0);
+    *(int32_t*)(p + 0xa4) = GetNearestPaletteIndex(g_4a1d54, 0xa4a4a4);
+    *(int32_t*)(p + 0xa8) = GetNearestPaletteIndex(g_4a1d54, 0x808080);
+    pads[0] = 0;
+    pads[1] = 0;
+    pads[2] = 0;
+    pads[3] = 0;
+    pads[4] = 0;
 }
 // FUNCTION: HOVER 0x00413c10
 void HoverTc::M413c10(void* a1)
@@ -1781,18 +1951,14 @@ L_scale:
     MulShift16((int32_t*)((uint8_t*)this + 0x218), scale);
     if (*(int32_t*)((uint8_t*)this + 0x540) == 0)
     {
-        int32_t v0 = *(int32_t*)(tbl + 0x264);
-        int32_t v1 = *(int32_t*)(tbl + 0x260);
-        int32_t v2 = *(int32_t*)(tbl + 0x25c);
         tbl += 0x258;
-        int32_t v3 = *(int32_t*)tbl;
-        ((HoverTc*)((uint8_t*)this + 0x150))->M40fee0((void*)((uint8_t*)this + 0xb4), this, g_460970, v3, v2, v1, v0);
+        ((HoverTc*)((uint8_t*)this + 0x150))->M40fee0((void*)((uint8_t*)this + 0xb4), this, g_460970, *(Four*)tbl);
     }
     else
     {
         int32_t rc[4];
         GetClientRect(*(void**)((uint8_t*)this + 0x1c), rc);
-        ((HoverTc*)((uint8_t*)this + 0x150))->M40fee0((void*)((uint8_t*)this + 0xb4), this, g_460970, rc[0], rc[1], rc[2], rc[3]);
+        ((HoverTc*)((uint8_t*)this + 0x150))->M40fee0((void*)((uint8_t*)this + 0xb4), this, g_460970, *(Four*)rc);
     }
 }
 // STUB: HOVER 0x00427bb0

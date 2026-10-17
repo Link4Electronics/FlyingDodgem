@@ -546,16 +546,19 @@ void HoverTc::F402630(void* a1, void* a2, void* a3)
     int32_t local1 = *(int32_t*)(node + 0xb4);
     uint8_t* local2 = node + 0xac;
     int32_t result = 0;
-    int32_t ebx, ecx, edx, ebp;
-    uint8_t* volatile selfpad = (uint8_t*)this;
+    int32_t ebx, edx, ebp;
 
+    ebp = *(int32_t*)(node + 0xb8);
     g_4a4564 = a3i;
     g_4a4524 = a2i;
     *(uint8_t*)(uintptr_t)(uint32_t)(*(int32_t*)(node + 0x10) + 0x24) |= 8;
 
-    if (*(int32_t*)(node + 0x40) == 0)
-        goto R3;
-
+    if (*(int32_t*)(node + 0x40) != 0)
+        goto MAIN;
+    if (((SpanArena*)this)->F4065f0((int32_t)(intptr_t)node, (int32_t)(intptr_t)local2, local1, ebp, *(int32_t*)(node + 0x64)))
+        return;
+    goto R3_tail;
+MAIN:
     if (*(int32_t*)(node + 0x6c) > 0)
     {
         edx = *(int32_t*)(node + 0x60);
@@ -563,94 +566,145 @@ void HoverTc::F402630(void* a1, void* a2, void* a3)
         if (ebx > local1)
         {
             if (ebx > a2i)
+                goto A_cont;
+            if (ebx < a3i)
             {
-                if (ebx >= a3i)
-                {
-                    ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
-                    result = 1;
-                    goto R1_flag;
-                }
-                ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, ebx, *(int32_t*)(node + 0x48));
+                ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x48), a2i, ebx);
                 g_4a4524 = g_4a453c + ebx;
-                goto R1_flag;
+                goto A_cont;
             }
-            if (a2i >= local1)
+            ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x48), a2i, a3i);
+            result = 1;
+            goto A_ret;
+        }
+        if (a2i >= local1)
+            goto A_cont;
+        if (a3i > local1)
+        {
+            ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x48), a2i, local1);
+            g_4a4524 = g_4a453c + local1;
+            goto A_cont;
+        }
+        ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x48), a2i, a3i);
+        result = 1;
+    A_ret:
+        return;
+    A_cont:
+        if (result)
+            return;
+        if (*(int32_t*)(node + 0x4c) != 0)
+        {
+            edx = *(int32_t*)(node + 0x64);
+            ebx = *(int32_t*)(uintptr_t)(uint32_t)*(int32_t*)(node + 0x88);
+            if (ebx > ebp)
             {
-                if (a3i <= local1)
+                if (g_4a4564 <= ebp)
+                    goto C1_none;
+                if (g_4a4524 >= ebp)
                 {
-                    ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
+                    ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x54), g_4a4524, g_4a4564);
                     result = 1;
-                    goto R1_flag;
+                    goto C1_end;
                 }
-                ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, local1, *(int32_t*)(node + 0x48));
-                g_4a4524 = g_4a453c + local1;
-                goto R1_flag;
+                ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x54), ebp, g_4a4564);
+                ebp -= g_4a453c;
+                g_4a4564 = ebp;
+                goto C1_none;
             }
-        }
-        else
-        {
-            if (a2i < local1 && a3i > local1)
+            if (g_4a4564 <= ebx)
+                goto C1_none;
+            if (g_4a4524 >= ebx)
             {
-                ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, local1, *(int32_t*)(node + 0x48));
-                g_4a4524 = g_4a453c + local1;
-                goto R1_flag;
+                ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x54), g_4a4524, g_4a4564);
+                result = 1;
+                goto C1_end;
             }
+            ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x54), ebx, g_4a4564);
+            ebx -= g_4a453c;
+            g_4a4564 = ebx;
+        C1_none:
+            result = 0;
+        C1_end:
+            if (result)
+                return;
         }
-        goto R1_flag;
+        goto R3_tail;
     }
-
-R2:
-    if (*(int32_t*)(node + 0x4c) == 0)
-        goto R3;
-    edx = *(int32_t*)(node + 0x64);
-    ebx = *(int32_t*)(uintptr_t)(uint32_t)*(int32_t*)(node + 0x88);
-    ebp = *(int32_t*)(node + 0xb8);
-    if (ebx > ebp)
+    if (*(int32_t*)(node + 0x4c) != 0)
     {
-        if (a3i > ebp)
+        edx = *(int32_t*)(node + 0x64);
+        ebx = *(int32_t*)(uintptr_t)(uint32_t)*(int32_t*)(node + 0x88);
+        if (ebx > ebp)
         {
+            if (a3i <= ebp)
+                goto C2_none;
             if (a2i >= ebp)
             {
-                ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
+                ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x54), a2i, a3i);
                 result = 1;
-                goto R2_flag;
+                goto C2_end;
             }
-            ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, ebp, a3i, *(int32_t*)(node + 0x48));
-            g_4a4564 = ebp - g_4a453c;
-            goto R2_flag;
+            ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x54), ebp, a3i);
+            ebp -= g_4a453c;
+            g_4a4564 = ebp;
+            goto C2_none;
         }
-        if (a3i > ebx)
+        if (a3i <= ebx)
+            goto C2_none;
+        if (a2i >= ebx)
         {
-            if (a2i >= ebx)
-            {
-                ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, a2i, a3i, *(int32_t*)(node + 0x48));
-                result = 1;
-                goto R2_flag;
-            }
-            ((SpanArena*)HOVER_LPTR(selfpad, 0))->F403980(edx, ebx, a3i, *(int32_t*)(node + 0x48));
-            g_4a4564 = ebx - g_4a453c;
-            goto R2_flag;
+            ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x54), a2i, a3i);
+            result = 1;
+            goto C2_end;
         }
-        goto R2_flag;
+        ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x54), ebx, a3i);
+        ebx -= g_4a453c;
+        g_4a4564 = ebx;
+    C2_none:
+        result = 0;
+    C2_end:
+        if (result)
+            return;
     }
-    goto R2_flag;
 
-R1_flag:
+R3_part2:
+    edx = *(int32_t*)(node + 0x60);
+    ebx = *(int32_t*)(uintptr_t)(uint32_t)*(int32_t*)(node + 0x84);
+    if (local1 < ebx)
+    {
+        if (g_4a4524 >= ebx)
+            goto D_none;
+        if (g_4a4564 > ebx)
+        {
+            ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x48), g_4a4524, ebx);
+            g_4a4524 = g_4a453c + ebx;
+            goto D_none;
+        }
+        ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x48), g_4a4524, g_4a4564);
+        result = 1;
+        goto D_end;
+    }
+    if (g_4a4524 >= local1)
+        goto D_none;
+    if (g_4a4564 > local1)
+    {
+        ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x48), g_4a4524, local1);
+        g_4a4524 = g_4a453c + local1;
+        goto D_none;
+    }
+    ((SpanArena*)HOVER_LPTR(this, 0))->F403980(edx, *(int32_t*)(node + 0x48), g_4a4524, g_4a4564);
+    result = 1;
+D_end:
     if (result)
         return;
-    goto R2;
+D_none:
+    goto R3_tail;
 
-R2_flag:
-    if (result)
-        return;
-
-R3:
-    if (((SpanArena*)this)->F4065f0((int32_t)(intptr_t)node, (int32_t)(intptr_t)local2, local1, ebp, *(int32_t*)(node + 0x64)))
-        return;
+R3_tail:
     if (g_4a4564 < g_4a4524)
         return;
-    ((SpanArena*)this)->F4065f0((int32_t)(intptr_t)node, (int32_t)(intptr_t)local2, local1, ebp, *(int32_t*)(node + 0x64));
     SpanSetup2990(this, local2, node, local2, g_4a4524, g_4a4564);
+    return;
 }
 
 // FUNCTION: HOVER 0x00402b10

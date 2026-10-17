@@ -17,8 +17,17 @@
  * of the object pointer.  Callees that only take `this` are __fastcall with a
  * single parameter, which puts it in ECX without touching EDX. */
 
+struct Four
+{
+    int32_t a;
+    int32_t b;
+    int32_t c;
+    int32_t d;
+};
+
 struct HoverTc
 {
+    void M40fbb0(Four rc);
     void F401980(int32_t x0, int32_t y0, int32_t x1, int32_t y1);
     void F401c00(void* a1, void* a2);
     void F402630(void* a1, void* a2, void* a3);
@@ -34,13 +43,14 @@ struct HoverTc
     int32_t M40cce0(void* a1, void* a2, void* a3, void* a4);
     void M410ec0();
     void M410f20(int32_t a1, int32_t a2);
-    void M40fee0(void* a1, void* a2, void* a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7);
+    void M40fee0(void* a1, void* a2, void* a3, Four rc);
     void M413c10(void* a1);
     int32_t M4184b0(void* a1, void* a2);
     void M427a80(void* a1);
     int32_t M449598(int32_t a1, int32_t a2);
     int32_t M44994f(void* a1);
     int32_t M44a003(void* a1, void* a2, void* a3);
+    void Sub40fb00(int32_t a, int32_t b, int32_t c);
 };
 
 /* Render-node discriminated by RTTI IsKindOf (retail 0x44e710). Shared by

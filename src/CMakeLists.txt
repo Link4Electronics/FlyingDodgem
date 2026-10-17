@@ -163,4 +163,29 @@ if(MSVC22_FOR_RECCMP)
     # whose helpers (__allshl loop form, __alldiv, ...) are byte-identical
     # to HOVER.EXE's. Name it explicitly so the retail runtime wins.
     target_link_libraries(FlyingDodgem PRIVATE "C:/msvc22/lib/LIBC.LIB")
+
+    # Retail's malloc/heap cluster is MSVC 2.2 LIBCMT.LIB's heap objects,
+    # byte-identical to HOVER.EXE (verified with reccmp operation shape and
+    # relocations). Link the exact archive members so those bytes come from
+    # the retail toolchain rather than being recompiled. Objects precede
+    # libraries on the link line, so LIBC.LIB's own allocator members are
+    # never pulled in. reccmp/reccmp-native.sh runs extract-libcmt.py before
+    # configuring; the files must exist at generate time.
+    set(_libcmt_objs "")
+    foreach(_m malloc calloc free heapinit heapsrch heapgrow heapadd hpabort findaddr _newmode mlock)
+        list(APPEND _libcmt_objs "${CMAKE_BINARY_DIR}/libcmt/${_m}.obj")
+    endforeach()
+    # Retail is a GUI application: its CRT entry is wincrt0.obj's
+    # WinMainCRTStartup, whose __amsg_exit (HOVER 0x43fcec) is the
+    # MessageBoxA/__GET_RTERRMSG form. CMake defaults to
+    # /subsystem:console, which pulls crt0.obj's console __amsg_exit
+    # instead. WIN32_EXECUTABLE selects the GUI subsystem and LIBC's
+    # wincrt0.obj is linked explicitly (extracted by reccmp-native.sh)
+    # so its defined set wins over the archive member and no console
+    # startup object is pulled; LIBC's __amsg_exit is byte-identical to
+    # the LIBCMT copy retail linked (verified against 0x43fcec).
+    list(APPEND _libcmt_objs "${CMAKE_BINARY_DIR}/libcmt/wincrt0.obj")
+    target_sources(FlyingDodgem PRIVATE ${_libcmt_objs})
+
+    set_target_properties(FlyingDodgem PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()

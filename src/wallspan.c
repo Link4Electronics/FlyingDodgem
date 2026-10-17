@@ -501,12 +501,14 @@ extern "C" void __stdcall F4066b0(void* a1, void* a2, int32_t a3, int32_t a4)
     uint8_t* v = (uint8_t*)a2;
     int32_t f98;
     int32_t shade;
+    int32_t t;
 
-    g_4a4a14 = g_4a453c - a3 + a4;
+    t = g_4a453c - a3;
+    g_4a4a14 = a4 + t;
     if (g_4a4a14 < 1)
         return;
-    shade = *(int16_t*)(o + 0x8);
     g_4a4a4c = g_4a4540 + a3 * g_4a4a34;
+    shade = *(int16_t*)(o + 0x8);
     g_4a4a44 = shade;
     g_4a4a38 = *(int32_t*)(o + 0x94);
     f98 = *(int32_t*)(o + 0x98);
