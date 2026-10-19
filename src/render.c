@@ -467,6 +467,7 @@ PtPair* RenderNode::GetPair(PtPair* out)
     return out;
 }
 
+#pragma optimize("s", on)
 // FUNCTION: HOVER 0x0044e710
 int32_t RenderNode::IsKindOf(void* pClass)
 {
@@ -480,6 +481,7 @@ int32_t RenderNode::IsKindOf(void* pClass)
     }
     return 0;
 }
+#pragma optimize("", on)
 
 struct MulFixHost
 {
@@ -885,13 +887,12 @@ typedef void (__fastcall *VSlot0)(void* self);
 extern "C" void __fastcall Set6c00(void* self, void* unused, int32_t a1, int32_t a2, int32_t a3, int32_t a4)
 {
     uint8_t* b = (uint8_t*)self;
-    int32_t* q = (int32_t*)(b + 0x48);
-    (void)a4;
     (void)unused;
     *(int32_t*)(b + 0x50) = a3;
     *(int32_t*)(b + 0x54) = a4 & 0x1ff;
-    q[0] = a1;
+    int32_t* q = (int32_t*)(b + 0x48);
     q[1] = a2;
+    q[0] = a1;
     if (*(int32_t*)(b + 0xa8) != a3)
         *(int32_t*)(b + 0xa8) = a3;
 }
@@ -1140,30 +1141,34 @@ extern "C" void __fastcall Setup6c90(void* self)
      * base on 64-bit native. */
     uint8_t* b = (uint8_t*)self;
     uint8_t* p = (uint8_t*)(uintptr_t)*(uint32_t*)(b + 0x18);
+    int32_t zero = 0;
+    uint8_t* t;
+    uint8_t* r;
+    int32_t size;
 
     *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)p;
     *(uint32_t*)(b + 4) = (uint32_t)(uintptr_t)p;
-    *(int32_t*)(b + 0x10) = 0;
-    uint8_t* t = p + 0xcc;
+    *(int32_t*)(b + 0x10) = zero;
+    t = p + 0xcc;
     p = p + 0xa0;
     *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)p;
-    *(int32_t*)(b + 0xc) = 0;
-    uint8_t* r = p + 4;
-    *(int32_t*)(b + 0x14) = 0;
+    *(int32_t*)(b + 0xc) = zero;
+    r = p + 4;
+    *(int32_t*)(b + 0x14) = zero;
     *(uint32_t*)(b + 8) = (uint32_t)(uintptr_t)p;
     *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)t;
     *(uint32_t*)p = (uint32_t)(uintptr_t)t;
     t = t + 0xa0;
+    size = *(int32_t*)b;
     *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)t;
     *(uint32_t*)r = (uint32_t)(uintptr_t)t;
-    *(int32_t*)(p + 0x28) = 0;
+    *(int32_t*)(p + 0x28) = zero;
     t = t + 0xa0;
-    *(int32_t*)(p + 0x14) = 0;
+    *(int32_t*)(p + 0x14) = zero;
     *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)t;
     *(uint32_t*)(p + 0x10) = (uint32_t)(uintptr_t)t;
-    int32_t size = *(int32_t*)b;
     t = t + size * 2;
-    *(int32_t*)(p + 0x18) = 0;
+    *(int32_t*)(p + 0x18) = zero;
     *(uint32_t*)(b + 0x1c) = (uint32_t)(uintptr_t)t;
     *(uint32_t*)(p + 8) = (uint32_t)(uintptr_t)p;
     *(uint32_t*)(p + 0xc) = (uint32_t)(uintptr_t)r;
@@ -1278,7 +1283,8 @@ extern "C" void __cdecl F4044a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4)
     *(int32_t*)(node + 0x24) = a4;
     if (a1 == 0)
         *(int32_t*)(node + 0x18) = 1;
-    *(int32_t*)(node + 0x18) = 1;
+    else if (a1 != 0)
+        *(int32_t*)(node + 0x18) = 1;
     *(int32_t*)(node + 0x10) = a2;
     cur = (uint8_t*)g_4a4714;
 
@@ -1405,7 +1411,7 @@ extern "C" int32_t __cdecl F4045e0(void* a0, void* a1)
     uint8_t* node;
     PtPair out;
 
-    lo = hi = (int16_t)(uintptr_t)a0;
+    hi = lo = (int16_t)(uintptr_t)a0;
     prev = NULL;
     node = (uint8_t*)g_4a4714;
     g_4a471c = NULL;
@@ -1650,8 +1656,6 @@ static inline int32_t* MulShort16(int32_t* p, int16_t d)
 // FUNCTION: HOVER 0x00404bb0
 void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
 {
-    int32_t m10a = -10;
-    int32_t m10b = -10;
     void* item = a1;
     void* parent;
     int32_t left;
@@ -1703,6 +1707,8 @@ void RenderNode::F404bb0(void* a0, void* a1, int32_t a2)
     volatile int32_t pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
     volatile int32_t pad8, pad9, pad10, pad11, pad12, pad13, pad14, pad15;
     volatile int32_t pad16, pad17, pad18, pad19, pad20, pad21;
+    int32_t m10a = -10;
+    int32_t m10b = -10;
 
     *(volatile int32_t*)&m10a = -10;
     *(volatile int32_t*)&m10b = -10;
@@ -2211,6 +2217,7 @@ int32_t HoverTc::M406090(void* a1, void* a2)
     entry -= g_4a454c * 8;
     g_4a4550 = *(int32_t*)((uint8_t*)this + 0x3c);
     idx = (*(int32_t*)(*(uint8_t**)((uint8_t*)this + 0x20) + 0x30) - 1) * 4;
+
     for (;;)
     {
         uint8_t* node;
@@ -2221,12 +2228,11 @@ int32_t HoverTc::M406090(void* a1, void* a2)
         {
             px = (int32_t)*(int16_t*)(node + 0x5a) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
             py = (int32_t)*(int16_t*)(node + 0x5c) - *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
-            pv = (int32_t)*(int16_t*)(node + 0x58);
             d2 = py * py + px * px;
             r = sqrt(fabs((double)d2));
-            u = px * pv;
+            u = px * (int32_t)*(int16_t*)(node + 0x58);
             u = (int)((double)u / r);
-            v = (int)((double)(py * pv) / r);
+            v = (int)((double)(py * (int32_t)*(int16_t*)(node + 0x58)) / r);
             px += *(int32_t*)((uint8_t*)g_4a1d68 + 0x48);
             py += *(int32_t*)((uint8_t*)g_4a1d68 + 0x4c);
             *(int32_t*)(node + 0x14) = px + v;
@@ -2332,230 +2338,262 @@ extern "C" int32_t __cdecl F406d30(void* a0, void* a1)
 {
     int32_t result = 0;
     uint8_t* p = (uint8_t*)g_4a471c;
+    uint8_t* next;
+    uint8_t* child;
+    PtPair buf;
+    int16_t r;
+    uint32_t f18;
+    uint32_t f20;
+    int32_t ay;
+    int32_t ax;
+    int32_t by;
+    int32_t bx;
+    int32_t dx;
+    int32_t dy;
+    uint32_t m;
+    uint32_t den;
+    uint32_t num;
+    uint32_t dist1;
+    int32_t ay2;
+    int32_t ax2;
+    int32_t by2;
+    int32_t bx2;
+    int32_t dx2;
+    int32_t dy2;
+    uint32_t m2;
+    uint32_t den2;
+    uint32_t num2;
+    uint32_t dist2;
+    int32_t ay3;
+    int32_t ax3;
+    int32_t by3;
+    int32_t bx3;
+    int32_t dx3;
+    int32_t dy3;
+    uint32_t m3;
+    uint32_t den3;
+    uint32_t num3;
+    uint32_t dist3;
+    uint8_t* prev;
+    uint8_t* node;
+    uint8_t* old;
+    uint8_t* sib;
+    uint8_t* head;
+    uint8_t* nnext;
+    uint32_t moved;
 
     while (p != NULL)
     {
-        uint8_t* next = HOVER_LPTR(p, 0x34);
-        uint8_t* child = HOVER_LPTR(p, 0x10);
-        PtPair buf;
-        int32_t r = F401260(child, &buf, a1, &buf);
-        uint32_t f18 = ((uint16_t)(r - 1) == 0);
-        uint32_t f20;
-        int32_t dv;
-        int16_t* slot;
+        next = HOVER_LPTR(p, 0x34);
+        child = HOVER_LPTR(p, 0x10);
+        r = F401260(child, &buf, a1, &buf);
+        f18 = ((uint16_t)(r - 1) == 0);
+        f20 = f18;
 
         *(uint32_t*)(p + 0x14) = f18;
-        f20 = f18;
 
         if ((uint16_t)r != 0)
         {
-            int32_t ay = buf.y;
-            int32_t ax = buf.x;
-            int32_t by = *(int32_t*)((uint8_t*)a1 + 0x18);
-            int32_t bx = *(int32_t*)((uint8_t*)a1 + 0x14);
-            int32_t dx = abs(ax - bx);
-            int32_t dy = abs(ay - by);
-            uint32_t m = (dy < dx) ? dy : dx;
-            uint32_t den = dy - m / 2 + dx + 1;
-            uint32_t num = (uint32_t)(dx * dx + dy * dy);
-            uint32_t dist1 = (den + num / den) / 2;
+            ay = buf.y;
+            ax = buf.x;
+            by = *(int32_t*)((uint8_t*)a1 + 0x18);
+            bx = *(int32_t*)((uint8_t*)a1 + 0x14);
+            dx = abs(ax - bx);
+            dy = abs(ay - by);
+            m = (dy < dx) ? dy : dx;
+            den = dy - m / 2 + dx + 1;
+            num = (uint32_t)(dx * dx + dy * dy);
+            dist1 = (den + num / den) / 2;
 
             *(int16_t*)(p + 8) = (int16_t)dist1;
-            if (*(int32_t*)(p + 0xc) != 0 && *(int32_t*)(child + 0x68) != 0)
-                f20 = !f18;
+
+            if (*(int32_t*)(p + 0xc) != 0)
+            {
+                if (*(int32_t*)(child + 0x68) != 0)
+                    f20 = !f18;
+            }
 
             if (f20 != 0)
             {
-                int32_t ay2 = buf.y;
-                int32_t ax2 = buf.x;
-                int32_t by2 = *(int32_t*)((uint8_t*)child + 0x20);
-                int32_t bx2 = *(int32_t*)((uint8_t*)child + 0x1c);
-                int32_t dx2 = abs(ax2 - bx2);
-                int32_t dy2 = abs(ay2 - by2);
-                uint32_t m2 = (dy2 < dx2) ? dy2 : dx2;
-                uint32_t den2 = dy2 - m2 / 2 + dx2 + 1;
-                uint32_t num2 = (uint32_t)(dx2 * dx2 + dy2 * dy2);
-                uint32_t dist2 = (den2 + num2 / den2) / 2;
+                ay2 = buf.y;
+                ax2 = buf.x;
+                by2 = *(int32_t*)((uint8_t*)child + 0x20);
+                bx2 = *(int32_t*)((uint8_t*)child + 0x1c);
+                dx2 = abs(ax2 - bx2);
+                dy2 = abs(ay2 - by2);
+                m2 = (dy2 < dx2) ? dy2 : dx2;
+                den2 = dy2 - m2 / 2 + dx2 + 1;
+                num2 = (uint32_t)(dx2 * dx2 + dy2 * dy2);
+                dist2 = (den2 + num2 / den2) / 2;
 
-                slot = (int16_t*)(p + 0xa);
-                dv = dist2;
+                *(int16_t*)(p + 0xa) = (int16_t)dist2;
             }
             else
             {
-                int32_t ay3 = buf.y;
-                int32_t ax3 = buf.x;
-                int32_t by3 = *(int32_t*)((uint8_t*)child + 0x18);
-                int32_t bx3 = *(int32_t*)((uint8_t*)child + 0x14);
-                int32_t dx3 = abs(ax3 - bx3);
-                int32_t dy3 = abs(ay3 - by3);
-                uint32_t m3 = (dy3 < dx3) ? dy3 : dx3;
-                uint32_t den3 = dy3 - m3 / 2 + dx3 + 1;
-                uint32_t num3 = (uint32_t)(dx3 * dx3 + dy3 * dy3);
-                uint32_t dist3 = (den3 + num3 / den3) / 2;
+                ay3 = buf.y;
+                ax3 = buf.x;
+                by3 = *(int32_t*)((uint8_t*)child + 0x18);
+                bx3 = *(int32_t*)((uint8_t*)child + 0x14);
+                dx3 = abs(ax3 - bx3);
+                dy3 = abs(ay3 - by3);
+                m3 = (dy3 < dx3) ? dy3 : dx3;
+                den3 = dy3 - m3 / 2 + dx3 + 1;
+                num3 = (uint32_t)(dx3 * dx3 + dy3 * dy3);
+                dist3 = (den3 + num3 / den3) / 2;
 
-                slot = (int16_t*)(p + 0xa);
-                dv = dist3;
+                *(int16_t*)(p + 0xa) = (int16_t)dist3;
             }
 
-            *(int16_t*)slot = (int16_t)dv;
-
-            if (*(int32_t*)(p + 0xc) == 0)
+            if (*(int32_t*)(p + 0xc) != 0)
             {
-                uint32_t cont;
+                if (*(int32_t*)(p + 0x18) != 0)
+                {
+                    result = 1;
+                    *(int32_t*)(p + 0x18) = 0;
 
+                    prev = HOVER_LPTR(p, 0x30);
+                    node = HOVER_LPTR(p, 0x34);
+                    if (prev != NULL)
+                        HOVER_SPTR(prev, 0x34, node);
+                    if (node != NULL)
+                        HOVER_SPTR(node, 0x30, prev);
+                    if (g_4a471c == p)
+                        g_4a471c = node;
+
+                    node = (uint8_t*)g_4a471c;
+                    if (node == NULL)
+                    {
+                        HOVER_SPTR(p, 0x34, NULL);
+                        HOVER_SPTR(p, 0x30, NULL);
+                        g_4a471c = p;
+                    }
+                    else
+                    {
+                        for (;;)
+                        {
+                            if (*(int32_t*)(node + 0x18) == 0
+                                && *(int16_t*)(node + 8) > *(int16_t*)(p + 8))
+                            {
+                                old = HOVER_LPTR(node, 0x30);
+                                HOVER_SPTR(node, 0x30, p);
+                                if (old != NULL)
+                                {
+                                    HOVER_SPTR(old, 0x34, p);
+                                    HOVER_SPTR(p, 0x30, old);
+                                    HOVER_SPTR(p, 0x34, node);
+                                }
+                                else
+                                {
+                                    g_4a471c = p;
+                                    HOVER_SPTR(p, 0x34, node);
+                                    HOVER_SPTR(p, 0x30, old);
+                                }
+                                break;
+                            }
+                            if (HOVER_LPTR(node, 0x34) == NULL)
+                            {
+                                HOVER_SPTR(node, 0x34, p);
+                                HOVER_SPTR(p, 0x30, node);
+                                HOVER_SPTR(p, 0x34, NULL);
+                                break;
+                            }
+                            node = HOVER_LPTR(node, 0x34);
+                        }
+                    }
+                }
+                else
+                {
+                    sib = HOVER_LPTR(p, 0x30);
+                    if (sib != NULL)
+                    {
+                        node = sib;
+                        while (node != NULL)
+                        {
+                            if (*(int32_t*)(node + 0x18) == 0
+                                && *(int16_t*)(node + 8) < *(int16_t*)(p + 8))
+                                break;
+                            node = HOVER_LPTR(node, 0x30);
+                        }
+
+                        if (node != sib)
+                        {
+                            result = 1;
+
+                            HOVER_SPTR(sib, 0x34, HOVER_LPTR(p, 0x34));
+                            if (HOVER_LPTR(p, 0x34) != NULL)
+                                HOVER_SPTR(HOVER_LPTR(p, 0x34), 0x30, sib);
+                            if (g_4a471c == p)
+                                g_4a471c = HOVER_LPTR(p, 0x34);
+
+                            if (node != NULL)
+                            {
+                                old = HOVER_LPTR(node, 0x34);
+                                HOVER_SPTR(node, 0x34, p);
+                                if (old != NULL)
+                                    HOVER_SPTR(old, 0x30, p);
+                                HOVER_SPTR(p, 0x34, old);
+                                HOVER_SPTR(p, 0x30, node);
+                            }
+                            else
+                            {
+                                HOVER_SPTR(p, 0x30, NULL);
+                                head = (uint8_t*)g_4a471c;
+                                HOVER_SPTR(p, 0x34, head);
+                                if (head != NULL)
+                                    HOVER_SPTR(head, 0x30, p);
+                                g_4a471c = p;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
                 if (*(int32_t*)(p + 0x18) != 0)
                 {
                     result = 1;
                     *(int32_t*)(p + 0x18) = 0;
                 }
 
-                *slot += (*(int32_t*)(p + 0x14) != 0)
-                    ? *(int16_t*)((uint8_t*)child + 0xb8)
-                    : *(int16_t*)((uint8_t*)child + 0xba);
+                if (*(int32_t*)(p + 0x14) != 0)
+                    *(int16_t*)(p + 0xa) += *(int16_t*)((uint8_t*)child + 0xb8);
+                else
+                    *(int16_t*)(p + 0xa) += *(int16_t*)((uint8_t*)child + 0xba);
 
                 do
                 {
-                    uint8_t* node;
-                    cont = 0;
+                    moved = 0;
                     node = HOVER_LPTR(p, 0x30);
                     if (node != NULL && *(int32_t*)(node + 0xc) != 0
                         && *(int32_t*)(node + 0x18) == 0
                         && *(int16_t*)(node + 8) > *(int16_t*)(p + 8))
                     {
-                        uint8_t* prev;
-                        uint8_t* old;
-
                         result = 1;
+
                         prev = HOVER_LPTR(node, 0x30);
+                        nnext = HOVER_LPTR(node, 0x34);
                         if (prev != NULL)
-                            if (prev != NULL) HOVER_SPTR(prev, 0x34, HOVER_LPTR(node, 0x34));
-                        if (HOVER_LPTR(node, 0x34) != NULL)
-                            HOVER_SPTR(HOVER_LPTR(node, 0x34), 0x30, prev);
+                            HOVER_SPTR(prev, 0x34, nnext);
+                        if (nnext != NULL)
+                            HOVER_SPTR(nnext, 0x30, prev);
                         if (g_4a471c == node)
-                            g_4a471c = HOVER_LPTR(node, 0x34);
+                            g_4a471c = nnext;
+
                         old = HOVER_LPTR(p, 0x34);
                         HOVER_SPTR(p, 0x34, node);
                         if (old != NULL)
                             HOVER_SPTR(old, 0x30, node);
                         HOVER_SPTR(node, 0x34, old);
                         HOVER_SPTR(node, 0x30, p);
-                        cont = 1;
+                        moved = 1;
                     }
-                } while (cont);
-            }
-            else if (*(int32_t*)(p + 0x18) == 0)
-            {
-                        uint8_t* prev = HOVER_LPTR(p, 0x30);
-                uint8_t* node = prev;
-
-    while (node != NULL)
-                {
-                    if (*(int32_t*)(node + 0x18) == 0
-                        && *(int16_t*)(node + 8) < *(int16_t*)(p + 8))
-                        break;
-                    node = HOVER_LPTR(node, 0x30);
-                }
-
-                if (node != prev)
-                {
-                    uint8_t* old;
-
-                    result = 1;
-                    if (prev != NULL)
-HOVER_SPTR(prev, 0x34, HOVER_LPTR(p, 0x34));
-                        if (HOVER_LPTR(p, 0x34) != NULL)
-                            HOVER_SPTR(HOVER_LPTR(p, 0x34), 0x30, prev);
-                    if (g_4a471c == p)
-                            g_4a471c = HOVER_LPTR(p, 0x34);
-
-                    if (node != NULL)
-                    {
-                        old = HOVER_LPTR(node, 0x34);
-                        HOVER_SPTR(node, 0x34, p);
-                        if (old != NULL)
-                            HOVER_SPTR(old, 0x30, p);
-                        HOVER_SPTR(p, 0x34, old);
-                        HOVER_SPTR(p, 0x30, node);
-                    }
-                    else
-                    {
-                        uint8_t* head;
-
-                        HOVER_SPTR(p, 0x30, NULL);
-                        head = (uint8_t*)g_4a471c;
-                        HOVER_SPTR(p, 0x34, head);
-                        if (head != NULL)
-                            HOVER_SPTR(head, 0x30, p);
-                        g_4a471c = p;
-                    }
-                }
-            }
-            else
-            {
-                uint8_t* prev;
-                uint8_t* node;
-
-                result = 1;
-                *(int32_t*)(p + 0x18) = 0;
-
-                        prev = HOVER_LPTR(p, 0x30);
-                if (prev != NULL)
-                    HOVER_SPTR(prev, 0x34, HOVER_LPTR(p, 0x34));
-                if (HOVER_LPTR(p, 0x34) != NULL)
-                    HOVER_SPTR(HOVER_LPTR(p, 0x34), 0x30, prev);
-                if (g_4a471c == p)
-                    g_4a471c = HOVER_LPTR(p, 0x34);
-
-                node = (uint8_t*)g_4a471c;
-                if (node == NULL)
-                {
-                    HOVER_SPTR(p, 0x34, NULL);
-                    HOVER_SPTR(p, 0x30, NULL);
-                    g_4a471c = p;
-                }
-                else
-                {
-                    for (;;)
-                    {
-                        if (*(int32_t*)(node + 0x18) == 0
-                            && *(int16_t*)(node + 8) > *(int16_t*)(p + 8))
-                        {
-                            uint8_t* old = HOVER_LPTR(node, 0x30);
-
-                            HOVER_SPTR(node, 0x30, p);
-                            if (old != NULL)
-                            {
-                                HOVER_SPTR(old, 0x34, p);
-                                HOVER_SPTR(p, 0x30, old);
-                                HOVER_SPTR(p, 0x34, node);
-                            }
-                            else
-                            {
-                                g_4a471c = p;
-                                HOVER_SPTR(p, 0x34, node);
-                                HOVER_SPTR(p, 0x30, old);
-                            }
-                            break;
-                        }
-                        if (HOVER_LPTR(node, 0x34) == NULL)
-                        {
-                            HOVER_SPTR(node, 0x34, p);
-                            HOVER_SPTR(p, 0x30, node);
-                            HOVER_SPTR(p, 0x34, NULL);
-                            break;
-                        }
-                        node = HOVER_LPTR(node, 0x34);
-                    }
-                }
+                } while (moved != 0);
             }
         }
-        else
+        else if (*(int32_t*)(p + 0x18) == 0)
         {
-            if (*(int32_t*)(p + 0x18) == 0)
-            {
-                F4045e0(a0, a1);
-                return 1;
-            }
+            F4045e0(a0, a1);
+            return 1;
         }
 
         p = next;

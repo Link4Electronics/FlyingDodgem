@@ -1093,200 +1093,197 @@ int32_t HoverTc::M402e00(void* a1)
 // FUNCTION: HOVER 0x00403a60
 void SpanChain::F403a60(void* a1)
 {
-    uint8_t* bucket;
-    uint8_t* ap;
     uint8_t* dst;
+    uint8_t* bucket;
+    uint8_t* p;
+    int32_t n;
     uint8_t* src;
+    uint8_t* ap;
     int32_t r0;
     int32_t r1;
     int32_t x0;
     int32_t a;
-    int32_t b;
-    int32_t y0;
-    int32_t n;
-    int32_t stride;
+    volatile int32_t y0;
+    volatile int32_t y0b;
+    int32_t x1;
+    int32_t b1;
 
-    bucket = HOVER_LPTR(this, 8);
     dst = HOVER_LPTR(this, 4);
+    bucket = HOVER_LPTR(this, 8);
 #if defined(FLYINGDODGEM_GDI_COMPAT)
     if (bucket == NULL || dst == NULL)
         return;
-    n = 0;
-    src = NULL;
-#else
+#endif
     n = *(int32_t*)(bucket + 0x14);
     src = HOVER_LPTR(HOVER_LPTR(bucket, 0xc), 0);
-#endif
+    p = dst;
     if (n > 0)
     {
-        uint8_t* p = dst;
         do
         {
 #if defined(FLYINGDODGEM_GDI_COMPAT)
             if (src == NULL)
                 break;
-            *(int16_t*)(p + 0) = *(int16_t*)src;
-            *(int16_t*)(p + 2) = *(int16_t*)(src + 2);
-#else
-            *(int16_t*)(p + 0) = *(int16_t*)(src + 0);
-            *(int16_t*)(p + 2) = *(int16_t*)(src + 2);
 #endif
-            p += 4;
+            *(int16_t*)p = *(int16_t*)src;
+            *(int16_t*)(p + 2) = *(int16_t*)(src + 2);
             src += 4;
+            p += 4;
             n--;
-        } while (n > 0);
+        } while (n != 0);
     }
+
     ap = HOVER_LPTR(HOVER_LPTR(bucket, 8), 0);
     r0 = 0;
     r1 = 0;
-    stride = g_4a453c;
+    if (*(int32_t*)(bucket + 0x18) <= r1)
+        goto L_c5f;
+
+L_ab8:
+    if (*(int32_t*)(bucket + 0x14) <= r0)
+        goto L_c5f;
+    a = *(int16_t*)ap;
+    x0 = *(int16_t*)dst;
+    if (x0 <= a)
+        goto L_b84;
+    y0 = *(int16_t*)(ap + 2);
+    if (x0 <= y0)
+        goto L_b10;
+    if (y0 < a)
+        goto L_c49;
+L_ae4:
+    F406740(a1, (void*)(intptr_t)y0, *(int16_t*)(HOVER_LPTR(bucket, 0x10) + a * 2), a);
+    a += g_4a453c;
+    if (y0 >= a)
+        goto L_ae4;
+    goto L_c49;
+
+L_b10:
+    y0b = *(int16_t*)(dst + 2);
+    if (y0b < y0)
+        goto L_b48;
+    if (x0 <= a)
+        goto L_c3d;
+L_b26:
+    F406740(a1, (void*)(intptr_t)y0, *(int16_t*)(HOVER_LPTR(bucket, 0x10) + a * 2), a);
+    a += g_4a453c;
+    if (x0 > a)
+        goto L_b26;
+    goto L_c3d;
+
+L_b48:
+    if (x0 <= a)
+        goto L_b69;
+L_b4c:
+    F406740(a1, (void*)(intptr_t)y0, *(int16_t*)(HOVER_LPTR(bucket, 0x10) + a * 2), a);
+    a += g_4a453c;
+    if (x0 > a)
+        goto L_b4c;
+L_b69:
+    *(int16_t*)ap = (int16_t)(y0b + g_4a453c);
+    dst += 4;
+    r0++;
+    goto L_c52;
+
+L_b84:
+    y0b = *(int16_t*)(dst + 2);
+    if (y0b >= a)
+        goto L_bc1;
+    if (y0b < x0)
+        goto L_bb5;
+L_b94:
+    *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2) = *(int16_t*)&g_4a4534;
+    x0 += g_4a453c;
+    if (y0b >= x0)
+        goto L_b94;
+L_bb5:
+    dst += 4;
+    r0++;
+    goto L_c52;
+
+L_bc1:
+    y0 = *(int16_t*)(ap + 2);
+    if (y0b > y0)
+        goto L_c14;
+    if (x0 >= a)
+        goto L_bfc;
+L_bd7:
+    *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2) = *(int16_t*)&g_4a4534;
+    x0 += g_4a453c;
+    if (a > x0)
+        goto L_bd7;
+L_bfc:
+    *(int16_t*)ap = (int16_t)(y0b + g_4a453c);
+    dst += 4;
+    r0++;
+    goto L_c52;
+
+L_c14:
+    if (x0 >= a)
+        goto L_c3d;
+L_c18:
+    *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2) = *(int16_t*)&g_4a4534;
+    x0 += g_4a453c;
+    if (a > x0)
+        goto L_c18;
+L_c3d:
+    *(int16_t*)dst = (int16_t)(y0 + g_4a453c);
+L_c49:
+    ap += 4;
+    r1++;
+L_c52:
+    if (*(int32_t*)(bucket + 0x18) > r1)
+        goto L_ab8;
+
+L_c5f:
     if (r1 < *(int32_t*)(bucket + 0x18))
     {
-        for (;;)
+        int32_t i;
+
+        i = r1;
+        do
         {
-            if (r0 >= *(int32_t*)(bucket + 0x14))
-                break;
-            x0 = *(int16_t*)(dst + 0);
-            a = *(int16_t*)(ap + 0);
-            if (x0 > a)
-            {
-                b = *(int16_t*)(ap + 2);
-                if (x0 > b)
-                {
-                    if (b >= a)
-                    {
-                        do
-                        {
-                            F406740(a1, (void*)(intptr_t)b, *(int16_t*)(HOVER_LPTR(bucket, 0x10) + a * 2), a);
-                            a += stride;
-                        } while (a <= b);
-                    }
-                    ap += 4;
-                    r1++;
-                    if (r1 < *(int32_t*)(bucket + 0x18))
-                        continue;
-                    break;
-                }
-                y0 = *(int16_t*)(dst + 2);
-                if (y0 >= b)
-                {
-                    if (x0 > a)
-                    {
-                        do
-                        {
-                            F406740(a1, (void*)(intptr_t)b, *(int16_t*)(HOVER_LPTR(bucket, 0x10) + a * 2), a);
-                            a += stride;
-                        } while (a < x0);
-                    }
-                    *(int16_t*)(dst + 0) = (int16_t)(b + stride);
-                    ap += 4;
-                    r1++;
-                    if (r1 < *(int32_t*)(bucket + 0x18))
-                        continue;
-                    break;
-                }
-                if (x0 > a)
-                {
-                    do
-                    {
-                        F406740(a1, (void*)(intptr_t)b, *(int16_t*)(HOVER_LPTR(bucket, 0x10) + a * 2), a);
-                        a += stride;
-                    } while (a < x0);
-                }
-                *(int16_t*)(ap + 0) = (int16_t)(y0 + stride);
-                dst += 4;
-                r0++;
-                if (r1 < *(int32_t*)(bucket + 0x18))
-                    continue;
-                break;
-            }
-            y0 = *(int16_t*)(dst + 2);
-            if (y0 < a)
-            {
-                if (y0 >= x0)
-                {
-                    do
-                    {
-                        *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2) = (int16_t)g_4a4534;
-                        x0 += stride;
-                    } while (x0 <= y0);
-                }
-                dst += 4;
-                r0++;
-                if (r1 < *(int32_t*)(bucket + 0x18))
-                    continue;
-                break;
-            }
-            b = *(int16_t*)(ap + 2);
-            if (y0 <= b)
-            {
-                if (x0 < a)
-                {
-                    do
-                    {
-                        *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2) = (int16_t)g_4a4534;
-                        x0 += stride;
-                    } while (x0 < a);
-                }
-                *(int16_t*)(ap + 0) = (int16_t)(y0 + stride);
-                dst += 4;
-                r0++;
-                if (r1 < *(int32_t*)(bucket + 0x18))
-                    continue;
-                break;
-            }
-            if (x0 < a)
+            uint8_t* e;
+
+            e = HOVER_LPTR(HOVER_LPTR(bucket, 8), 0) + i * 4;
+            x0 = *(int16_t*)e;
+            y0b = *(int16_t*)(e + 2);
+            if (y0b >= x0)
             {
                 do
                 {
-                    *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2) = (int16_t)g_4a4534;
-                    x0 += stride;
-                } while (x0 < a);
+                    F406740(a1, (void*)(intptr_t)y0b, *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2), x0);
+                    x0 += g_4a453c;
+                    y0b = *(int16_t*)(HOVER_LPTR(HOVER_LPTR(bucket, 8), 0) + i * 4 + 2);
+                } while (y0b >= x0);
             }
-            *(int16_t*)(dst + 0) = (int16_t)(b + stride);
-            ap += 4;
-            r1++;
-            if (r1 >= *(int32_t*)(bucket + 0x18))
-                break;
-        }
+            i++;
+        } while (*(int32_t*)(bucket + 0x18) > i);
     }
-    if (r1 < *(int32_t*)(bucket + 0x18))
-    {
-        for (a = r1; a < *(int32_t*)(bucket + 0x18); a++)
-        {
-            src = HOVER_LPTR(HOVER_LPTR(bucket, 8), 0) + a * 4;
-            x0 = *(int16_t*)(src + 0);
-            b = *(int16_t*)(src + 2);
-            if (b >= x0)
-            {
-                for (n = x0; n <= b; n += stride)
-                    F406740(a1, (void*)(intptr_t)b, *(int16_t*)(HOVER_LPTR(bucket, 0x10) + n * 2), n);
-            }
-        }
-    }
+
     if (r0 < *(int32_t*)(bucket + 0x14))
     {
-        n = *(int32_t*)(bucket + 0x14) - r0;
-        ap = (uint8_t*)HOVER_LPTR(this, 4) + r0 * 4 + 2;
-        while (n != 0)
+        uint8_t* e;
+        int32_t count;
+
+        e = HOVER_LPTR(this, 4) + r0 * 4 + 2;
+        count = *(int32_t*)(bucket + 0x14) - r0;
+        do
         {
-            x0 = *(int16_t*)(ap - 2);
-            b = *(int16_t*)(ap);
-            if (x0 <= b)
+            x0 = *(int16_t*)(e - 2);
+            y0b = *(int16_t*)e;
+            if (x0 <= y0b)
             {
-                src = HOVER_LPTR(bucket, 0x10) + x0 * 2;
-                a = stride * 2;
                 do
                 {
-                    *(int16_t*)src = (int16_t)g_4a4534;
-                    src += a;
-                    x0 += stride;
-                } while (x0 <= b);
+                    *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2) = *(int16_t*)&g_4a4534;
+                    x0 += g_4a453c;
+                } while (x0 <= y0b);
             }
-            ap += 4;
-            n--;
-        }
+            e += 4;
+        } while (--count != 0);
     }
+
     src = HOVER_LPTR(bucket, 0xc);
     ap = HOVER_LPTR(bucket, 8);
     n = *(int32_t*)(bucket + 0x14);
@@ -1297,188 +1294,177 @@ void SpanChain::F403a60(void* a1)
     bucket = HOVER_LPTR(this, 0xc);
     while (bucket != NULL)
     {
-#if defined(FLYINGDODGEM_GDI_COMPAT)
-        n = 0;
-        src = NULL;
-#else
-        n = *(int32_t*)(bucket + 0x14);
         src = HOVER_LPTR(HOVER_LPTR(bucket, 0xc), 0);
-#endif
         dst = HOVER_LPTR(this, 4);
+        p = dst;
+        n = *(int32_t*)(bucket + 0x14);
         if (n > 0)
         {
-            uint8_t* p = dst;
             do
             {
 #if defined(FLYINGDODGEM_GDI_COMPAT)
                 if (src == NULL)
                     break;
-                *(int16_t*)(p + 0) = *(int16_t*)src;
-                *(int16_t*)(p + 2) = *(int16_t*)(src + 2);
-#else
-                *(int16_t*)(p + 0) = *(int16_t*)(src + 0);
-                *(int16_t*)(p + 2) = *(int16_t*)(src + 2);
 #endif
+                *(int16_t*)p = *(int16_t*)src;
+                *(int16_t*)(p + 2) = *(int16_t*)(src + 2);
                 p += 4;
                 src += 4;
                 n--;
-            } while (n > 0);
+            } while (n != 0);
         }
+
         ap = HOVER_LPTR(HOVER_LPTR(bucket, 8), 0);
         r0 = 0;
         r1 = 0;
-        stride = g_4a453c;
+        if (*(int32_t*)(bucket + 0x18) <= r1)
+            goto L_f3e;
+
+    L_d81:
+        if (*(int32_t*)(bucket + 0x14) <= r0)
+            goto L_f3e;
+        b1 = *(int16_t*)ap;
+        x1 = *(int16_t*)dst;
+        if (x1 <= b1)
+            goto L_e64;
+        y0 = *(int16_t*)(ap + 2);
+        if (x1 <= y0)
+            goto L_de0;
+        if (y0 < b1)
+            goto L_f28;
+    L_db4:
+        ((SpanChain*)a1)->F402b10((void*)(intptr_t)*(int16_t*)(HOVER_LPTR(bucket, 0x10) + b1 * 2), b1, *(int32_t*)(bucket + 0x24), *(int32_t*)(bucket + 0x1c));
+        b1 += g_4a453c;
+        if (y0 >= b1)
+            goto L_db4;
+        goto L_f28;
+
+    L_de0:
+        y0b = *(int16_t*)(dst + 2);
+        if (y0b < y0)
+            goto L_e20;
+        if (x1 <= b1)
+            goto L_f1d;
+    L_df6:
+        ((SpanChain*)a1)->F402b10((void*)(intptr_t)*(int16_t*)(HOVER_LPTR(bucket, 0x10) + b1 * 2), b1, *(int32_t*)(bucket + 0x24), *(int32_t*)(bucket + 0x1c));
+        b1 += g_4a453c;
+        if (x1 > b1)
+            goto L_df6;
+        goto L_f1d;
+
+    L_e20:
+        if (x1 <= b1)
+            goto L_e49;
+    L_e24:
+        ((SpanChain*)a1)->F402b10((void*)(intptr_t)*(int16_t*)(HOVER_LPTR(bucket, 0x10) + b1 * 2), b1, *(int32_t*)(bucket + 0x24), *(int32_t*)(bucket + 0x1c));
+        b1 += g_4a453c;
+        if (x1 > b1)
+            goto L_e24;
+    L_e49:
+        *(int16_t*)ap = (int16_t)(y0b + g_4a453c);
+        dst += 4;
+        r0++;
+        goto L_f31;
+
+    L_e64:
+        y0b = *(int16_t*)(dst + 2);
+        if (y0b >= b1)
+            goto L_ea1;
+        if (y0b < x1)
+            goto L_e95;
+    L_e74:
+        *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x1 * 2) = *(int16_t*)&g_4a4534;
+        x1 += g_4a453c;
+        if (y0b >= x1)
+            goto L_e74;
+    L_e95:
+        dst += 4;
+        r0++;
+        goto L_f31;
+
+    L_ea1:
+        y0 = *(int16_t*)(ap + 2);
+        if (y0b > y0)
+            goto L_ef4;
+        if (x1 >= b1)
+            goto L_edc;
+    L_eb7:
+        *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x1 * 2) = *(int16_t*)&g_4a4534;
+        x1 += g_4a453c;
+        if (b1 > x1)
+            goto L_eb7;
+    L_edc:
+        *(int16_t*)ap = (int16_t)(y0b + g_4a453c);
+        dst += 4;
+        r0++;
+        goto L_f31;
+
+    L_ef4:
+        if (x1 >= b1)
+            goto L_f1d;
+    L_ef8:
+        *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x1 * 2) = *(int16_t*)&g_4a4534;
+        x1 += g_4a453c;
+        if (b1 > x1)
+            goto L_ef8;
+    L_f1d:
+        *(int16_t*)dst = (int16_t)(y0 + g_4a453c);
+    L_f28:
+        ap += 4;
+        r1++;
+    L_f31:
+        if (*(int32_t*)(bucket + 0x18) > r1)
+            goto L_d81;
+
+    L_f3e:
         if (r1 < *(int32_t*)(bucket + 0x18))
         {
-            for (;;)
+            int32_t i;
+
+            i = r1;
+            do
             {
-                if (r0 >= *(int32_t*)(bucket + 0x14))
-                    break;
-                x0 = *(int16_t*)(dst + 0);
-                a = *(int16_t*)(ap + 0);
-                if (x0 > a)
-                {
-                    b = *(int16_t*)(ap + 2);
-                    if (x0 > b)
-                    {
-                        if (b >= a)
-                        {
-                            do
-                            {
-                                ((SpanChain*)a1)->F402b10((void*)(intptr_t)*(int16_t*)(HOVER_LPTR(bucket, 0x10) + a * 2), a,
-                                                          *(int32_t*)(bucket + 0x24), *(int32_t*)(bucket + 0x1c));
-                                a += stride;
-                            } while (a <= b);
-                        }
-                        ap += 4;
-                        r1++;
-                        if (r1 < *(int32_t*)(bucket + 0x18))
-                            continue;
-                        break;
-                    }
-                    y0 = *(int16_t*)(dst + 2);
-                    if (y0 >= b)
-                    {
-                        if (x0 > a)
-                        {
-                            do
-                            {
-                                ((SpanChain*)a1)->F402b10((void*)(intptr_t)*(int16_t*)(HOVER_LPTR(bucket, 0x10) + a * 2), a,
-                                                          *(int32_t*)(bucket + 0x24), *(int32_t*)(bucket + 0x1c));
-                                a += stride;
-                            } while (a < x0);
-                        }
-                        *(int16_t*)(dst + 0) = (int16_t)(b + stride);
-                        ap += 4;
-                        r1++;
-                        if (r1 < *(int32_t*)(bucket + 0x18))
-                            continue;
-                        break;
-                    }
-                    if (x0 > a)
-                    {
-                        do
-                        {
-                            ((SpanChain*)a1)->F402b10((void*)(intptr_t)*(int16_t*)(HOVER_LPTR(bucket, 0x10) + a * 2), a,
-                                                      *(int32_t*)(bucket + 0x24), *(int32_t*)(bucket + 0x1c));
-                            a += stride;
-                        } while (a < x0);
-                    }
-                    *(int16_t*)(ap + 0) = (int16_t)(y0 + stride);
-                    dst += 4;
-                    r0++;
-                    if (r1 < *(int32_t*)(bucket + 0x18))
-                        continue;
-                    break;
-                }
-                y0 = *(int16_t*)(dst + 2);
-                if (y0 < a)
-                {
-                    if (y0 >= x0)
-                    {
-                        do
-                        {
-                            *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2) = (int16_t)g_4a4534;
-                            x0 += stride;
-                        } while (x0 <= y0);
-                    }
-                    dst += 4;
-                    r0++;
-                    if (r1 < *(int32_t*)(bucket + 0x18))
-                        continue;
-                    break;
-                }
-                b = *(int16_t*)(ap + 2);
-                if (y0 <= b)
-                {
-                    if (x0 < a)
-                    {
-                        do
-                        {
-                            *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2) = (int16_t)g_4a4534;
-                            x0 += stride;
-                        } while (x0 < a);
-                    }
-                    *(int16_t*)(ap + 0) = (int16_t)(y0 + stride);
-                    dst += 4;
-                    r0++;
-                    if (r1 < *(int32_t*)(bucket + 0x18))
-                        continue;
-                    break;
-                }
-                if (x0 < a)
+                uint8_t* e;
+
+                e = HOVER_LPTR(HOVER_LPTR(bucket, 8), 0) + i * 4;
+                x1 = *(int16_t*)e;
+                y0b = *(int16_t*)(e + 2);
+                if (y0b >= x1)
                 {
                     do
                     {
-                        *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x0 * 2) = (int16_t)g_4a4534;
-                        x0 += stride;
-                    } while (x0 < a);
+                        ((SpanChain*)a1)->F402b10((void*)(intptr_t)*(int16_t*)(HOVER_LPTR(bucket, 0x10) + x1 * 2), x1, *(int32_t*)(bucket + 0x24), *(int32_t*)(bucket + 0x1c));
+                        x1 += g_4a453c;
+                        y0b = *(int16_t*)(HOVER_LPTR(HOVER_LPTR(bucket, 8), 0) + i * 4 + 2);
+                    } while (y0b >= x1);
                 }
-                *(int16_t*)(dst + 0) = (int16_t)(b + stride);
-                ap += 4;
-                r1++;
-                if (r1 >= *(int32_t*)(bucket + 0x18))
-                    break;
-            }
+                i++;
+            } while (*(int32_t*)(bucket + 0x18) > i);
         }
-        if (r1 < *(int32_t*)(bucket + 0x18))
-        {
-            for (a = r1; a < *(int32_t*)(bucket + 0x18); a++)
-            {
-                src = HOVER_LPTR(HOVER_LPTR(bucket, 8), 0) + a * 4;
-                x0 = *(int16_t*)(src + 0);
-                b = *(int16_t*)(src + 2);
-                if (b >= x0)
-                {
-                    for (n = x0; n <= b; n += stride)
-                        ((SpanChain*)a1)->F402b10((void*)(intptr_t)*(int16_t*)(HOVER_LPTR(bucket, 0x10) + n * 2), n,
-                                                  *(int32_t*)(bucket + 0x24), *(int32_t*)(bucket + 0x1c));
-                }
-            }
-        }
+
         if (r0 < *(int32_t*)(bucket + 0x14))
         {
-            n = *(int32_t*)(bucket + 0x14) - r0;
-            ap = (uint8_t*)HOVER_LPTR(this, 4) + r0 * 4 + 2;
-            while (n != 0)
+            uint8_t* e;
+            int32_t count;
+
+            e = HOVER_LPTR(this, 4) + r0 * 4 + 2;
+            count = *(int32_t*)(bucket + 0x14) - r0;
+            do
             {
-                x0 = *(int16_t*)(ap - 2);
-                b = *(int16_t*)(ap);
-                if (x0 <= b)
+                x1 = *(int16_t*)(e - 2);
+                y0b = *(int16_t*)e;
+                if (x1 <= y0b)
                 {
-                    src = HOVER_LPTR(bucket, 0x10) + x0 * 2;
-                    a = stride * 2;
                     do
                     {
-                        *(int16_t*)src = (int16_t)g_4a4534;
-                        src += a;
-                        x0 += stride;
-                    } while (x0 <= b);
+                        *(int16_t*)(HOVER_LPTR(bucket, 0x10) + x1 * 2) = *(int16_t*)&g_4a4534;
+                        x1 += g_4a453c;
+                    } while (x1 <= y0b);
                 }
-                ap += 4;
-                n--;
-            }
+                e += 4;
+            } while (--count != 0);
         }
+
         src = HOVER_LPTR(bucket, 0xc);
         ap = HOVER_LPTR(bucket, 8);
         n = *(int32_t*)(bucket + 0x14);

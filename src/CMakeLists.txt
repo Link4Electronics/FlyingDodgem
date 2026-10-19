@@ -54,6 +54,8 @@ if(DEFINED _vc_cl)
             set(_extra_flags /G4 /Oa)
         elseif(_f STREQUAL "callees.c")
             set(_extra_flags /G4)
+        elseif(_f STREQUAL "fixed96.c")
+            set(_extra_flags /G3)
         elseif(_f STREQUAL "stubs.c")
             # WinHelpA is dllimported: MSVC 2.2 /G5 saves ebx around
             # the indirect call (push/pop with no use); /G4 drops the pair and

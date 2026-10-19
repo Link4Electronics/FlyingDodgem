@@ -79,8 +79,7 @@ static const char *find_dashres(int argc, char **argv)
 /* The 48-byte game object initialized by Init22c80 (HOVER.EXE 0x422c80).
  * Retail constructs a whole run of these (base + 0x2e0, +0x310, +0x340, ...)
  * and never reads the constructor's return value. The matched recompilation
- * is __fastcall void Init22c80(void* self); the trailing `mov eax,ecx; ret`
- * (return self) lives in the separate Self22CA8 symbol. */
+ * is __fastcall void* Init22c80(void* self), returning self like retail. */
 typedef struct Init22Object
 {
     u32 f00;
@@ -98,8 +97,8 @@ typedef struct Init22Object
 } Init22Object;
 
 /* FUNCTION: HOVER 0x00422c80
- * __fastcall void Init22c80(void* self). Defined in stubs.c. */
-extern void __fastcall Init22c80(void *self);
+ * __fastcall void* Init22c80(void* self). Defined in stubs.c. */
+extern void* __fastcall Init22c80(void *self);
 
 /* Locate and parse the retail maze/texture assets to exercise the
  * reconstructed TEX/MAZ loaders (texmaze.c). Search order: the

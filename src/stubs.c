@@ -260,6 +260,8 @@ void* _pnhHeap;
 // __heap_addblock
 // LIBRARY: HOVER 0x0043fcec
 // __amsg_exit
+// STUB: HOVER 0x0044286e
+// __GET_RTERRMSG
 // GLOBAL: HOVER 0x004c79b0
 // _pnhHeap
 // GLOBAL: HOVER 0x004c8e54
@@ -507,13 +509,10 @@ void __fastcall Ramp419960(void* self, void* unused, s32 a, u8 r, u8 g, u8 b, vo
 }
 
 // FUNCTION: HOVER 0x00422c80
-/* Retail ends with `mov eax,ecx; ret` (return self), which is scheduled LAST
- * only when the function carries no return value; MSVC 4 /O2 hoists the copy
- * to the top whenever Init22c80 actually `return self`. Retail callers reload
- * `ecx` after every call and ignore the return, so the equivalent C is void:
- * the trailing `mov eax,ecx; ret` split off into the (fabricated) Self22CA8
- * symbol reproduces the full 43-byte retail epilogue. */
-void __fastcall Init22c80(void* self)
+/* Retail ends with `mov eax,ecx; ret` (return self) inside the same function
+ * body: CL 9.10 schedules the copy after the stores. Retail callers ignore
+ * the return value. */
+void* __fastcall Init22c80(void* self)
 {
     *(uint32_t*)((uint8_t*)self + 0x00) = 0;
     *(uint32_t*)((uint8_t*)self + 0x04) = 0;
@@ -525,11 +524,6 @@ void __fastcall Init22c80(void* self)
     *(uint32_t*)((uint8_t*)self + 0x2c) = 0;
     *(uint32_t*)((uint8_t*)self + 0x1c) = 1;
     *(uint32_t*)((uint8_t*)self + 0x24) = 0;
-}
-
-// FUNCTION: HOVER 0x00422CA8
-void* __fastcall Self22CA8(void* self)
-{
     return self;
 }
 
@@ -1924,12 +1918,16 @@ void* __fastcall Ptr4CC70(void* self)
  * pattern so "this" lands in ECX and the real argument at [esp+4].
  * ------------------------------------------------------------------------- */
 
+typedef struct { int32_t x; int32_t y; } TmpPair87D0;
+
 // FUNCTION: HOVER 0x004087D0
 void __fastcall CopyPos87D0(void* self)
 {
     uint8_t* b = (uint8_t*)self;
-    *(int32_t*)(b + 0x4c) = *(int16_t*)(b + 0x46);
-    *(int32_t*)(b + 0x50) = *(int16_t*)(b + 0x4a);
+    TmpPair87D0 t;
+    t.x = *(int16_t*)(b + 0x46);
+    t.y = *(int16_t*)(b + 0x4a);
+    *(TmpPair87D0*)(b + 0x4c) = t;
     *(int32_t*)(b + 0x60) = *(int32_t*)(b + 0x5c);
 }
 

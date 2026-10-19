@@ -83,6 +83,11 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
     int32_t n;
     int32_t scale;
     int32_t w;
+#if defined(_MSC_VER)
+    int32_t six;
+#else
+    uintptr_t six;
+#endif
     int32_t span;
     int32_t base;
     int32_t top;
@@ -98,13 +103,6 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
     int32_t saved;
     int32_t mask;
     uint8_t* tbl;
-#if defined(_MSC_VER)
-    int32_t six;
-#else
-    /* Native 64-bit: the host framebuffer pointer at +0x28 does not fit
-     * in int32_t.  The MSVC matching build keeps the retail int32 shape. */
-    uintptr_t six;
-#endif
 
     (void)self;
     (void)unused;
@@ -121,7 +119,12 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
         base = (int32_t)((uintptr_t)a1 * (uintptr_t)g_4a4a34 +
                          (uintptr_t)g_nativePlanes.bits);
 #endif
+#if defined(_MSC_VER)
+        six = base + a0;
+        g_4a4a4c = six;
+#else
         g_4a4a4c = base + a0;
+#endif
         if (n > 0)
         {
 #if defined(_MSC_VER)
@@ -130,9 +133,7 @@ extern "C" void __fastcall F406740(void* self, void* unused, int32_t a0, int32_t
             w = (uint8_t)g_nativePlanes.rowColours[a1];
 #endif
             span = g_4a4534 - a0;
-#if defined(_MSC_VER)
-            six = base + a0;
-#else
+#if !defined(_MSC_VER)
             /* Reconstruct the full 64-bit framebuffer address so memset
              * writes the real surface (base/g_4a4a4c stay 32-bit for the
              * retail-shaped globals). */
@@ -296,6 +297,25 @@ int32_t HoverTc::M405b90(void* a1)
     return 0;
 }
 
+
+#ifdef _MSC_VER
+__inline int32_t MulShift16r(int32_t a, int32_t b)
+{
+    __asm {
+        mov eax, a
+        imul b
+        shl edx, 0x10
+        shr eax, 0x10
+        add eax, edx
+    }
+}
+#else
+static inline int32_t MulShift16r(int32_t a, int32_t b)
+{
+    return (int32_t)(((int64_t)a * (int64_t)b) >> 16);
+}
+#endif
+
 // FUNCTION: HOVER 0x00405ce0
 int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
 {
@@ -312,10 +332,6 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
     (void)a1;
     (void)a3;
     (void)a4;
-#ifdef _MSC_VER
-    __asm { mov eax, rec0 }
-    __asm { mov eax, rec1 }
-#endif
     /* Native Y-flip (world +Y south vs math +Y north) so angles agree with
      * the flipped dirTable; matching sees the original retail operands. */
 #if defined(FLYINGDODGEM_GDI_COMPAT)
@@ -362,8 +378,8 @@ int32_t HoverTc::M405ce0(void* a1, void* a2, int32_t a3, int16_t a4)
     }
     {
         int32_t sc = *(int32_t*)((uint8_t*)this + 0x30);
-        angA = (int32_t)(((int64_t)hi * sc) >> 16);
-        angB = (int32_t)(((int64_t)lo * sc) >> 16);
+        angA = MulShift16r(hi, sc);
+        angB = MulShift16r(lo, sc);
         colLo = angA / 65536;
         colHi = angB / 65536;
         colLo -= 3;
@@ -499,8 +515,8 @@ extern "C" void __stdcall F4066b0(void* a1, void* a2, int32_t a3, int32_t a4)
 {
     uint8_t* o = (uint8_t*)a1;
     uint8_t* v = (uint8_t*)a2;
-    int32_t f98;
     int32_t shade;
+    int32_t f98;
     int32_t t;
 
     t = g_4a453c - a3;
@@ -509,10 +525,10 @@ extern "C" void __stdcall F4066b0(void* a1, void* a2, int32_t a3, int32_t a4)
         return;
     g_4a4a4c = g_4a4540 + a3 * g_4a4a34;
     shade = *(int16_t*)(o + 0x8);
-    g_4a4a44 = shade;
-    g_4a4a38 = *(int32_t*)(o + 0x94);
+    *(volatile int32_t*)&g_4a4a44 = shade;
+    *(volatile int32_t*)&g_4a4a38 = *(int32_t*)(o + 0x94);
     f98 = *(int32_t*)(o + 0x98);
-    g_4a4a50 = f98;
+    *(volatile int32_t*)&g_4a4a50 = f98;
     g_4a4a1c = *(int32_t*)(v + 0x10);
     g_4a4a40 = (a3 - *(int32_t*)(v + 0x8)) * f98;
     g_4a4a3c = ((struct HostObj*)g_4a1d68)->F403850(shade);
@@ -525,7 +541,7 @@ extern "C" void __cdecl F406a80(void* arg)
     uint8_t* node = (uint8_t*)arg;
     uint8_t* p;
     int32_t key;
-    int32_t zero;
+    int32_t zero = 0;
 
     key = *(int32_t*)(node + 0x40);
     if (key != 0)
@@ -535,7 +551,6 @@ extern "C" void __cdecl F406a80(void* arg)
             key = 0;
         if (*(int32_t*)(node + 0x3c) != key)
         {
-            zero = 0;
             do
             {
                 p = HOVER_LPTR(p, 0x3c);
@@ -594,7 +609,6 @@ extern "C" void __cdecl F406a80(void* arg)
             key = 0;
         if (*(int32_t*)(node + 0x3c) != key)
         {
-            zero = 0;
             do
             {
                 p = HOVER_LPTR(p, 0x3c);
