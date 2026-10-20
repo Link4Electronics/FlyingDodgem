@@ -258,6 +258,8 @@ void* _pnhHeap;
 // __heap_free_region
 // LIBRARY: HOVER 0x00445d39
 // __heap_addblock
+// LIBRARY: HOVER 0x0043ea08
+// __ftol
 // LIBRARY: HOVER 0x0043fcec
 // __amsg_exit
 // STUB: HOVER 0x0044286e

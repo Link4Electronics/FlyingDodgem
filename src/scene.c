@@ -6,8 +6,10 @@
 #if defined(_MSC_VER)
 #pragma comment(lib, "user32.lib")
 extern "C" __declspec(dllimport) char* __stdcall CharUpperA(char* psz);
+extern "C" __declspec(dllimport) uint32_t __stdcall GetPaletteEntries(void* hpal, uint32_t start, uint32_t count, void* entries);
 #else
 extern "C" char* __stdcall CharUpperA(char* psz);
+extern "C" uint32_t __stdcall GetPaletteEntries(void* hpal, uint32_t start, uint32_t count, void* entries);
 #endif
 
 extern "C" void* g_460970;
@@ -49,6 +51,9 @@ extern "C" int32_t g_4a4840;
 extern "C" int32_t g_4a4858;
 extern "C" void* g_4c57a8;
 extern "C" int32_t g_4c57ac;
+extern "C" void (__cdecl* g_4c4dac)(int32_t row, int32_t total);
+extern "C" uint16_t g_sqTable[511];
+extern "C" int64_t __ftol(void);
 
 /* 4-byte packed address fields (see render.c HOVER_LPTR): matching sees the
  * exact original tokens. */
@@ -908,23 +913,70 @@ int32_t PlayerGate::Gate414470(void* obj)
     return ((PlayerGate*)t)->Gate40cb40(obj);
 }
 
+// FUNCTION: HOVER 0x00413730
+extern "C" int32_t __cdecl F413730(uint32_t rgb, uint8_t* pal)
+{
+    int32_t bestd = 0x08000001;
+    int32_t besti = 0;
+    int32_t r = (int32_t)(uint8_t)rgb;
+    int32_t g = (int32_t)(uint8_t)(rgb >> 8);
+    int32_t b = (int32_t)(uint8_t)(rgb >> 16);
+    uint8_t* p;
+    int32_t i;
+    for (i = 0xa, p = pal + 0x2a; i < 0xf6; p += 4, i++)
+    {
+        int32_t d = (int32_t)g_sqTable[(r - p[-2]) + 255];
+        d += g_sqTable[(g - p[-1]) + 255];
+        d += g_sqTable[(b - p[0]) + 255];
+        if (d < bestd)
+        {
+            bestd = d;
+            besti = i;
+        }
+    }
+    return besti;
+}
+
 /* Craft thrust/inertia steppers (retail 0x427060-0x427379): each nudges one
  * motion double (accel1/2/3 by 0.05, inertia by 0.001, down/up pairs) and
  * forwards inertia, three 0xff flags, the three accels and the 0x4a1d50
  * target into the 0x414550 motion integrator.  Single `this`, no stack
  * args, so free __fastcall (no EDX use) matches retail exactly. */
 // FUNCTION: HOVER 0x00414550
-void MoverSub::M414550(void* tgt, double ain, int32_t f1, int32_t f2, int32_t f3,
-                        double d1, double d2, double d3)
+void MoverSub::M414550(void* tgt, double scale, int32_t maxR, int32_t maxB, int32_t maxG,
+                       double rscale, double bscale, double gscale)
 {
-    (void)tgt;
-    (void)ain;
-    (void)f1;
-    (void)f2;
-    (void)f3;
-    (void)d1;
-    (void)d2;
-    (void)d3;
+    uint8_t entries[0x400];
+    int32_t row;
+    int32_t color;
+    uint8_t* p;
+    int32_t i;
+
+    GetPaletteEntries(*(void**)((uint8_t*)tgt + 4), 0, 0x100, entries);
+    for (row = 0; row < 0x40; row++)
+    {
+        rscale *= scale;
+        gscale *= scale;
+        bscale *= scale;
+        for (i = 0, p = entries; p < entries + 0x400; i++, p += 4)
+        {
+            int32_t c;
+            c = (int32_t)(p[0] * rscale);
+            if (c > maxR)
+                c = maxR;
+            color = c;
+            c = (int32_t)(p[1] * gscale);
+            if (c > maxG)
+                c = maxG;
+            color += c << 8;
+            c = (int32_t)(p[2] * bscale);
+            if (c > maxB)
+                c = maxB;
+            ((uint8_t*)this)[row * 0x100 + i] = (uint8_t)F413730((uint32_t)((c << 16) + color), entries);
+        }
+        if (g_4c4dac != 0)
+            g_4c4dac(row, 0x40);
+    }
 }
 
 /* Drone difficulty selector (retail 0x425870): points the object's three

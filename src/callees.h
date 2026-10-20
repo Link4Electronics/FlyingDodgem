@@ -118,8 +118,8 @@ public:
  * __thiscall: target, inertia, three flags and three accel doubles). */
 struct MoverSub
 {
-    void M414550(void* tgt, double ain, int32_t f1, int32_t f2, int32_t f3,
-                 double d1, double d2, double d3);
+    void M414550(void* tgt, double scale, int32_t maxR, int32_t maxB, int32_t maxG,
+                 double rscale, double bscale, double gscale);
 };
 
 /* __thiscall, `this` in ECX only (spelled __fastcall on a free function). */
